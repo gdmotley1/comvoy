@@ -17,7 +17,7 @@ import logging
 import math
 from datetime import date
 
-from fastapi import APIRouter, Query, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Query, HTTPException
 
 from app.database import get_service_client
 from app.etl.geocoder import geocode_single
@@ -233,7 +233,7 @@ async def _geocode_location(text: str) -> tuple[float, float] | None:
 # ---------------------------------------------------------------------------
 
 @router.post("/plans")
-async def create_travel_plan(body: TravelPlanCreate, bg: BackgroundTasks):
+async def create_travel_plan(body: TravelPlanCreate):
     """Create a trip day. Geocodes locations, fires auto-briefing email."""
     db = get_service_client()
 
@@ -282,14 +282,14 @@ async def create_travel_plan(body: TravelPlanCreate, bg: BackgroundTasks):
 
     plan = result.data[0] if result.data else record
 
-    # Fire auto-briefing in background (doesn't block response)
-    bg.add_task(_fire_auto_brief, plan["id"] if "id" in plan else None, plan)
+    # Send auto-briefing inline (reliable in serverless)
+    _fire_auto_brief(plan["id"] if "id" in plan else None, plan)
 
     return {"status": "created", "plan": plan}
 
 
 @router.put("/plans/{plan_id}")
-async def update_travel_plan(plan_id: str, body: TravelPlanUpdate, bg: BackgroundTasks):
+async def update_travel_plan(plan_id: str, body: TravelPlanUpdate):
     """Update an existing trip day. Re-geocodes if locations changed."""
     db = get_service_client()
 
@@ -340,9 +340,9 @@ async def update_travel_plan(plan_id: str, body: TravelPlanUpdate, bg: Backgroun
     result = db.table("rep_travel_plans").update(updates).eq("id", plan_id).execute()
     plan = result.data[0] if result.data else {**old, **updates}
 
-    # Re-brief if route changed
+    # Re-brief if route changed (inline for serverless reliability)
     if locations_changed:
-        bg.add_task(_fire_auto_brief, plan_id, plan)
+        _fire_auto_brief(plan_id, plan)
 
     return {"status": "updated", "plan": plan, "rebriefed": locations_changed}
 
