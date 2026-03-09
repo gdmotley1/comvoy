@@ -1,0 +1,2328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Otto — Comvoy Sales Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #06080f;
+            --glass: rgba(255,255,255,0.05);
+            --glass-border: rgba(255,255,255,0.08);
+            --glass-hover: rgba(255,255,255,0.1);
+            --text-primary: #f0f2f5;
+            --text-secondary: rgba(255,255,255,0.5);
+            --text-tertiary: rgba(255,255,255,0.3);
+            --accent-blue: #4f8fff;
+            --accent-cyan: #00d4ff;
+            --accent-purple: #a855f7;
+            --accent-pink: #ec4899;
+            --orb-glow: rgba(79,143,255,0.4);
+            --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --smooth: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ========== ANIMATED BACKGROUND ========== */
+        .bg-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bg-canvas::before, .bg-canvas::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.35;
+            animation: drift 20s ease-in-out infinite alternate;
+        }
+
+        .bg-canvas::before {
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, var(--accent-blue), transparent 70%);
+            top: -200px; left: -100px;
+        }
+
+        .bg-canvas::after {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, var(--accent-purple), transparent 70%);
+            bottom: -150px; right: -100px;
+            animation-delay: -10s;
+            animation-duration: 25s;
+        }
+
+        .bg-orb-3 {
+            position: absolute;
+            width: 400px; height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--accent-cyan), transparent 70%);
+            filter: blur(100px);
+            opacity: 0.2;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            animation: drift2 18s ease-in-out infinite alternate;
+        }
+
+        @keyframes drift {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(80px, 40px) scale(1.15); }
+        }
+
+        @keyframes drift2 {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            100% { transform: translate(-40%, -60%) scale(1.2); }
+        }
+
+        /* ========== TOP BAR ========== */
+        .topbar {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 28px;
+            flex-shrink: 0;
+            pointer-events: none;
+        }
+
+        .topbar > * { pointer-events: auto; }
+
+        .topbar-center, .topbar .btn-ghost {
+            opacity: 0;
+            transform: translateY(-6px);
+            transition: opacity 0.4s var(--smooth), transform 0.4s var(--smooth);
+            pointer-events: none;
+        }
+
+        body.chatting .topbar-center,
+        body.chatting .topbar .btn-ghost,
+        body.chatting .topbar .btn-trips,
+        body.chatting .usage-badge {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .wordmark {
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .wordmark-text {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+            line-height: 1;
+            margin-bottom: 3px;
+        }
+
+        .wordmark-sub {
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--text-tertiary);
+            letter-spacing: 0.3px;
+        }
+
+        .btn-ghost {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s var(--smooth);
+        }
+
+        .btn-ghost:hover {
+            background: var(--glass-hover);
+            color: var(--text-primary);
+            border-color: rgba(255,255,255,0.15);
+        }
+
+        /* ========== USAGE BADGE ========== */
+        .usage-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            color: var(--text-muted, rgba(255,255,255,0.35));
+            font-size: 10px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-weight: 400;
+            letter-spacing: 0.02em;
+            opacity: 0;
+            transform: translateY(-6px);
+            transition: opacity 0.4s var(--smooth), transform 0.4s var(--smooth), color 0.3s;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .usage-badge:empty { display: none; }
+        .usage-badge.warn { color: rgba(255, 180, 50, 0.6); }
+
+        /* ========== MAIN CONTENT ========== */
+        .main {
+            position: relative;
+            z-index: 10;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-scroll {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 0 24px 60px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
+        }
+
+        body.chatting .chat-scroll {
+            padding-top: 76px;
+        }
+
+        .chat-scroll::-webkit-scrollbar { width: 6px; }
+        .chat-scroll::-webkit-scrollbar-track { background: transparent; }
+        .chat-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+        /* ========== WELCOME STATE ========== */
+        .welcome {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100%;
+            padding: 60px 20px 30px;
+            animation: fadeUp 0.8s var(--smooth);
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ---- THE OTTO EYE ---- */
+        .orb-hero {
+            position: relative;
+            width: 150px; height: 150px;
+            margin: 20px 0 28px;
+            animation: heroFloat 5s ease-in-out infinite;
+            transition: filter 0.3s;
+            cursor: default;
+            /* ensure rings/aura aren't clipped */
+            overflow: visible;
+        }
+
+        .orb-hero:hover {
+            filter: brightness(1.15);
+        }
+
+        .orb-hero::before {
+            content: '';
+            position: absolute;
+            inset: -60px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(79,143,255,0.18) 0%, rgba(79,143,255,0.06) 40%, transparent 70%);
+            animation: auraBreath 4s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes auraBreath {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.12); opacity: 1; }
+        }
+
+        .orb-hero .otto-eye {
+            width: 100%; height: 100%;
+            filter:
+                drop-shadow(0 0 20px rgba(79,143,255,0.5))
+                drop-shadow(0 0 50px rgba(79,143,255,0.35))
+                drop-shadow(0 0 100px rgba(79,143,255,0.2))
+                drop-shadow(0 0 150px rgba(168,85,247,0.1));
+        }
+
+        .orb-ring {
+            position: absolute;
+            inset: -22px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(79,143,255,0.18);
+            animation: orbRingPulse 4s ease-in-out infinite;
+            box-shadow: 0 0 15px rgba(79,143,255,0.06);
+        }
+
+        .orb-ring:nth-child(2) { inset: -42px; border-color: rgba(168,85,247,0.12); animation-delay: -1.3s; box-shadow: 0 0 20px rgba(168,85,247,0.04); }
+        .orb-ring:nth-child(3) { inset: -62px; border-color: rgba(0,212,255,0.08); animation-delay: -2.6s; box-shadow: 0 0 25px rgba(0,212,255,0.03); }
+
+        @keyframes heroFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        @keyframes orbRingPulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.06); opacity: 1; } }
+
+        /* Otto eye SVG animations */
+        @keyframes irisRotate { to { transform: rotate(360deg); } }
+        @keyframes pupilPulse { 0%, 100% { r: 6; } 50% { r: 7.5; } }
+        @keyframes pupilGlow { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+        @keyframes irisShift { 0%, 100% { stop-color: #4f8fff; } 33% { stop-color: #00d4ff; } 66% { stop-color: #a855f7; } }
+
+        .welcome-title {
+            font-size: 28px;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .welcome-sub {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 36px;
+            text-align: center;
+            font-weight: 400;
+        }
+
+        /* ---- ACTION CARDS ---- */
+        .action-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            max-width: 640px;
+            width: 100%;
+        }
+
+        .action-card {
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            cursor: pointer;
+            transition: all 0.3s var(--smooth);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-card:hover {
+            background: var(--glass-hover);
+            border-color: rgba(79,143,255,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(79,143,255,0.1);
+        }
+
+        .action-card:active { transform: translateY(0) scale(0.98); }
+
+        .action-card:last-child:nth-child(odd) {
+            grid-column: 1 / -1;
+            max-width: 314px;
+            justify-self: center;
+        }
+
+        .action-card-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: rgba(79,143,255,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .action-card-icon svg {
+            width: 18px; height: 18px;
+            stroke: var(--accent-blue);
+            fill: none;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .action-card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.3;
+        }
+
+        .action-card-desc {
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .action-card-form {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 8px;
+            padding-top: 12px;
+            border-top: 1px solid var(--glass-border);
+            width: 100%;
+        }
+
+        .action-card.expanded { cursor: default; }
+        .action-card.expanded .action-card-form {
+            display: flex;
+            animation: formSlide 0.3s var(--smooth);
+        }
+
+        @keyframes formSlide {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .action-form-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .action-form-label {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 48px;
+            flex-shrink: 0;
+            text-align: right;
+        }
+
+        .action-form-input, .action-form-select {
+            flex: 1;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 13px;
+            padding: 8px 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .action-form-input:focus, .action-form-select:focus {
+            border-color: rgba(79,143,255,0.4);
+        }
+
+        .action-form-select {
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.3)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 28px;
+            cursor: pointer;
+        }
+
+        .action-form-select option {
+            background: #1a1e2e;
+            color: var(--text-primary);
+        }
+
+        .action-form-go {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            color: white;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .action-form-go:hover { opacity: 0.9; transform: scale(1.02); }
+
+        .api-notice {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            border-radius: 14px;
+            border: 1px solid rgba(79,143,255,0.15);
+            background: rgba(79,143,255,0.05);
+            backdrop-filter: blur(20px);
+            max-width: 640px;
+            width: 100%;
+            margin-top: 16px;
+        }
+
+        .api-notice.show { display: flex; animation: msgIn 0.4s var(--spring); }
+
+        .api-notice-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: rgba(79,143,255,0.1);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .api-notice-icon svg {
+            width: 20px; height: 20px;
+            stroke: var(--accent-blue);
+            fill: none;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .api-notice-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .api-notice-text strong { color: var(--text-primary); font-weight: 600; }
+
+        /* ========== CHAT MESSAGES ========== */
+        .messages {
+            max-width: 720px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .msg {
+            display: flex;
+            gap: 14px;
+            animation: msgIn 0.4s var(--spring);
+            max-width: 100%;
+        }
+
+        .msg.user { flex-direction: row-reverse; }
+
+        @keyframes msgIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .msg-orb {
+            width: 36px; height: 36px;
+            flex-shrink: 0;
+        }
+
+        .msg-orb .otto-eye {
+            width: 100%; height: 100%;
+            filter: drop-shadow(0 0 8px rgba(79,143,255,0.3));
+        }
+
+        .msg-bubble {
+            padding: 14px 18px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.7;
+            max-width: 85%;
+            overflow-wrap: break-word;
+        }
+
+        .msg.assistant .msg-bubble {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            color: var(--text-primary);
+            border-top-left-radius: 4px;
+        }
+
+        .msg.user .msg-bubble {
+            background: linear-gradient(135deg, rgba(79,143,255,0.15), rgba(168,85,247,0.1));
+            border: 1px solid rgba(79,143,255,0.2);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            color: var(--text-primary);
+            border-top-right-radius: 4px;
+        }
+
+        .msg-bubble strong { color: #fff; font-weight: 600; }
+        .msg-bubble p { margin-bottom: 8px; }
+        .msg-bubble p:last-child { margin-bottom: 0; }
+
+        .msg-bubble pre {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+            padding: 12px 14px;
+            overflow-x: auto;
+            font-size: 12.5px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            margin: 8px 0;
+        }
+
+        /* ---- THINKING ---- */
+        .thinking {
+            display: flex;
+            gap: 14px;
+            animation: msgIn 0.4s var(--spring);
+        }
+
+        .thinking .msg-orb {
+            animation: thinkPulse 1.2s ease-in-out infinite;
+        }
+
+        .thinking .msg-orb .otto-eye {
+            filter: drop-shadow(0 0 12px rgba(79,143,255,0.5));
+        }
+
+        .thinking .msg-orb .otto-pupil {
+            animation: pupilThink 0.8s ease-in-out infinite;
+        }
+
+        @keyframes pupilThink {
+            0%, 100% { r: 6; }
+            50% { r: 9; }
+        }
+
+        @keyframes thinkPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        .think-dots {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 14px 20px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 18px;
+            border-top-left-radius: 4px;
+        }
+
+        .think-dots span {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            animation: thinkDot 1.4s ease-in-out infinite;
+            opacity: 0.4;
+        }
+
+        .think-dots span:nth-child(2) { animation-delay: 0.15s; background: var(--accent-cyan); }
+        .think-dots span:nth-child(3) { animation-delay: 0.3s; background: var(--accent-purple); }
+
+        @keyframes thinkDot {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-8px); opacity: 1; }
+        }
+
+        /* ========== INPUT BAR ========== */
+        .input-area {
+            position: relative;
+            z-index: 10;
+            padding: 16px 20px 24px;
+            flex-shrink: 0;
+            background: linear-gradient(to top, var(--bg-deep) 0%, rgba(6,8,15,0.95) 40%, rgba(6,8,15,0.6) 70%, transparent 100%);
+        }
+
+        .input-bar {
+            max-width: 720px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 6px 6px 6px;
+            border-radius: 28px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            transition: all 0.4s var(--smooth);
+            box-shadow:
+                0 8px 40px rgba(0,0,0,0.4),
+                0 2px 8px rgba(0,0,0,0.2),
+                inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+
+        .input-bar.focused {
+            border-color: rgba(79,143,255,0.25);
+            background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(79,143,255,0.03) 100%);
+            box-shadow:
+                0 8px 40px rgba(0,0,0,0.4),
+                0 2px 8px rgba(0,0,0,0.2),
+                0 0 0 1px rgba(79,143,255,0.08),
+                0 0 60px -10px rgba(79,143,255,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+
+        .input-bar textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: inherit;
+            font-weight: 400;
+            resize: none;
+            height: 44px;
+            max-height: 120px;
+            line-height: 44px;
+            padding: 0 8px;
+            letter-spacing: 0.01em;
+            overflow: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .input-bar textarea::-webkit-scrollbar { display: none; }
+
+        .input-bar textarea::placeholder {
+            color: var(--text-tertiary);
+            font-weight: 300;
+            line-height: 44px;
+        }
+
+        .attach-btn {
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s var(--smooth);
+            flex-shrink: 0;
+        }
+
+        .attach-btn:hover {
+            color: var(--text-secondary);
+            background: rgba(255,255,255,0.05);
+        }
+        .attach-btn:active { transform: scale(0.9); }
+
+        .attach-btn svg {
+            width: 19px; height: 19px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .send-btn {
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s var(--smooth);
+            flex-shrink: 0;
+            box-shadow: 0 2px 12px rgba(79,143,255,0.25);
+        }
+
+        .send-btn:hover {
+            transform: scale(1.06);
+            box-shadow: 0 4px 20px rgba(79,143,255,0.35);
+            background: linear-gradient(135deg, #5a9aff, #1ae0ff);
+        }
+        .send-btn:active { transform: scale(0.94); }
+        .send-btn:disabled { opacity: 0.25; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .send-btn svg {
+            width: 18px; height: 18px;
+            fill: none;
+            stroke: white;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .file-toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(20,25,40,0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            transition: all 0.4s var(--spring);
+            pointer-events: none;
+            z-index: 100;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+        }
+
+        .file-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            pointer-events: auto;
+        }
+
+        .file-toast-icon {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            background: rgba(79,143,255,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .file-toast-icon svg {
+            width: 20px; height: 20px;
+            fill: none;
+            stroke: var(--accent-blue);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .file-toast-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .file-toast-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+
+        .file-toast-status {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .file-toast-status.success { color: #34d399; }
+        .file-toast-status.error { color: #f87171; }
+
+        .file-toast-progress {
+            height: 3px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .file-toast-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.5s var(--smooth);
+        }
+
+        /* ========== TREND INDICATORS ========== */
+        .trend-up { color: #34d399; font-size: 11px; font-weight: 600; }
+        .trend-down { color: #f87171; font-size: 11px; font-weight: 600; }
+        .trend-flat { color: var(--text-tertiary); font-size: 11px; }
+
+        /* ========== SHINY TEXT (React Bits style) ========== */
+        .shiny-text {
+            background: linear-gradient(
+                120deg,
+                rgba(255,255,255,0.7) 0%,
+                rgba(255,255,255,0.7) 40%,
+                rgba(79,143,255,1) 50%,
+                rgba(255,255,255,0.7) 60%,
+                rgba(255,255,255,0.7) 100%
+            );
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shinySlide 3s ease-in-out infinite;
+        }
+
+        @keyframes shinySlide {
+            0% { background-position: 100% 50%; }
+            100% { background-position: -100% 50%; }
+        }
+
+        /* ========== SPLIT TEXT BLUR REVEAL (React Bits style) ========== */
+        .split-text-char {
+            display: inline-block;
+            opacity: 0;
+            filter: blur(12px);
+            transform: translateY(8px);
+            animation: charReveal 0.5s var(--smooth) forwards;
+        }
+
+        @keyframes charReveal {
+            to { opacity: 1; filter: blur(0); transform: translateY(0); }
+        }
+
+        .welcome-sub-reveal {
+            opacity: 0;
+            filter: blur(6px);
+            transform: translateY(6px);
+            animation: subReveal 0.6s var(--smooth) 0.8s forwards;
+        }
+
+        @keyframes subReveal {
+            to { opacity: 1; filter: blur(0); transform: translateY(0); }
+        }
+
+        /* ========== CUSTOM GLASS DROPDOWN (React Bits style) ========== */
+        .topbar-center {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .glass-dropdown {
+            position: relative;
+            user-select: none;
+        }
+
+        .glass-dropdown-trigger {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s var(--smooth);
+            outline: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-dropdown-trigger::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 20px;
+            padding: 1px;
+            background: linear-gradient(135deg, transparent 40%, rgba(79,143,255,0.4) 50%, transparent 60%);
+            background-size: 300% 300%;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s;
+            animation: shimmerBorder 2s linear infinite;
+            pointer-events: none;
+        }
+
+        .glass-dropdown-trigger:hover::before,
+        .glass-dropdown.open .glass-dropdown-trigger::before {
+            opacity: 1;
+        }
+
+        @keyframes shimmerBorder {
+            0% { background-position: 100% 0%; }
+            100% { background-position: -100% 100%; }
+        }
+
+        .glass-dropdown-trigger:hover {
+            border-color: rgba(255,255,255,0.15);
+            color: var(--text-primary);
+        }
+
+        .glass-dropdown.open .glass-dropdown-trigger {
+            border-color: rgba(79,143,255,0.3);
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.08);
+        }
+
+        .glass-dropdown-chevron {
+            width: 14px; height: 14px;
+            transition: transform 0.3s var(--spring);
+            opacity: 0.5;
+            flex-shrink: 0;
+        }
+
+        .glass-dropdown.open .glass-dropdown-chevron { transform: rotate(180deg); }
+
+        .glass-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-4px) scale(0.96);
+            min-width: 180px;
+            padding: 6px;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            background: rgba(14,17,30,0.92);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            box-shadow: 0 12px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s var(--spring);
+            z-index: 100;
+        }
+
+        .glass-dropdown.open .glass-dropdown-menu {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0) scale(1);
+        }
+
+        .glass-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 14px;
+            border-radius: 10px;
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s var(--smooth);
+            position: relative;
+        }
+
+        .glass-dropdown-item:hover {
+            background: rgba(79,143,255,0.1);
+            color: var(--text-primary);
+        }
+
+        .glass-dropdown-item.active {
+            color: var(--accent-blue);
+            font-weight: 500;
+        }
+
+        .glass-dropdown-item.active::before {
+            content: '';
+            width: 4px; height: 4px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            box-shadow: 0 0 8px var(--accent-blue);
+            flex-shrink: 0;
+        }
+
+        .glass-dropdown-item-info {
+            font-size: 10.5px;
+            color: var(--text-tertiary);
+            margin-left: auto;
+        }
+
+        .snapshot-count {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            font-weight: 400;
+        }
+
+        /* ========== SPOTLIGHT CARDS (React Bits style) ========== */
+        .action-card::after {
+            content: '';
+            position: absolute;
+            width: 180px; height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(79,143,255,0.15) 0%, transparent 70%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            transform: translate(-50%, -50%);
+            left: var(--spot-x, 50%);
+            top: var(--spot-y, 50%);
+        }
+
+        .action-card:hover::after { opacity: 1; }
+
+        /* ========== TRIP MANAGER VIEW ========== */
+        body.trip-manager .topbar-center,
+        body.trip-manager .topbar .btn-ghost,
+        body.trip-manager .usage-badge,
+        body.trip-manager .topbar .btn-trips {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        body.trip-manager .chat-scroll {
+            padding-top: 76px;
+        }
+
+        body.trip-manager .chat-input-wrap { display: none; }
+
+        .btn-trips {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s var(--smooth);
+            opacity: 0;
+            transform: translateY(-6px);
+            pointer-events: none;
+        }
+
+        .btn-trips:hover {
+            background: var(--glass-hover);
+            color: var(--text-primary);
+            border-color: rgba(255,255,255,0.15);
+        }
+
+        .tm-container {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 20px 0;
+            width: 100%;
+        }
+
+        .tm-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .tm-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .tm-subtitle {
+            font-size: 13px;
+            color: var(--text-tertiary);
+            margin-top: 2px;
+        }
+
+        .tm-rep-select {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 13px;
+            padding: 8px 14px;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .tm-rep-select:focus { border-color: var(--accent-blue); }
+
+        .tm-add-btn {
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 1px dashed rgba(79,143,255,0.3);
+            background: rgba(79,143,255,0.06);
+            color: var(--accent-blue);
+            font-size: 13px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+
+        .tm-add-btn:hover {
+            background: rgba(79,143,255,0.12);
+            border-color: rgba(79,143,255,0.5);
+        }
+
+        .tm-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-tertiary);
+            font-size: 14px;
+        }
+
+        .tm-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 10px;
+            transition: all 0.25s var(--smooth);
+        }
+
+        .tm-card:hover {
+            background: var(--glass-hover);
+            border-color: rgba(255,255,255,0.12);
+        }
+
+        .tm-card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .tm-card-date {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-blue);
+        }
+
+        .tm-card-route {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .tm-card-route span {
+            color: var(--text-tertiary);
+            margin: 0 6px;
+        }
+
+        .tm-card-notes {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-top: 6px;
+            font-style: italic;
+        }
+
+        .tm-card-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .tm-card-btn {
+            padding: 5px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tm-card-btn:hover {
+            background: var(--glass-hover);
+            color: var(--text-primary);
+        }
+
+        .tm-card-btn.hot { border-color: rgba(255,107,53,0.3); color: #ff6b35; }
+        .tm-card-btn.hot:hover { background: rgba(255,107,53,0.1); }
+        .tm-card-btn.danger { border-color: rgba(239,68,68,0.3); color: #ef4444; }
+        .tm-card-btn.danger:hover { background: rgba(239,68,68,0.1); }
+
+        /* Trip form modal overlay */
+        .tm-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: tmFadeIn 0.2s ease-out;
+        }
+
+        @keyframes tmFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .tm-modal {
+            background: #1a1a2e;
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 28px;
+            width: 100%;
+            max-width: 420px;
+            animation: tmSlideUp 0.25s var(--spring);
+        }
+
+        @keyframes tmSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .tm-modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .tm-field {
+            margin-bottom: 14px;
+        }
+
+        .tm-field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .tm-field input, .tm-field textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .tm-field input:focus, .tm-field textarea:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .tm-field textarea {
+            height: 60px;
+            resize: vertical;
+        }
+
+        .tm-modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .tm-modal-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 12px;
+            border: none;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tm-modal-btn.primary {
+            background: var(--accent-blue);
+            color: #fff;
+        }
+
+        .tm-modal-btn.primary:hover { filter: brightness(1.15); }
+        .tm-modal-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .tm-modal-btn.secondary {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+        }
+
+        .tm-modal-btn.secondary:hover { background: var(--glass-hover); }
+
+        .manage-trips-link {
+            display: block;
+            text-align: center;
+            font-size: 12px;
+            color: var(--accent-blue);
+            cursor: pointer;
+            margin-top: 8px;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .manage-trips-link:hover { opacity: 1; }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 600px) {
+            .action-cards { grid-template-columns: 1fr; }
+            .action-card:last-child:nth-child(odd) { max-width: none; }
+            .orb-hero { width: 100px; height: 100px; }
+            .welcome-title { font-size: 22px; }
+            .msg-bubble { max-width: 90%; }
+            .topbar-center { display: none; }
+            .tm-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+            .tm-card-actions { flex-wrap: wrap; }
+            .tm-modal { padding: 20px; margin: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-canvas"><div class="bg-orb-3"></div></div>
+
+    <div class="topbar">
+        <div class="wordmark" onclick="clearChat()">
+            <div class="wordmark-text shiny-text">Otto</div>
+            <div class="wordmark-sub">Comvoy Sales Intelligence</div>
+        </div>
+        <div class="topbar-center">
+            <div class="glass-dropdown" id="snapshotDropdown" style="display:none">
+                <div class="glass-dropdown-trigger" id="snapshotTrigger" onclick="toggleDropdown()">
+                    <span id="snapshotLabel">Loading...</span>
+                    <svg class="glass-dropdown-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                </div>
+                <div class="glass-dropdown-menu" id="snapshotMenu"></div>
+            </div>
+            <span class="snapshot-count" id="snapshotCount"></span>
+        </div>
+        <div class="usage-badge" id="usageBadge" title="Token usage this session"></div>
+        <button class="btn-trips" onclick="openTripManager()">Trips</button>
+        <button class="btn-ghost" onclick="clearChat()">New Chat</button>
+    </div>
+
+    <div class="main">
+        <div class="chat-scroll" id="chatScroll">
+            <div class="welcome" id="welcome">
+                <div class="orb-hero">
+                    <div class="orb-ring"></div>
+                    <div class="orb-ring"></div>
+                    <div class="orb-ring"></div>
+                    <svg class="otto-eye" viewBox="0 0 60 60">
+                        <defs>
+                            <radialGradient id="irisGrad" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#00d4ff"/>
+                                <stop offset="50%" stop-color="#4f8fff">
+                                    <animate attributeName="stop-color" values="#4f8fff;#00d4ff;#a855f7;#4f8fff" dur="6s" repeatCount="indefinite"/>
+                                </stop>
+                                <stop offset="100%" stop-color="#1a1a3e"/>
+                            </radialGradient>
+                            <radialGradient id="pupilGlow" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#fff" stop-opacity="0.9"/>
+                                <stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/>
+                            </radialGradient>
+                        </defs>
+                        <!-- Outer glow ring -->
+                        <circle cx="30" cy="30" r="29" fill="none" stroke="url(#irisGrad)" stroke-width="0.5" opacity="0.3">
+                            <animate attributeName="opacity" values="0.3;0.5;0.3" dur="3s" repeatCount="indefinite"/>
+                        </circle>
+                        <!-- Outer shell -->
+                        <circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="url(#irisGrad)" stroke-width="2" opacity="0.9"/>
+                        <!-- Ambient iris fill -->
+                        <circle cx="30" cy="30" r="27" fill="url(#irisGrad)" opacity="0.06"/>
+                        <!-- Iris ring outer -->
+                        <circle cx="30" cy="30" r="22" fill="url(#irisGrad)" opacity="0.18">
+                            <animateTransform attributeName="transform" type="rotate" from="0 30 30" to="360 30 30" dur="12s" repeatCount="indefinite"/>
+                        </circle>
+                        <!-- Iris ring inner -->
+                        <circle cx="30" cy="30" r="16" fill="none" stroke="url(#irisGrad)" stroke-width="2.5" opacity="0.45">
+                            <animateTransform attributeName="transform" type="rotate" from="0 30 30" to="-360 30 30" dur="8s" repeatCount="indefinite"/>
+                        </circle>
+                        <!-- Iris detail arcs -->
+                        <path d="M30 12 A18 18 0 0 1 48 30" fill="none" stroke="url(#irisGrad)" stroke-width="1.2" opacity="0.25">
+                            <animateTransform attributeName="transform" type="rotate" from="0 30 30" to="360 30 30" dur="10s" repeatCount="indefinite"/>
+                        </path>
+                        <path d="M30 48 A18 18 0 0 1 12 30" fill="none" stroke="url(#irisGrad)" stroke-width="1.2" opacity="0.25">
+                            <animateTransform attributeName="transform" type="rotate" from="0 30 30" to="-360 30 30" dur="14s" repeatCount="indefinite"/>
+                        </path>
+                        <!-- Extra detail arcs for richness -->
+                        <path d="M14 20 A16 16 0 0 1 30 10" fill="none" stroke="url(#irisGrad)" stroke-width="0.8" opacity="0.15">
+                            <animateTransform attributeName="transform" type="rotate" from="0 30 30" to="360 30 30" dur="16s" repeatCount="indefinite"/>
+                        </path>
+                        <!-- Iris glow -->
+                        <circle cx="30" cy="30" r="10" fill="url(#irisGrad)" opacity="0.6">
+                            <animate attributeName="r" values="10;12.5;10" dur="3s" repeatCount="indefinite"/>
+                            <animate attributeName="opacity" values="0.6;0.85;0.6" dur="3s" repeatCount="indefinite"/>
+                        </circle>
+                        <!-- Pupil -->
+                        <circle class="otto-pupil" cx="30" cy="30" r="6" fill="#060810"/>
+                        <!-- Pupil inner glow -->
+                        <circle class="pupil-glow" cx="30" cy="30" r="4" fill="url(#pupilGlow)" opacity="0.8">
+                            <animate attributeName="opacity" values="0.8;0.35;0.8" dur="2.5s" repeatCount="indefinite"/>
+                            <animate attributeName="r" values="4;5;4" dur="2.5s" repeatCount="indefinite"/>
+                        </circle>
+                        <!-- Specular highlights -->
+                        <circle class="specular-1" cx="23" cy="23" r="3" fill="white" opacity="0.25"/>
+                        <circle class="specular-2" cx="25" cy="25" r="1.5" fill="white" opacity="0.45"/>
+                        <circle cx="36" cy="36" r="1" fill="white" opacity="0.1"/>
+                    </svg>
+                </div>
+                <div class="welcome-title" id="welcomeTitle"></div>
+                <div class="welcome-sub welcome-sub-reveal">Territory intel, dealer briefings, whitespace — just ask.</div>
+                <div class="action-cards" id="actionCards">
+                    <div class="action-card" data-action="trip" onclick="handleActionCard(this)">
+                        <div class="action-card-icon"><svg viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg></div>
+                        <div class="action-card-title">Plan a Trip</div>
+                        <div class="action-card-desc">Build a multi-day dealer visit itinerary</div>
+                        <div class="action-card-form" onclick="event.stopPropagation()">
+                            <div class="action-form-row">
+                                <span class="action-form-label">Rep</span>
+                                <select class="action-form-select" id="tripRep"><option value="">Loading...</option></select>
+                            </div>
+                            <div class="action-form-row">
+                                <span class="action-form-label">States</span>
+                                <input class="action-form-input" id="tripStates" placeholder="GA, TN, NC" />
+                            </div>
+                            <div class="action-form-row">
+                                <span class="action-form-label">Days</span>
+                                <input class="action-form-input" id="tripDays" type="number" value="3" min="1" max="7" style="max-width:80px" />
+                                <button class="action-form-go" onclick="submitTrip()">Plan Trip</button>
+                            </div>
+                            <div class="manage-trips-link" onclick="openTripManager()">Manage Trips →</div>
+                        </div>
+                    </div>
+                    <div class="action-card" data-action="dealer" onclick="handleActionCard(this)">
+                        <div class="action-card-icon"><svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div>
+                        <div class="action-card-title">Research a Dealer</div>
+                        <div class="action-card-desc">Full briefing with talking points</div>
+                        <div class="action-card-form" onclick="event.stopPropagation()">
+                            <div class="action-form-row">
+                                <span class="action-form-label">Name</span>
+                                <input class="action-form-input" id="dealerName" placeholder="e.g. Century Trucks" />
+                                <button class="action-form-go" onclick="submitDealer()">Research</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="action-card" data-action="territory" onclick="handleActionCard(this)">
+                        <div class="action-card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></div>
+                        <div class="action-card-title">Review Territory</div>
+                        <div class="action-card-desc">State-level overview with top dealers</div>
+                        <div class="action-card-form" onclick="event.stopPropagation()">
+                            <div class="action-form-row">
+                                <span class="action-form-label">State</span>
+                                <select class="action-form-select" id="territoryState">
+                                    <option value="">Select a state...</option>
+                                    <option value="NC">North Carolina</option><option value="FL">Florida</option>
+                                    <option value="TX">Texas</option><option value="GA">Georgia</option>
+                                    <option value="TN">Tennessee</option><option value="AL">Alabama</option>
+                                    <option value="SC">South Carolina</option><option value="KY">Kentucky</option>
+                                    <option value="LA">Louisiana</option><option value="AR">Arkansas</option>
+                                    <option value="OK">Oklahoma</option><option value="MS">Mississippi</option>
+                                </select>
+                                <button class="action-form-go" onclick="submitTerritory()">Review</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="action-card" data-action="opportunities" onclick="handleActionCard(this)">
+                        <div class="action-card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+                        <div class="action-card-title">Find Opportunities</div>
+                        <div class="action-card-desc">Top hot leads across all territories</div>
+                    </div>
+                    <div class="action-card" data-action="report" onclick="handleActionCard(this)">
+                        <div class="action-card-icon"><svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div>
+                        <div class="action-card-title">Monthly Report</div>
+                        <div class="action-card-desc">Territory changes and top opportunities</div>
+                    </div>
+                </div>
+                <div class="api-notice" id="apiNotice">
+                    <div class="api-notice-icon"><svg viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg></div>
+                    <div class="api-notice-text"><strong>API key required.</strong> Add <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">ANTHROPIC_API_KEY</code> to your <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">.env</code> file and restart the server.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="fileToast" class="file-toast">
+        <div class="file-toast-icon">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div class="file-toast-info">
+            <div class="file-toast-name" id="fileName"></div>
+            <div class="file-toast-status" id="fileStatus">Uploading...</div>
+            <div class="file-toast-progress"><div class="file-toast-progress-bar" id="fileProgress"></div></div>
+        </div>
+    </div>
+
+    <div class="input-area">
+        <div class="input-bar" id="inputBar">
+            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" hidden>
+            <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="Upload report file">
+                <svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+            </button>
+            <textarea id="input" placeholder="Ask Otto anything..." rows="1"
+                onkeydown="onKey(event)" oninput="autoGrow(this)"
+                onfocus="document.getElementById('inputBar').classList.add('focused')"
+                onblur="document.getElementById('inputBar').classList.remove('focused')"></textarea>
+            <button class="send-btn" id="sendBtn" onclick="send()">
+                <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const _uid = (() => { let n = 0; return () => 'm' + (n++); })();
+        function ottoEyeSvg() {
+            const id = _uid();
+            return `<svg class="otto-eye" viewBox="0 0 60 60"><defs><radialGradient id="ig${id}" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"><animate attributeName="stop-color" values="#4f8fff;#00d4ff;#a855f7;#4f8fff" dur="6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#1a1a3e"/></radialGradient><radialGradient id="pg${id}" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient></defs><circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="url(#ig${id})" stroke-width="1.5" opacity="0.8"/><circle cx="30" cy="30" r="20" fill="url(#ig${id})" opacity="0.15"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="360 30 30" dur="12s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="14" fill="none" stroke="url(#ig${id})" stroke-width="2" opacity="0.4"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="-360 30 30" dur="8s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="8" fill="url(#ig${id})" opacity="0.6"><animate attributeName="r" values="8;9;8" dur="3s" repeatCount="indefinite"/></circle><circle class="otto-pupil" cx="30" cy="30" r="5" fill="#0a0e1a"/><circle cx="30" cy="30" r="3" fill="url(#pg${id})" opacity="0.8"><animate attributeName="opacity" values="0.8;0.4;0.8" dur="2.5s" repeatCount="indefinite"/></circle><circle cx="24" cy="25" r="2" fill="white" opacity="0.3"/></svg>`;
+        }
+
+        const $ = id => document.getElementById(id);
+        const scroll = $('chatScroll');
+        const input = $('input');
+        const sendBtn = $('sendBtn');
+        let busy = false;
+        let messagesDiv = null;
+        const sid = 'otto_' + Date.now();
+
+        function onKey(e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+        }
+
+        function autoGrow(el) {
+            el.style.height = '44px';
+            el.style.lineHeight = el.scrollHeight > 44 ? '22px' : '44px';
+            if (el.scrollHeight > 44) {
+                el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+                el.style.overflow = 'auto';
+            } else {
+                el.style.overflow = 'hidden';
+            }
+        }
+
+        function ask(text) { input.value = text; send(); }
+
+        function handleActionCard(card) {
+            const action = card.dataset.action;
+            // Direct-send cards (no form)
+            if (action === 'opportunities') { ask('Show me the top 15 hot leads across all territories'); return; }
+            if (action === 'report') { ask('Give me the latest monthly report with territory changes and top opportunities'); return; }
+            // Form cards — toggle expanded
+            if (card.classList.contains('expanded')) {
+                card.classList.remove('expanded');
+            } else {
+                document.querySelectorAll('.action-card.expanded').forEach(c => c.classList.remove('expanded'));
+                card.classList.add('expanded');
+                const firstInput = card.querySelector('.action-form-input, .action-form-select');
+                if (firstInput) setTimeout(() => firstInput.focus(), 100);
+            }
+        }
+
+        function submitTrip() {
+            const rep = document.getElementById('tripRep');
+            const repName = rep ? rep.options[rep.selectedIndex]?.text : '';
+            const states = (document.getElementById('tripStates')?.value || '').trim();
+            const days = document.getElementById('tripDays')?.value || '3';
+            if (!states) { document.getElementById('tripStates')?.focus(); return; }
+            let msg = `Suggest a ${days}-day trip`;
+            if (repName && repName !== 'Loading...' && repName !== 'Select a rep...') msg += ` for ${repName}`;
+            msg += ` covering ${states.toUpperCase()}`;
+            ask(msg);
+        }
+
+        function submitDealer() {
+            const name = (document.getElementById('dealerName')?.value || '').trim();
+            if (!name) { document.getElementById('dealerName')?.focus(); return; }
+            ask(`Search for ${name} and give me a full briefing with talking points`);
+        }
+
+        function submitTerritory() {
+            const sel = document.getElementById('territoryState');
+            const state = sel?.value;
+            if (!state) { sel?.focus(); return; }
+            const stateName = sel.options[sel.selectedIndex]?.text || state;
+            ask(`Give me the full territory overview for ${stateName}`);
+        }
+
+        let _repsLoaded = false;
+        async function loadReps() {
+            if (_repsLoaded) return;
+            try {
+                const res = await fetch('/api/travel/reps');
+                if (!res.ok) return;
+                const reps = await res.json();
+                const sel = document.getElementById('tripRep');
+                if (!sel) return;
+                sel.innerHTML = '<option value="">Select a rep...</option>' +
+                    reps.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+                _repsLoaded = true;
+            } catch(_) {}
+        }
+
+        function ensureMessages() {
+            if (!messagesDiv) {
+                const w = $('welcome');
+                if (w) w.remove();
+                document.body.classList.add('chatting');
+                messagesDiv = document.createElement('div');
+                messagesDiv.className = 'messages';
+                scroll.appendChild(messagesDiv);
+            }
+            return messagesDiv;
+        }
+
+        async function send() {
+            const text = input.value.trim();
+            if (!text || busy) return;
+
+            const msgs = ensureMessages();
+            const userEl = document.createElement('div');
+            userEl.className = 'msg user';
+            userEl.innerHTML = '<div class="msg-bubble">' + esc(text) + '</div>';
+            msgs.appendChild(userEl);
+
+            input.value = '';
+            input.style.height = '44px';
+            input.style.lineHeight = '44px';
+            input.style.overflow = 'hidden';
+            scrollDown();
+
+            busy = true;
+            sendBtn.disabled = true;
+
+            const think = document.createElement('div');
+            think.className = 'thinking';
+            think.innerHTML = '<div class="msg-orb">' + ottoEyeSvg() + '</div><div class="think-dots"><span></span><span></span><span></span></div>';
+            msgs.appendChild(think);
+            scrollDown();
+
+            try {
+                const res = await fetch('/api/chat?session_id=' + sid, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text }),
+                });
+                think.remove();
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({ detail: 'Unknown error' }));
+                    addBot('Something went wrong: ' + (err.detail || 'Unknown error'));
+                    return;
+                }
+                const data = await res.json();
+                if (data.error === 'no_api_key') {
+                    addBot('I need an API key to work. Add **ANTHROPIC_API_KEY** to your `.env` file and restart the server.');
+                    const notice = $('apiNotice');
+                    if (notice) notice.classList.add('show');
+                } else {
+                    addBot(data.response);
+                }
+                if (data.usage) updateUsage(data.usage);
+            } catch (e) {
+                think.remove();
+                addBot('Connection error. Is the server running?');
+            } finally {
+                busy = false;
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        }
+
+        /* --- Token usage tracking --- */
+        let sessionTokens = 0;
+        let sessionCost = 0;
+        function updateUsage(u) {
+            if (!u) return;
+            sessionTokens += (u.total_tokens || 0);
+            sessionCost += (u.estimated_cost_usd || 0);
+            const badge = $('usageBadge');
+            if (!badge) return;
+            const tk = sessionTokens > 1000 ? (sessionTokens / 1000).toFixed(1) + 'k' : sessionTokens;
+            const cost = sessionCost < 0.01 ? '<1¢' : '$' + sessionCost.toFixed(2);
+            badge.textContent = tk + ' tokens · ' + cost;
+            badge.title = `Session: ${sessionTokens.toLocaleString()} tokens, ~$${sessionCost.toFixed(4)}\nThis msg: ${(u.total_tokens||0).toLocaleString()} tokens, ${u.loop_iterations||1} API call(s), ${(u.elapsed_seconds||0)}s`;
+            if (sessionCost > 0.50) badge.classList.add('warn');
+        }
+
+        function addBot(text) {
+            const msgs = ensureMessages();
+            const el = document.createElement('div');
+            el.className = 'msg assistant';
+            el.innerHTML = '<div class="msg-orb">' + ottoEyeSvg() + '</div><div class="msg-bubble">' + fmt(text) + '</div>';
+            msgs.appendChild(el);
+            runCountUps(el);
+            scrollDown();
+        }
+
+        function scrollDown() {
+            requestAnimationFrame(() => { scroll.scrollTop = scroll.scrollHeight; });
+        }
+
+        function esc(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        function fmt(text) {
+            return text
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                // Trend indicators
+                .replace(/\[UP\]/g, '<span class="trend-up">&#9650;</span>')
+                .replace(/\[DOWN\]/g, '<span class="trend-down">&#9660;</span>')
+                .replace(/\[FLAT\]/g, '<span class="trend-flat">&#9654;</span>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                // CountUp: bold numbers like **588** or **1,368** get animated
+                .replace(/<strong>(\d[\d,]*)<\/strong>/g, (_, num) => `<strong class="countup" data-target="${num}">${num}</strong>`)
+                .replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12.5px">$1</code>')
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n- /g, '<br>&bull; ')
+                .replace(/\n(\d+)\. /g, '<br>$1. ')
+                .replace(/\n/g, '<br>')
+                .replace(/^/, '<p>')
+                .replace(/$/, '</p>');
+        }
+
+        // ===== COUNTUP ANIMATION (React Bits style) =====
+        function runCountUps(container) {
+            container.querySelectorAll('.countup').forEach(el => {
+                const raw = el.dataset.target;
+                const target = parseInt(raw.replace(/,/g, ''), 10);
+                if (isNaN(target) || target < 10) return; // skip tiny numbers
+                const hasComma = raw.includes(',');
+                const duration = Math.min(1200, Math.max(400, target * 0.5));
+                const start = performance.now();
+                const fmt = n => hasComma ? n.toLocaleString() : String(n);
+                el.textContent = '0';
+                function tick(now) {
+                    const t = Math.min((now - start) / duration, 1);
+                    const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
+                    el.textContent = fmt(Math.round(target * eased));
+                    if (t < 1) requestAnimationFrame(tick);
+                }
+                requestAnimationFrame(tick);
+            });
+        }
+
+        function buildWelcomeHTML() {
+            return `<div class="welcome" id="welcome">
+<div class="orb-hero"><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
+<svg class="otto-eye" viewBox="0 0 60 60"><defs><radialGradient id="irisGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"><animate attributeName="stop-color" values="#4f8fff;#00d4ff;#a855f7;#4f8fff" dur="6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#1a1a3e"/></radialGradient><radialGradient id="pupilGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient></defs><circle cx="30" cy="30" r="29" fill="none" stroke="url(#irisGrad)" stroke-width="0.5" opacity="0.3"><animate attributeName="opacity" values="0.3;0.5;0.3" dur="3s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="url(#irisGrad)" stroke-width="2" opacity="0.9"/><circle cx="30" cy="30" r="27" fill="url(#irisGrad)" opacity="0.06"/><circle cx="30" cy="30" r="22" fill="url(#irisGrad)" opacity="0.18"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="360 30 30" dur="12s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="16" fill="none" stroke="url(#irisGrad)" stroke-width="2.5" opacity="0.45"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="-360 30 30" dur="8s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="10" fill="url(#irisGrad)" opacity="0.6"><animate attributeName="r" values="10;12.5;10" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0.85;0.6" dur="3s" repeatCount="indefinite"/></circle><circle class="otto-pupil" cx="30" cy="30" r="6" fill="#060810"/><circle class="pupil-glow" cx="30" cy="30" r="4" fill="url(#pupilGlow)" opacity="0.8"><animate attributeName="opacity" values="0.8;0.35;0.8" dur="2.5s" repeatCount="indefinite"/><animate attributeName="r" values="4;5;4" dur="2.5s" repeatCount="indefinite"/></circle><circle class="specular-1" cx="23" cy="23" r="3" fill="white" opacity="0.25"/><circle class="specular-2" cx="25" cy="25" r="1.5" fill="white" opacity="0.45"/></svg></div>
+<div class="welcome-title" id="welcomeTitle"></div>
+<div class="welcome-sub welcome-sub-reveal">Territory intel, dealer briefings, whitespace — just ask.</div>
+<div class="action-cards" id="actionCards">
+<div class="action-card" data-action="trip" onclick="handleActionCard(this)"><div class="action-card-icon"><svg viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg></div><div class="action-card-title">Plan a Trip</div><div class="action-card-desc">Build a multi-day dealer visit itinerary</div><div class="action-card-form" onclick="event.stopPropagation()"><div class="action-form-row"><span class="action-form-label">Rep</span><select class="action-form-select" id="tripRep"><option value="">Loading...</option></select></div><div class="action-form-row"><span class="action-form-label">States</span><input class="action-form-input" id="tripStates" placeholder="GA, TN, NC" /></div><div class="action-form-row"><span class="action-form-label">Days</span><input class="action-form-input" id="tripDays" type="number" value="3" min="1" max="7" style="max-width:80px" /><button class="action-form-go" onclick="submitTrip()">Plan Trip</button></div><div class="manage-trips-link" onclick="openTripManager()">Manage Trips →</div></div></div>
+<div class="action-card" data-action="dealer" onclick="handleActionCard(this)"><div class="action-card-icon"><svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div><div class="action-card-title">Research a Dealer</div><div class="action-card-desc">Full briefing with talking points</div><div class="action-card-form" onclick="event.stopPropagation()"><div class="action-form-row"><span class="action-form-label">Name</span><input class="action-form-input" id="dealerName" placeholder="e.g. Century Trucks" /><button class="action-form-go" onclick="submitDealer()">Research</button></div></div></div>
+<div class="action-card" data-action="territory" onclick="handleActionCard(this)"><div class="action-card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></div><div class="action-card-title">Review Territory</div><div class="action-card-desc">State-level overview with top dealers</div><div class="action-card-form" onclick="event.stopPropagation()"><div class="action-form-row"><span class="action-form-label">State</span><select class="action-form-select" id="territoryState"><option value="">Select a state...</option><option value="NC">North Carolina</option><option value="FL">Florida</option><option value="TX">Texas</option><option value="GA">Georgia</option><option value="TN">Tennessee</option><option value="AL">Alabama</option><option value="SC">South Carolina</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option><option value="AR">Arkansas</option><option value="OK">Oklahoma</option><option value="MS">Mississippi</option></select><button class="action-form-go" onclick="submitTerritory()">Review</button></div></div></div>
+<div class="action-card" data-action="opportunities" onclick="handleActionCard(this)"><div class="action-card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div><div class="action-card-title">Find Opportunities</div><div class="action-card-desc">Top hot leads across all territories</div></div>
+<div class="action-card" data-action="report" onclick="handleActionCard(this)"><div class="action-card-icon"><svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div><div class="action-card-title">Monthly Report</div><div class="action-card-desc">Territory changes and top opportunities</div></div>
+</div>
+<div class="api-notice" id="apiNotice"><div class="api-notice-icon"><svg viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg></div><div class="api-notice-text"><strong>API key required.</strong> Add <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">ANTHROPIC_API_KEY</code> to your <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">.env</code> file and restart the server.</div></div>
+</div>`;
+        }
+
+        async function clearChat() {
+            try { await fetch('/api/chat/' + sid, { method: 'DELETE' }); } catch(_) {}
+            messagesDiv = null;
+            sessionTokens = 0; sessionCost = 0;
+            const ub = $('usageBadge'); if (ub) { ub.textContent = ''; ub.classList.remove('warn'); }
+            document.body.classList.remove('chatting');
+            document.body.classList.remove('trip-manager');
+            scroll.innerHTML = buildWelcomeHTML();
+            const wtEl = $('welcomeTitle');
+            if (wtEl) splitTextReveal(wtEl, 'What do you need to know?', 0.3);
+            initEyeTracking();
+            _repsLoaded = false;
+            loadReps();
+            checkApiStatus();
+        }
+
+        // ===== SPLIT TEXT BLUR REVEAL (React Bits style) =====
+        function splitTextReveal(el, text, baseDelay) {
+            el.innerHTML = '';
+            const words = text.split(' ');
+            let charIdx = 0;
+            words.forEach((word, wi) => {
+                const wordSpan = document.createElement('span');
+                wordSpan.style.display = 'inline-block';
+                wordSpan.style.whiteSpace = 'nowrap';
+                for (let i = 0; i < word.length; i++) {
+                    const ch = document.createElement('span');
+                    ch.className = 'split-text-char';
+                    ch.textContent = word[i];
+                    ch.style.animationDelay = (baseDelay + charIdx * 0.03) + 's';
+                    wordSpan.appendChild(ch);
+                    charIdx++;
+                }
+                el.appendChild(wordSpan);
+                if (wi < words.length - 1) {
+                    const space = document.createTextNode('\u00A0');
+                    el.appendChild(space);
+                    charIdx++;
+                }
+            });
+        }
+        const wtEl = $('welcomeTitle');
+        if (wtEl) splitTextReveal(wtEl, 'What do you need to know?', 0.3);
+
+        // ===== SPOTLIGHT GLOW ON CARDS (React Bits style) =====
+        document.addEventListener('mousemove', e => {
+            document.querySelectorAll('.action-card').forEach(card => {
+                const r = card.getBoundingClientRect();
+                const x = e.clientX - r.left;
+                const y = e.clientY - r.top;
+                const nx = (e.clientX - r.left) / r.width - 0.5;
+                const ny = (e.clientY - r.top) / r.height - 0.5;
+                const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+                if (inside) {
+                    card.style.setProperty('--spot-x', x + 'px');
+                    card.style.setProperty('--spot-y', y + 'px');
+                    if (!card.classList.contains('expanded')) {
+                        card.style.transform = 'translateY(-2px) perspective(600px) rotateX(' + (-ny * 8) + 'deg) rotateY(' + (nx * 8) + 'deg)';
+                    }
+                } else if (!card.classList.contains('expanded')) {
+                    card.style.transform = '';
+                }
+            });
+        });
+
+        // ===== CUSTOM GLASS DROPDOWN (React Bits style) =====
+        let _ddOpen = false;
+        function toggleDropdown() {
+            _ddOpen = !_ddOpen;
+            $('snapshotDropdown').classList.toggle('open', _ddOpen);
+        }
+        function selectSnapshot(id, label) {
+            $('snapshotLabel').textContent = label;
+            $('snapshotDropdown').querySelectorAll('.glass-dropdown-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.id === id);
+            });
+            _ddOpen = false;
+            $('snapshotDropdown').classList.remove('open');
+        }
+        document.addEventListener('click', e => {
+            if (_ddOpen && !$('snapshotDropdown').contains(e.target)) {
+                _ddOpen = false;
+                $('snapshotDropdown').classList.remove('open');
+            }
+        });
+
+        // File upload
+        const fileInput = $('fileInput');
+        const fileToast = $('fileToast');
+        const fileName = $('fileName');
+        const fileStatus = $('fileStatus');
+        const fileProgress = $('fileProgress');
+
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            fileName.textContent = file.name;
+            fileStatus.textContent = 'Uploading...';
+            fileStatus.className = 'file-toast-status';
+            fileProgress.style.width = '0%';
+            fileToast.classList.add('show');
+
+            // Animate progress bar
+            fileProgress.style.width = '60%';
+
+            const form = new FormData();
+            form.append('file', file);
+
+            try {
+                const res = await fetch('/api/ingest/upload', {
+                    method: 'POST',
+                    body: form,
+                });
+
+                fileProgress.style.width = '100%';
+
+                if (res.ok) {
+                    const data = await res.json();
+                    fileStatus.textContent = `Done — ${data.dealers_loaded || 0} dealers loaded`;
+                    fileStatus.className = 'file-toast-status success';
+                    addBot(`Report **${file.name}** uploaded successfully! ${data.dealers_loaded || 0} dealers loaded, ${data.dealers_geocoded || 0} geocoded. Ask me anything about the new data.`);
+                } else {
+                    const err = await res.json().catch(() => ({ detail: 'Upload failed' }));
+                    fileStatus.textContent = err.detail || 'Upload failed';
+                    fileStatus.className = 'file-toast-status error';
+                }
+            } catch (err) {
+                fileProgress.style.width = '100%';
+                fileStatus.textContent = 'Connection error';
+                fileStatus.className = 'file-toast-status error';
+            }
+
+            fileInput.value = '';
+            setTimeout(() => fileToast.classList.remove('show'), 4000);
+        });
+
+        // Load snapshots → glass dropdown + trend suggestions
+        let _snapshots = [];
+        async function loadSnapshots() {
+            try {
+                const res = await fetch('/api/dealers/snapshots');
+                if (!res.ok) return;
+                _snapshots = await res.json();
+                const dd = $('snapshotDropdown');
+                const menu = $('snapshotMenu');
+                const countEl = $('snapshotCount');
+
+                if (_snapshots.length > 0) {
+                    dd.style.display = '';
+                    const first = new Date(_snapshots[0].report_date + 'T00:00:00');
+                    $('snapshotLabel').textContent = first.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+
+                    menu.innerHTML = _snapshots.map((s, i) => {
+                        const d = new Date(s.report_date + 'T00:00:00');
+                        const label = d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                        const dealers = s.total_dealers ? s.total_dealers + ' dealers' : '';
+                        return `<div class="glass-dropdown-item${i === 0 ? ' active' : ''}" data-id="${s.id}" onclick="selectSnapshot('${s.id}','${label}')">
+                            <span>${label}</span>
+                            <span class="glass-dropdown-item-info">${dealers}</span>
+                        </div>`;
+                    }).join('');
+                    countEl.textContent = _snapshots.length === 1
+                        ? '1 report'
+                        : _snapshots.length + ' reports';
+                }
+
+            } catch (_) {}
+        }
+        loadSnapshots();
+        loadReps();
+
+        // ===== API STATUS CHECK =====
+        async function checkApiStatus() {
+            try {
+                const res = await fetch('/api/status');
+                if (!res.ok) return;
+                const data = await res.json();
+                if (!data.api_key_configured) {
+                    const notice = document.getElementById('apiNotice');
+                    if (notice) notice.classList.add('show');
+                    input.placeholder = 'API key required — see notice below';
+                }
+            } catch(_) {}
+        }
+        checkApiStatus();
+
+        // ===== TRIP MANAGER =====
+        let _tmReps = [];
+        let _tmTrips = [];
+        let _tmSelectedRep = '';
+        let _tmEditId = null;
+
+        async function openTripManager() {
+            // Switch to trip manager view state
+            document.body.classList.remove('chatting');
+            document.body.classList.add('trip-manager');
+            const w = document.getElementById('welcome');
+            if (w) w.remove();
+            messagesDiv = null;
+            scroll.innerHTML = buildTripManagerHTML();
+            await loadTmReps();
+        }
+
+        function buildTripManagerHTML() {
+            return `<div class="tm-container" id="tmContainer">
+                <div class="tm-header">
+                    <div>
+                        <div class="tm-title">Trip Manager</div>
+                        <div class="tm-subtitle">Plan routes, get auto-briefings via email</div>
+                    </div>
+                    <select class="tm-rep-select" id="tmRepSelect" onchange="onTmRepChange()">
+                        <option value="">Select a rep...</option>
+                    </select>
+                </div>
+                <div id="tmContent">
+                    <div class="tm-empty">Select a rep to view their trips</div>
+                </div>
+            </div>`;
+        }
+
+        async function loadTmReps() {
+            try {
+                const res = await fetch('/api/travel/reps');
+                if (!res.ok) return;
+                _tmReps = await res.json();
+                const sel = document.getElementById('tmRepSelect');
+                if (!sel) return;
+                sel.innerHTML = '<option value="">Select a rep...</option>' +
+                    _tmReps.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+            } catch(e) { console.error('Failed to load reps:', e); }
+        }
+
+        async function onTmRepChange() {
+            const sel = document.getElementById('tmRepSelect');
+            _tmSelectedRep = sel ? sel.value : '';
+            if (_tmSelectedRep) {
+                await loadTmTrips();
+            } else {
+                const ct = document.getElementById('tmContent');
+                if (ct) ct.innerHTML = '<div class="tm-empty">Select a rep to view their trips</div>';
+            }
+        }
+
+        async function loadTmTrips() {
+            if (!_tmSelectedRep) return;
+            const ct = document.getElementById('tmContent');
+            if (!ct) return;
+            ct.innerHTML = '<div class="tm-empty">Loading trips...</div>';
+
+            try {
+                const res = await fetch(`/api/travel/plans/${_tmSelectedRep}`);
+                if (!res.ok) throw new Error('Failed to load trips');
+                _tmTrips = await res.json();
+                renderTmTrips();
+            } catch(e) {
+                ct.innerHTML = '<div class="tm-empty">Failed to load trips</div>';
+                console.error(e);
+            }
+        }
+
+        function renderTmTrips() {
+            const ct = document.getElementById('tmContent');
+            if (!ct) return;
+
+            const rep = _tmReps.find(r => r.id === _tmSelectedRep);
+            const repName = rep ? rep.name : '';
+
+            let html = `<button class="tm-add-btn" onclick="showTripForm()">+ Add Trip Day</button>`;
+
+            if (_tmTrips.length === 0) {
+                html += '<div class="tm-empty">No trips scheduled. Add one above!</div>';
+            } else {
+                _tmTrips.forEach(t => {
+                    const d = new Date(t.travel_date + 'T12:00:00');
+                    const dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+                    html += `<div class="tm-card">
+                        <div class="tm-card-top">
+                            <div>
+                                <div class="tm-card-date">${esc(dateStr)}</div>
+                                <div class="tm-card-route">${esc(t.start_location)} <span>→</span> ${esc(t.end_location)}</div>
+                                ${t.notes ? `<div class="tm-card-notes">${esc(t.notes)}</div>` : ''}
+                            </div>
+                            <div class="tm-card-actions">
+                                <button class="tm-card-btn hot" onclick="tmDealers('${t.id}','${esc(repName)}','${t.travel_date}')">Dealers</button>
+                                <button class="tm-card-btn" onclick="tmBrief('${t.id}','${esc(repName)}','${t.travel_date}')">Brief</button>
+                                <button class="tm-card-btn" onclick="showTripForm('${t.id}')">Edit</button>
+                                <button class="tm-card-btn danger" onclick="deleteTripPlan('${t.id}')">Delete</button>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+            }
+
+            ct.innerHTML = html;
+        }
+
+        function showTripForm(editId) {
+            _tmEditId = editId || null;
+            const existing = _tmEditId ? _tmTrips.find(t => t.id === _tmEditId) : null;
+
+            const overlay = document.createElement('div');
+            overlay.className = 'tm-overlay';
+            overlay.id = 'tmOverlay';
+            overlay.onclick = (e) => { if (e.target === overlay) closeTripForm(); };
+
+            overlay.innerHTML = `<div class="tm-modal">
+                <div class="tm-modal-title">${existing ? 'Edit Trip Day' : 'Add Trip Day'}</div>
+                <div class="tm-field">
+                    <label>Travel Date</label>
+                    <input type="date" id="tmDate" value="${existing ? existing.travel_date : ''}">
+                </div>
+                <div class="tm-field">
+                    <label>Start Location</label>
+                    <input type="text" id="tmStart" placeholder="e.g. Smyrna, GA or Hampton Inn, Macon GA" value="${existing ? esc(existing.start_location) : ''}">
+                </div>
+                <div class="tm-field">
+                    <label>End Location</label>
+                    <input type="text" id="tmEnd" placeholder="e.g. Atlanta, GA" value="${existing ? esc(existing.end_location) : ''}">
+                </div>
+                <div class="tm-field">
+                    <label>Notes (optional)</label>
+                    <textarea id="tmNotes" placeholder="Hotel info, dealer meeting times...">${existing ? esc(existing.notes || '') : ''}</textarea>
+                </div>
+                <div class="tm-modal-actions">
+                    <button class="tm-modal-btn secondary" onclick="closeTripForm()">Cancel</button>
+                    <button class="tm-modal-btn primary" id="tmSaveBtn" onclick="saveTripPlan()">
+                        ${existing ? 'Update' : 'Save & Send Briefing'}
+                    </button>
+                </div>
+            </div>`;
+
+            document.body.appendChild(overlay);
+            setTimeout(() => document.getElementById('tmDate')?.focus(), 100);
+        }
+
+        function closeTripForm() {
+            const overlay = document.getElementById('tmOverlay');
+            if (overlay) overlay.remove();
+            _tmEditId = null;
+        }
+
+        async function saveTripPlan() {
+            const dateVal = document.getElementById('tmDate')?.value;
+            const startVal = document.getElementById('tmStart')?.value.trim();
+            const endVal = document.getElementById('tmEnd')?.value.trim();
+            const notesVal = document.getElementById('tmNotes')?.value.trim();
+
+            if (!dateVal) { document.getElementById('tmDate')?.focus(); return; }
+            if (!startVal) { document.getElementById('tmStart')?.focus(); return; }
+            if (!endVal) { document.getElementById('tmEnd')?.focus(); return; }
+
+            const btn = document.getElementById('tmSaveBtn');
+            if (btn) { btn.disabled = true; btn.textContent = 'Geocoding...'; }
+
+            try {
+                let res;
+                if (_tmEditId) {
+                    // Update
+                    const existing = _tmTrips.find(t => t.id === _tmEditId);
+                    const body = {};
+                    if (dateVal !== existing?.travel_date) body.travel_date = dateVal;
+                    if (startVal !== existing?.start_location) body.start_location = startVal;
+                    if (endVal !== existing?.end_location) body.end_location = endVal;
+                    if (notesVal !== (existing?.notes || '')) body.notes = notesVal;
+
+                    res = await fetch(`/api/travel/plans/${_tmEditId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+                } else {
+                    // Create
+                    res = await fetch('/api/travel/plans', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            rep_id: _tmSelectedRep,
+                            travel_date: dateVal,
+                            start_location: startVal,
+                            end_location: endVal,
+                            notes: notesVal || null
+                        })
+                    });
+                }
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    const detail = err.detail || 'Save failed';
+                    alert(detail);
+                    if (btn) { btn.disabled = false; btn.textContent = _tmEditId ? 'Update' : 'Save & Send Briefing'; }
+                    return;
+                }
+
+                closeTripForm();
+                await loadTmTrips();
+            } catch(e) {
+                alert('Error saving trip: ' + e.message);
+                if (btn) { btn.disabled = false; btn.textContent = _tmEditId ? 'Update' : 'Save & Send Briefing'; }
+            }
+        }
+
+        async function deleteTripPlan(planId) {
+            if (!confirm('Delete this trip day?')) return;
+            try {
+                const res = await fetch(`/api/travel/plans/${planId}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('Delete failed');
+                await loadTmTrips();
+            } catch(e) {
+                alert('Error deleting trip: ' + e.message);
+            }
+        }
+
+        function tmDealers(planId, repName, date) {
+            // Switch to chat mode and ask Otto
+            document.body.classList.remove('trip-manager');
+            document.body.classList.add('chatting');
+            scroll.innerHTML = '';
+            messagesDiv = null;
+            const d = new Date(date + 'T12:00:00');
+            const dateStr = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+            ask(`Show dealers along ${repName}'s route on ${date}`);
+        }
+
+        function tmBrief(planId, repName, date) {
+            // Switch to chat mode and ask Otto for full briefing
+            document.body.classList.remove('trip-manager');
+            document.body.classList.add('chatting');
+            scroll.innerHTML = '';
+            messagesDiv = null;
+            ask(`Full briefing for ${repName}'s ${date} trip`);
+        }
+
+        // ===== EYE TRACKING + MAGNETIC HOVER =====
+        function initEyeTracking() {
+            const orb = document.querySelector('.orb-hero');
+            if (!orb) return;
+            const eye = orb.querySelector('.otto-eye');
+            if (!eye) return;
+
+            let _magX = 0, _magY = 0, _curMagX = 0, _curMagY = 0;
+
+            document.addEventListener('mousemove', e => {
+                const rect = orb.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const dx = e.clientX - cx;
+                const dy = e.clientY - cy;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const maxPupilShift = 4; // SVG units the pupil can move
+                const angle = Math.atan2(dy, dx);
+                const pupilR = Math.min(dist / 8, maxPupilShift);
+                const px = 30 + Math.cos(angle) * pupilR;
+                const py = 30 + Math.sin(angle) * pupilR;
+
+                // Move pupil + glow + specular highlights
+                const pupil = eye.querySelector('.otto-pupil');
+                const glow = eye.querySelector('.pupil-glow');
+                const spec1 = eye.querySelector('.specular-1');
+                const spec2 = eye.querySelector('.specular-2');
+                if (pupil) { pupil.setAttribute('cx', px); pupil.setAttribute('cy', py); }
+                if (glow) { glow.setAttribute('cx', px); glow.setAttribute('cy', py); }
+                if (spec1) { spec1.setAttribute('cx', px - 5); spec1.setAttribute('cy', py - 5); }
+                if (spec2) { spec2.setAttribute('cx', px - 3.5); spec2.setAttribute('cy', py - 3.5); }
+
+                // Magnetic pull — stronger when closer, max ~12px shift
+                const magnetRange = 350;
+                if (dist < magnetRange) {
+                    const strength = (1 - dist / magnetRange) * 12;
+                    _magX = Math.cos(angle) * strength;
+                    _magY = Math.sin(angle) * strength;
+                } else {
+                    _magX = 0;
+                    _magY = 0;
+                }
+            });
+
+            // Smooth magnetic animation loop
+            function magnetLoop() {
+                _curMagX += (_magX - _curMagX) * 0.08;
+                _curMagY += (_magY - _curMagY) * 0.08;
+                if (Math.abs(_curMagX) > 0.1 || Math.abs(_curMagY) > 0.1) {
+                    orb.style.translate = `${_curMagX}px ${_curMagY}px`;
+                } else {
+                    orb.style.translate = '';
+                }
+                requestAnimationFrame(magnetLoop);
+            }
+            magnetLoop();
+        }
+        initEyeTracking();
+
+        input.focus();
+    </script>
+</body>
+</html>

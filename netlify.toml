@@ -1,0 +1,20 @@
+[build]
+  publish = "static"
+
+# Proxy API calls to Render backend
+[[redirects]]
+  from = "/api/*"
+  to = "https://BACKEND_URL_PLACEHOLDER/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/health"
+  to = "https://BACKEND_URL_PLACEHOLDER/health"
+  status = 200
+
+# SPA fallback
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

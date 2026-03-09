@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+venv/
+data/reports/*.xlsx
+node_modules/
+.netlify/
