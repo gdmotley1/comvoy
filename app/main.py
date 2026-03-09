@@ -41,13 +41,14 @@ app.include_router(scoring_router)
 app.include_router(reports_router)
 app.include_router(travel_router)
 
-# Static files (web chat UI)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Static files (web chat UI) — skip in serverless environments
+import os
+if os.path.isdir("static"):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
 
-
-@app.get("/")
-async def root():
-    return FileResponse("static/index.html")
+    @app.get("/")
+    async def root():
+        return FileResponse("static/index.html")
 
 
 @app.get("/health")

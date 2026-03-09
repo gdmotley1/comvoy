@@ -7,3 +7,5 @@ venv/
 data/reports/*.xlsx
 node_modules/
 .netlify/
+
+.vercel
