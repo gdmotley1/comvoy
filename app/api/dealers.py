@@ -207,6 +207,52 @@ def get_dealer_briefing(dealer_id: str):
     )
 
 
+@router.get("/map")
+def get_map_data():
+    """All dealers with lat/lng + lead scores for map display."""
+    db = get_service_client()
+    snap_id = _latest_snapshot_id(db)
+
+    result = db.table("dealer_snapshots").select(
+        "dealer_id, total_vehicles, smyrna_units, smyrna_percentage, top_brand, rank, "
+        "dealers!inner(id, name, city, state, latitude, longitude)"
+    ).eq("snapshot_id", snap_id).execute()
+
+    dealer_ids = [r["dealers"]["id"] for r in result.data if r["dealers"].get("latitude")]
+
+    score_map = {}
+    if dealer_ids:
+        scores = db.table("lead_scores").select(
+            "dealer_id, score, tier, opportunity_type"
+        ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).execute()
+        score_map = {r["dealer_id"]: r for r in scores.data}
+
+    markers = []
+    for row in result.data:
+        d = row["dealers"]
+        if not d.get("latitude") or not d.get("longitude"):
+            continue
+        sc = score_map.get(d["id"], {})
+        markers.append({
+            "id": d["id"],
+            "name": d["name"],
+            "city": d["city"],
+            "state": d["state"],
+            "lat": d["latitude"],
+            "lng": d["longitude"],
+            "vehicles": row["total_vehicles"],
+            "smyrna": row["smyrna_units"] or 0,
+            "smyrna_pct": float(row["smyrna_percentage"] or 0),
+            "top_brand": row["top_brand"],
+            "rank": row["rank"],
+            "score": sc.get("score"),
+            "tier": sc.get("tier"),
+            "opportunity": sc.get("opportunity_type"),
+        })
+
+    return {"dealers": markers, "total": len(markers)}
+
+
 @router.get("/territory/{state}")
 def get_territory_summary(state: str):
     """Get a state-level territory summary."""

@@ -6,6 +6,9 @@
     <title>Otto — Comvoy Sales Intelligence</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <style>
         :root {
             --bg-deep: #06080f;
@@ -1073,6 +1076,155 @@
 
         .action-card:hover::after { opacity: 1; }
 
+        /* ========== DEALER MAP VIEW ========== */
+        .btn-map {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s var(--smooth);
+            opacity: 0;
+            transform: translateY(-6px);
+            pointer-events: none;
+        }
+        .btn-map:hover {
+            background: var(--glass-hover);
+            color: var(--text-primary);
+            border-color: rgba(255,255,255,0.15);
+        }
+        body.chatting .topbar .btn-map,
+        body.trip-manager .topbar .btn-map,
+        body.map-view .topbar .btn-map {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        body.map-view .topbar-center,
+        body.map-view .topbar .btn-ghost,
+        body.map-view .usage-badge,
+        body.map-view .topbar .btn-trips,
+        body.map-view .topbar .btn-map {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        body.map-view .chat-scroll { display: none; }
+        body.map-view .chat-input-wrap { display: none; }
+
+        #dealerMap {
+            position: fixed;
+            top: 68px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 5;
+            display: none;
+        }
+        body.map-view #dealerMap { display: block; }
+
+        /* Dark map tiles */
+        .leaflet-container { background: #0a0e1a; }
+        .leaflet-control-zoom a {
+            background: rgba(15,18,30,0.9) !important;
+            color: var(--text-primary) !important;
+            border-color: var(--glass-border) !important;
+        }
+        .leaflet-control-zoom a:hover {
+            background: rgba(30,35,55,0.95) !important;
+        }
+        .leaflet-control-attribution {
+            background: rgba(6,8,15,0.7) !important;
+            color: var(--text-tertiary) !important;
+            font-size: 10px !important;
+        }
+        .leaflet-control-attribution a { color: var(--text-secondary) !important; }
+
+        /* Custom popups */
+        .leaflet-popup-content-wrapper {
+            background: rgba(15,18,30,0.95) !important;
+            border: 1px solid var(--glass-border) !important;
+            border-radius: 12px !important;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+        }
+        .leaflet-popup-tip { background: rgba(15,18,30,0.95) !important; }
+        .leaflet-popup-content { color: var(--text-primary) !important; font-family: 'Inter', sans-serif; margin: 12px 16px !important; }
+
+        .map-popup-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+        .map-popup-loc { color: var(--text-secondary); font-size: 12px; margin-bottom: 8px; }
+        .map-popup-stats { display: flex; gap: 16px; font-size: 12px; margin-bottom: 6px; }
+        .map-popup-stat { display: flex; flex-direction: column; gap: 2px; }
+        .map-popup-stat-label { color: var(--text-tertiary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .map-popup-stat-value { font-weight: 600; }
+        .map-popup-tier {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+        .map-popup-tier.hot { background: rgba(255,107,53,0.2); color: #ff6b35; }
+        .map-popup-tier.warm { background: rgba(34,197,94,0.2); color: #22c55e; }
+        .map-popup-tier.cold { background: rgba(71,85,105,0.2); color: #94a3b8; }
+
+        /* Map legend */
+        .map-legend {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            z-index: 10;
+            background: rgba(15,18,30,0.9);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 14px 18px;
+            backdrop-filter: blur(20px);
+            display: none;
+        }
+        body.map-view .map-legend { display: block; }
+        .map-legend-title { font-size: 11px; font-weight: 600; margin-bottom: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .map-legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; color: var(--text-secondary); }
+        .map-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+        /* Map stats bar */
+        .map-stats {
+            position: fixed;
+            top: 72px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            background: rgba(15,18,30,0.9);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 8px 20px;
+            backdrop-filter: blur(20px);
+            display: none;
+            gap: 20px;
+            font-size: 12px;
+        }
+        body.map-view .map-stats { display: flex; }
+        .map-stat { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); }
+        .map-stat-value { font-weight: 600; color: var(--text-primary); }
+
+        /* Cluster styling override for dark theme */
+        .marker-cluster-small { background-color: rgba(79,143,255,0.3) !important; }
+        .marker-cluster-small div { background-color: rgba(79,143,255,0.6) !important; color: #fff !important; }
+        .marker-cluster-medium { background-color: rgba(168,85,247,0.3) !important; }
+        .marker-cluster-medium div { background-color: rgba(168,85,247,0.6) !important; color: #fff !important; }
+        .marker-cluster-large { background-color: rgba(236,72,153,0.3) !important; }
+        .marker-cluster-large div { background-color: rgba(236,72,153,0.6) !important; color: #fff !important; }
+        .marker-cluster div { font-family: 'Inter', sans-serif !important; font-weight: 600 !important; }
+
         /* ========== TRIP MANAGER VIEW ========== */
         body.trip-manager .topbar-center,
         body.trip-manager .topbar .btn-ghost,
@@ -1407,9 +1559,20 @@
             <span class="snapshot-count" id="snapshotCount"></span>
         </div>
         <div class="usage-badge" id="usageBadge" title="Token usage this session"></div>
+        <button class="btn-map" onclick="openDealerMap()">Map</button>
         <button class="btn-trips" onclick="openTripManager()">Trips</button>
         <button class="btn-ghost" onclick="clearChat()">New Chat</button>
     </div>
+
+    <div id="dealerMap"></div>
+    <div class="map-legend" id="mapLegend">
+        <div class="map-legend-title">Lead Tier</div>
+        <div class="map-legend-item"><div class="map-legend-dot" style="background:#ff6b35"></div> Hot (70-100)</div>
+        <div class="map-legend-item"><div class="map-legend-dot" style="background:#22c55e"></div> Warm (40-69)</div>
+        <div class="map-legend-item"><div class="map-legend-dot" style="background:#475569"></div> Cold (0-39)</div>
+        <div class="map-legend-item"><div class="map-legend-dot" style="background:#4f8fff"></div> Not scored</div>
+    </div>
+    <div class="map-stats" id="mapStats"></div>
 
     <div class="main">
         <div class="chat-scroll" id="chatScroll">
@@ -1835,7 +1998,7 @@
             sessionTokens = 0; sessionCost = 0;
             const ub = $('usageBadge'); if (ub) { ub.textContent = ''; ub.classList.remove('warn'); }
             document.body.classList.remove('chatting');
-            document.body.classList.remove('trip-manager');
+            document.body.classList.remove('trip-manager', 'map-view');
             scroll.innerHTML = buildWelcomeHTML();
             const wtEl = $('welcomeTitle');
             if (wtEl) splitTextReveal(wtEl, 'What do you need to know?', 0.3);
@@ -2024,7 +2187,7 @@
 
         async function openTripManager() {
             // Switch to trip manager view state
-            document.body.classList.remove('chatting');
+            document.body.classList.remove('chatting', 'map-view');
             document.body.classList.add('trip-manager');
             const w = document.getElementById('welcome');
             if (w) w.remove();
@@ -2245,7 +2408,7 @@
 
         function tmDealers(planId, repName, date) {
             // Switch to chat mode and ask Otto
-            document.body.classList.remove('trip-manager');
+            document.body.classList.remove('trip-manager', 'map-view');
             document.body.classList.add('chatting');
             scroll.innerHTML = '';
             messagesDiv = null;
@@ -2256,11 +2419,150 @@
 
         function tmBrief(planId, repName, date) {
             // Switch to chat mode and ask Otto for full briefing
-            document.body.classList.remove('trip-manager');
+            document.body.classList.remove('trip-manager', 'map-view');
             document.body.classList.add('chatting');
             scroll.innerHTML = '';
             messagesDiv = null;
             ask(`Full briefing for ${repName}'s ${date} trip`);
+        }
+
+        // ===== DEALER MAP =====
+        let _map = null;
+        let _mapLoaded = false;
+
+        async function openDealerMap() {
+            document.body.classList.remove('chatting', 'trip-manager');
+            document.body.classList.add('map-view');
+
+            if (!_mapLoaded) {
+                // Load Leaflet JS dynamically
+                await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+                await loadScript('https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js');
+
+                _map = L.map('dealerMap', {
+                    zoomControl: true,
+                    attributionControl: true,
+                }).setView([33.5, -86.8], 6); // Center on SE US
+
+                // Dark map tiles (CartoDB Dark Matter)
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+                    subdomains: 'abcd',
+                    maxZoom: 19,
+                }).addTo(_map);
+
+                // Load dealer data
+                try {
+                    const res = await fetch('/api/dealers/map');
+                    if (!res.ok) throw new Error('Failed to load map data');
+                    const data = await res.json();
+                    addDealerMarkers(data.dealers);
+                    updateMapStats(data.dealers);
+                } catch(e) {
+                    console.error('Map data error:', e);
+                }
+
+                _mapLoaded = true;
+            } else {
+                _map.invalidateSize();
+            }
+        }
+
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+                const s = document.createElement('script');
+                s.src = src;
+                s.onload = resolve;
+                s.onerror = reject;
+                document.head.appendChild(s);
+            });
+        }
+
+        function tierColor(tier) {
+            if (tier === 'hot') return '#ff6b35';
+            if (tier === 'warm') return '#22c55e';
+            if (tier === 'cold') return '#475569';
+            return '#4f8fff'; // not scored
+        }
+
+        function createCircleIcon(color) {
+            return L.divIcon({
+                html: `<div style="width:10px;height:10px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.3);box-shadow:0 0 8px ${color}80;"></div>`,
+                className: '',
+                iconSize: [14, 14],
+                iconAnchor: [7, 7],
+            });
+        }
+
+        function addDealerMarkers(dealers) {
+            const clusters = L.markerClusterGroup({
+                maxClusterRadius: 40,
+                spiderfyOnMaxZoom: true,
+                showCoverageOnHover: false,
+                iconCreateFunction: function(cluster) {
+                    const count = cluster.getChildCount();
+                    let size = 'small';
+                    if (count > 50) size = 'large';
+                    else if (count > 20) size = 'medium';
+                    return L.divIcon({
+                        html: '<div>' + count + '</div>',
+                        className: 'marker-cluster marker-cluster-' + size,
+                        iconSize: L.point(40, 40),
+                    });
+                },
+            });
+
+            dealers.forEach(d => {
+                if (!d.lat || !d.lng) return;
+                const color = tierColor(d.tier);
+                const marker = L.marker([d.lat, d.lng], { icon: createCircleIcon(color) });
+
+                const tierLabel = d.tier ? d.tier.charAt(0).toUpperCase() + d.tier.slice(1) : 'Unscored';
+                const tierClass = d.tier || 'cold';
+                const smyrnaPct = d.smyrna_pct ? d.smyrna_pct.toFixed(1) + '%' : '0%';
+
+                marker.bindPopup(`
+                    <div class="map-popup-name">${d.name}</div>
+                    <div class="map-popup-loc">${d.city}, ${d.state}</div>
+                    <div class="map-popup-stats">
+                        <div class="map-popup-stat">
+                            <span class="map-popup-stat-label">Vehicles</span>
+                            <span class="map-popup-stat-value">${d.vehicles || 0}</span>
+                        </div>
+                        <div class="map-popup-stat">
+                            <span class="map-popup-stat-label">Smyrna</span>
+                            <span class="map-popup-stat-value">${d.smyrna || 0} (${smyrnaPct})</span>
+                        </div>
+                        <div class="map-popup-stat">
+                            <span class="map-popup-stat-label">Score</span>
+                            <span class="map-popup-stat-value">${d.score ?? '—'}</span>
+                        </div>
+                    </div>
+                    ${d.top_brand ? `<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;">Top: ${d.top_brand}${d.opportunity ? ' · ' + d.opportunity : ''}</div>` : ''}
+                    <span class="map-popup-tier ${tierClass}">${tierLabel}</span>
+                `, { maxWidth: 280 });
+
+                clusters.addLayer(marker);
+            });
+
+            _map.addLayer(clusters);
+        }
+
+        function updateMapStats(dealers) {
+            const total = dealers.length;
+            const totalVehicles = dealers.reduce((s, d) => s + (d.vehicles || 0), 0);
+            const hot = dealers.filter(d => d.tier === 'hot').length;
+            const withSmyrna = dealers.filter(d => d.smyrna > 0).length;
+            const states = new Set(dealers.map(d => d.state)).size;
+
+            document.getElementById('mapStats').innerHTML = `
+                <div class="map-stat"><span class="map-stat-value">${total}</span> dealers</div>
+                <div class="map-stat"><span class="map-stat-value">${totalVehicles.toLocaleString()}</span> vehicles</div>
+                <div class="map-stat"><span class="map-stat-value">${states}</span> states</div>
+                <div class="map-stat"><span class="map-stat-value">${hot}</span> hot leads</div>
+                <div class="map-stat"><span class="map-stat-value">${withSmyrna}</span> Smyrna dealers</div>
+            `;
         }
 
         // ===== EYE TRACKING + MAGNETIC HOVER =====

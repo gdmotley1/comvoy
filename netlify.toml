@@ -4,13 +4,13 @@
 # Proxy API calls to Vercel backend
 [[redirects]]
   from = "/api/*"
-  to = "https://comvoy.vercel.app/api/:splat"
+  to = "https://comvoy-api.vercel.app/api/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/health"
-  to = "https://comvoy.vercel.app/health"
+  to = "https://comvoy-api.vercel.app/health"
   status = 200
 
 # SPA fallback
