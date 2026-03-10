@@ -1740,6 +1740,7 @@
     </div>
 
     <script>
+        const API_BASE = location.hostname === 'localhost' ? '' : 'https://comvoy-api.vercel.app';
         const _uid = (() => { let n = 0; return () => 'm' + (n++); })();
         function ottoEyeSvg() {
             const id = _uid();
@@ -1817,7 +1818,7 @@
         async function loadReps() {
             if (_repsLoaded) return;
             try {
-                const res = await fetch('/api/travel/reps');
+                const res = await fetch(API_BASE + '/api/travel/reps');
                 if (!res.ok) return;
                 const reps = await res.json();
                 const sel = document.getElementById('tripRep');
@@ -1866,7 +1867,7 @@
             scrollDown();
 
             try {
-                const res = await fetch('/api/chat?session_id=' + sid, {
+                const res = await fetch(API_BASE + '/api/chat?session_id=' + sid, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message: text }),
@@ -1990,7 +1991,7 @@
         }
 
         async function clearChat() {
-            try { await fetch('/api/chat/' + sid, { method: 'DELETE' }); } catch(_) {}
+            try { await fetch(API_BASE + '/api/chat/' + sid, { method: 'DELETE' }); } catch(_) {}
             messagesDiv = null;
             sessionTokens = 0; sessionCost = 0;
             const ub = $('usageBadge'); if (ub) { ub.textContent = ''; ub.classList.remove('warn'); }
@@ -2099,7 +2100,7 @@
             form.append('file', file);
 
             try {
-                const res = await fetch('/api/ingest/upload', {
+                const res = await fetch(API_BASE + '/api/ingest/upload', {
                     method: 'POST',
                     body: form,
                 });
@@ -2130,7 +2131,7 @@
         let _snapshots = [];
         async function loadSnapshots() {
             try {
-                const res = await fetch('/api/dealers/snapshots');
+                const res = await fetch(API_BASE + '/api/dealers/snapshots');
                 if (!res.ok) return;
                 _snapshots = await res.json();
                 const dd = $('snapshotDropdown');
@@ -2164,7 +2165,7 @@
         // ===== API STATUS CHECK =====
         async function checkApiStatus() {
             try {
-                const res = await fetch('/api/status');
+                const res = await fetch(API_BASE + '/api/status');
                 if (!res.ok) return;
                 const data = await res.json();
                 if (!data.api_key_configured) {
@@ -2212,7 +2213,7 @@
 
         async function loadTmReps() {
             try {
-                const res = await fetch('/api/travel/reps');
+                const res = await fetch(API_BASE + '/api/travel/reps');
                 if (!res.ok) return;
                 _tmReps = await res.json();
                 const sel = document.getElementById('tmRepSelect');
@@ -2240,7 +2241,7 @@
             ct.innerHTML = '<div class="tm-empty">Loading trips...</div>';
 
             try {
-                const res = await fetch(`/api/travel/plans/${_tmSelectedRep}`);
+                const res = await fetch(API_BASE + `/api/travel/plans/${_tmSelectedRep}`);
                 if (!res.ok) throw new Error('Failed to load trips');
                 _tmTrips = await res.json();
                 renderTmTrips();
@@ -2356,14 +2357,14 @@
                     if (endVal !== existing?.end_location) body.end_location = endVal;
                     if (notesVal !== (existing?.notes || '')) body.notes = notesVal;
 
-                    res = await fetch(`/api/travel/plans/${_tmEditId}`, {
+                    res = await fetch(API_BASE + `/api/travel/plans/${_tmEditId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(body)
                     });
                 } else {
                     // Create
-                    res = await fetch('/api/travel/plans', {
+                    res = await fetch(API_BASE + '/api/travel/plans', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -2395,7 +2396,7 @@
         async function deleteTripPlan(planId) {
             if (!confirm('Delete this trip day?')) return;
             try {
-                const res = await fetch(`/api/travel/plans/${planId}`, { method: 'DELETE' });
+                const res = await fetch(API_BASE + `/api/travel/plans/${planId}`, { method: 'DELETE' });
                 if (!res.ok) throw new Error('Delete failed');
                 await loadTmTrips();
             } catch(e) {
@@ -2450,7 +2451,7 @@
 
                 // Load dealer data
                 try {
-                    const res = await fetch('/api/dealers/map');
+                    const res = await fetch(API_BASE + '/api/dealers/map');
                     if (!res.ok) throw new Error('Failed to load map data');
                     const data = await res.json();
                     addDealerMarkers(data.dealers);

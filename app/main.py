@@ -22,7 +22,7 @@ app = FastAPI(
     version="0.2.0",
 )
 
-# CORS — allow Netlify frontend + local dev
+# CORS — allow GitHub Pages frontend + local dev
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

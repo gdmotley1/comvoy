@@ -10,8 +10,8 @@ cp -r .vercel "$TMPDIR/" 2>/dev/null || true
 rm -rf "$TMPDIR"
 
 echo ""
-echo "=== Deploying frontend to Netlify ==="
-netlify deploy --prod --dir=static
+echo "=== Pushing to GitHub (triggers GitHub Pages deploy) ==="
+git push origin master
 
 echo ""
 echo "=== Done ==="
