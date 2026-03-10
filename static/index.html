@@ -1213,6 +1213,60 @@
         .map-stat { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); }
         .map-stat-value { font-weight: 600; color: var(--text-primary); }
 
+        /* ========== MAP FILTER BAR ========== */
+        .map-filters {
+            position: fixed;
+            top: 118px;
+            left: 20px;
+            right: 230px;
+            z-index: 10;
+            background: rgba(15,18,30,0.88);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 6px 14px;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .map-filters::-webkit-scrollbar { display: none; }
+        body.map-view .map-filters { display: flex; }
+        body.map-view.route-active .map-filters { display: none; }
+        .map-filter-group { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+        .map-filter-states { flex-shrink: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+        .map-filter-states::-webkit-scrollbar { display: none; }
+        .map-filter-label {
+            font-size: 9px; font-weight: 700; color: var(--text-tertiary);
+            text-transform: uppercase; letter-spacing: 0.8px; flex-shrink: 0;
+        }
+        .map-filter-chips { display: flex; gap: 3px; flex-wrap: nowrap; }
+        .map-filter-divider { width: 1px; height: 18px; background: var(--glass-border); flex-shrink: 0; }
+        .map-chip {
+            display: flex; align-items: center; gap: 4px;
+            padding: 3px 9px; border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.03);
+            color: var(--text-tertiary);
+            font-size: 10px; font-family: inherit; font-weight: 500;
+            cursor: pointer; transition: all .2s ease; white-space: nowrap; user-select: none;
+        }
+        .map-chip:hover { border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); color: var(--text-secondary); }
+        .map-chip.active { border-color: var(--chip-color-dim, rgba(79,143,255,0.35)); background: var(--chip-bg, rgba(79,143,255,0.1)); color: var(--text-primary); }
+        .map-chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; opacity: 0.35; transition: opacity .2s; }
+        .map-chip.active .map-chip-dot { opacity: 1; }
+        .map-filter-reset {
+            display: none; align-items: center; gap: 3px;
+            padding: 3px 8px; border-radius: 8px;
+            border: 1px solid rgba(239,68,68,0.2); background: rgba(239,68,68,0.06);
+            color: rgba(239,68,68,0.7); font-size: 10px; font-family: inherit; font-weight: 500;
+            cursor: pointer; transition: all .2s ease; flex-shrink: 0;
+        }
+        .map-filter-reset:hover { background: rgba(239,68,68,0.12); color: #ef4444; border-color: rgba(239,68,68,0.35); }
+
         /* Cluster styling override for dark theme */
         .marker-cluster-small { background-color: rgba(79,143,255,0.3) !important; }
         .marker-cluster-small div { background-color: rgba(79,143,255,0.6) !important; color: #fff !important; }
@@ -1221,6 +1275,36 @@
         .marker-cluster-large { background-color: rgba(236,72,153,0.3) !important; }
         .marker-cluster-large div { background-color: rgba(236,72,153,0.6) !important; color: #fff !important; }
         .marker-cluster div { font-family: 'Inter', sans-serif !important; font-weight: 600 !important; }
+
+        /* ========== TACTICAL MARKER SYSTEM ========== */
+        .tac-marker { position: relative; display: flex; align-items: center; justify-content: center; }
+        .tac-marker svg { width: 100%; height: 100%; }
+        .tac-marker.tier-hot svg { filter: drop-shadow(0 0 6px #ff6b35); }
+        .tac-marker.tier-warm svg { filter: drop-shadow(0 0 5px rgba(34,197,94,0.6)); }
+        .tac-marker.tier-cold svg { filter: drop-shadow(0 0 3px rgba(71,85,105,0.4)); opacity: 0.8; }
+        .tac-marker.tier-unscored svg { filter: drop-shadow(0 0 3px rgba(79,143,255,0.3)); opacity: 0.65; }
+
+        .tac-ping {
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 1.5px solid #ff6b35;
+            animation: tacPing 2.5s cubic-bezier(0,0,0.2,1) infinite;
+            pointer-events: none;
+        }
+        .tac-ping-2 {
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 1.5px solid #ff6b35;
+            animation: tacPing 2.5s cubic-bezier(0,0,0.2,1) infinite;
+            animation-delay: 1.25s;
+            pointer-events: none;
+        }
+        @keyframes tacPing {
+            0% { transform: scale(0.6); opacity: 0.8; }
+            100% { transform: scale(2.4); opacity: 0; }
+        }
 
         /* ========== HOVER TOOLTIPS ========== */
         .map-hover-tooltip {
@@ -1382,6 +1466,7 @@
         /* Mobile responsive */
         @media (max-width: 600px) {
             .route-panel { width: 200px; right: 8px; top: 68px; padding: 10px 12px; }
+            .map-filters { top: 110px; padding: 5px 8px; gap: 6px; left: 8px; right: 8px; }
         }
 
         /* ========== TRIP MANAGER VIEW ========== */
@@ -1726,12 +1811,32 @@
     <div id="dealerMap"></div>
     <div class="map-legend" id="mapLegend">
         <div class="map-legend-title">Lead Tier</div>
-        <div class="map-legend-item"><div class="map-legend-dot" style="background:#ff6b35"></div> Hot (70-100)</div>
-        <div class="map-legend-item"><div class="map-legend-dot" style="background:#22c55e"></div> Warm (40-69)</div>
-        <div class="map-legend-item"><div class="map-legend-dot" style="background:#475569"></div> Cold (0-39)</div>
-        <div class="map-legend-item"><div class="map-legend-dot" style="background:#4f8fff"></div> Not scored</div>
+        <div class="map-legend-item"><svg width="12" height="12" viewBox="0 0 26 26"><rect x="5" y="5" width="16" height="16" rx="2" transform="rotate(45 13 13)" fill="#ff6b35" fill-opacity="0.3" stroke="#ff6b35" stroke-width="1.5"/><circle cx="13" cy="13" r="3" fill="#ff6b35"/></svg> Hot (70-100)</div>
+        <div class="map-legend-item"><svg width="12" height="12" viewBox="0 0 22 22"><polygon points="11,1 21,6 21,16 11,21 1,16 1,6" fill="#22c55e" fill-opacity="0.2" stroke="#22c55e" stroke-width="1.2"/><circle cx="11" cy="11" r="2.5" fill="#22c55e"/></svg> Warm (40-69)</div>
+        <div class="map-legend-item"><svg width="12" height="12" viewBox="0 0 18 18"><circle cx="9" cy="9" r="6" fill="none" stroke="#475569" stroke-width="1"/><circle cx="9" cy="9" r="2" fill="#475569"/></svg> Cold (0-39)</div>
+        <div class="map-legend-item"><svg width="12" height="12" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="none" stroke="#4f8fff" stroke-width="0.8" opacity="0.4"/><circle cx="8" cy="8" r="2" fill="#4f8fff" opacity="0.6"/></svg> Not scored</div>
     </div>
     <div class="map-stats" id="mapStats"></div>
+
+    <div class="map-filters" id="mapFilters">
+        <div class="map-filter-group">
+            <span class="map-filter-label">Tier</span>
+            <div class="map-filter-chips" id="tierChips">
+                <button class="map-chip active" data-tier="hot" style="--chip-color-dim:rgba(255,107,53,0.35);--chip-bg:rgba(255,107,53,0.1)" onclick="toggleTierFilter('hot',this)"><span class="map-chip-dot" style="background:#ff6b35"></span>Hot</button>
+                <button class="map-chip active" data-tier="warm" style="--chip-color-dim:rgba(34,197,94,0.35);--chip-bg:rgba(34,197,94,0.1)" onclick="toggleTierFilter('warm',this)"><span class="map-chip-dot" style="background:#22c55e"></span>Warm</button>
+                <button class="map-chip active" data-tier="cold" style="--chip-color-dim:rgba(71,85,105,0.4);--chip-bg:rgba(71,85,105,0.1)" onclick="toggleTierFilter('cold',this)"><span class="map-chip-dot" style="background:#475569"></span>Cold</button>
+                <button class="map-chip active" data-tier="unscored" style="--chip-color-dim:rgba(79,143,255,0.35);--chip-bg:rgba(79,143,255,0.1)" onclick="toggleTierFilter('unscored',this)"><span class="map-chip-dot" style="background:#4f8fff"></span>Unscored</button>
+            </div>
+        </div>
+        <div class="map-filter-divider"></div>
+        <div class="map-filter-group map-filter-states">
+            <span class="map-filter-label">State</span>
+            <div class="map-filter-chips" id="stateChips"></div>
+        </div>
+        <button class="map-filter-reset" id="filterResetBtn" onclick="resetFilters()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><path d="M18 6L6 18M6 6l12 12"/></svg>Reset
+        </button>
+    </div>
 
     <div class="route-panel" id="routePanel">
         <div class="route-panel-header">
@@ -2633,6 +2738,9 @@
         let _savedGlobalStats = '';
         let _routeRepDdOpen = false;
         let _routeTripDdOpen = false;
+        let _allDealers = [];
+        let _activeStates = new Set();
+        let _activeTiers = new Set(['hot','warm','cold','unscored']);
 
         async function openDealerMap() {
             document.body.classList.remove('chatting', 'trip-manager');
@@ -2660,8 +2768,10 @@
                     const res = await fetch(API_BASE + '/api/dealers/map');
                     if (!res.ok) throw new Error('Failed to load map data');
                     const data = await res.json();
-                    addDealerMarkers(data.dealers);
-                    updateMapStats(data.dealers);
+                    _allDealers = data.dealers;
+                    buildStateChips(_allDealers);
+                    addDealerMarkers(_allDealers);
+                    updateMapStats(_allDealers);
                 } catch(e) {
                     console.error('Map data error:', e);
                 }
@@ -2691,12 +2801,42 @@
             return '#4f8fff'; // not scored
         }
 
-        function createCircleIcon(color) {
+        function createTacticalIcon(tier, color) {
+            const isHot = tier === 'hot';
+            const isWarm = tier === 'warm';
+            const isCold = tier === 'cold';
+            const size = isHot ? 26 : isWarm ? 22 : isCold ? 18 : 16;
+            const half = size / 2;
+            let svg;
+            if (isHot) {
+                svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 26">
+                    <rect x="5" y="5" width="16" height="16" rx="2" transform="rotate(45 13 13)" fill="${color}" fill-opacity="0.25" stroke="${color}" stroke-width="1.5"/>
+                    <circle cx="13" cy="13" r="4" fill="${color}"/>
+                    <circle cx="13" cy="13" r="4" fill="${color}" opacity="0.5"><animate attributeName="r" values="4;5.5;4" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.5;0.2;0.5" dur="2s" repeatCount="indefinite"/></circle>
+                </svg>`;
+            } else if (isWarm) {
+                svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 22">
+                    <polygon points="11,1 21,6 21,16 11,21 1,16 1,6" fill="${color}" fill-opacity="0.15" stroke="${color}" stroke-width="1.2" stroke-linejoin="round"/>
+                    <circle cx="11" cy="11" r="3.5" fill="${color}"/>
+                </svg>`;
+            } else if (isCold) {
+                svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18">
+                    <circle cx="9" cy="9" r="7" fill="${color}" fill-opacity="0.1" stroke="${color}" stroke-width="1" stroke-opacity="0.5"/>
+                    <circle cx="9" cy="9" r="2.5" fill="${color}" fill-opacity="0.7"/>
+                </svg>`;
+            } else {
+                svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+                    <circle cx="8" cy="8" r="6" fill="none" stroke="${color}" stroke-width="0.8" stroke-opacity="0.3"/>
+                    <circle cx="8" cy="8" r="2.5" fill="${color}" fill-opacity="0.6"/>
+                </svg>`;
+            }
+            const pulse = isHot ? '<div class="tac-ping"></div><div class="tac-ping-2"></div>' : '';
+            const tc = tier ? 'tier-' + tier : 'tier-unscored';
             return L.divIcon({
-                html: `<div style="width:10px;height:10px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.3);box-shadow:0 0 8px ${color}80;"></div>`,
+                html: `<div class="tac-marker ${tc}" style="width:${size}px;height:${size}px;">${pulse}${svg}</div>`,
                 className: '',
-                iconSize: [14, 14],
-                iconAnchor: [7, 7],
+                iconSize: [size, size],
+                iconAnchor: [half, half],
             });
         }
 
@@ -2721,7 +2861,7 @@
             dealers.forEach(d => {
                 if (!d.lat || !d.lng) return;
                 const color = tierColor(d.tier);
-                const marker = L.marker([d.lat, d.lng], { icon: createCircleIcon(color) });
+                const marker = L.marker([d.lat, d.lng], { icon: createTacticalIcon(d.tier, color) });
 
                 const tierLabel = d.tier ? d.tier.charAt(0).toUpperCase() + d.tier.slice(1) : 'Unscored';
                 const tierClass = d.tier || 'cold';
@@ -2772,6 +2912,69 @@
                 <div class="map-stat"><span class="map-stat-value">${hot}</span> hot leads</div>
                 <div class="map-stat"><span class="map-stat-value">${withSmyrna}</span> Smyrna dealers</div>
             `;
+        }
+
+        // ===== MAP FILTERS =====
+        function buildStateChips(dealers) {
+            const states = [...new Set(dealers.map(d => d.state))].filter(Boolean).sort();
+            const el = document.getElementById('stateChips');
+            if (!el) return;
+            el.innerHTML = states.map(st =>
+                `<button class="map-chip active" data-state="${st}" style="--chip-color-dim:rgba(79,143,255,0.3);--chip-bg:rgba(79,143,255,0.08)" onclick="toggleStateFilter('${st}',this)">${st}</button>`
+            ).join('');
+            _activeStates = new Set();
+        }
+
+        function toggleStateFilter(state, btn) {
+            if (_activeStates.size === 0) {
+                document.querySelectorAll('#stateChips .map-chip').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                _activeStates = new Set([state]);
+            } else if (_activeStates.has(state)) {
+                _activeStates.delete(state);
+                btn.classList.remove('active');
+                if (_activeStates.size === 0) {
+                    document.querySelectorAll('#stateChips .map-chip').forEach(c => c.classList.add('active'));
+                }
+            } else {
+                _activeStates.add(state);
+                btn.classList.add('active');
+            }
+            applyFilters();
+        }
+
+        function toggleTierFilter(tier, btn) {
+            if (_activeTiers.has(tier)) {
+                if (_activeTiers.size <= 1) return;
+                _activeTiers.delete(tier);
+                btn.classList.remove('active');
+            } else {
+                _activeTiers.add(tier);
+                btn.classList.add('active');
+            }
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const filtered = _allDealers.filter(d => {
+                const statePass = _activeStates.size === 0 || _activeStates.has(d.state);
+                const tierPass = _activeTiers.has(d.tier || 'unscored');
+                return statePass && tierPass;
+            });
+            if (_clusterLayer) { _map.removeLayer(_clusterLayer); _clusterLayer = null; }
+            addDealerMarkers(filtered);
+            updateMapStats(filtered);
+            const isDefault = _activeStates.size === 0 && _activeTiers.size === 4;
+            const resetBtn = document.getElementById('filterResetBtn');
+            if (resetBtn) resetBtn.style.display = isDefault ? 'none' : 'flex';
+        }
+
+        function resetFilters() {
+            _activeStates = new Set();
+            _activeTiers = new Set(['hot','warm','cold','unscored']);
+            document.querySelectorAll('#stateChips .map-chip').forEach(c => c.classList.add('active'));
+            document.querySelectorAll('#tierChips .map-chip').forEach(c => c.classList.add('active'));
+            applyFilters();
         }
 
         // ===== ROUTE OVERLAY =====
@@ -3060,8 +3263,15 @@
             _routeActive = false;
             _routeSelectedTrip = null;
             document.body.classList.remove('route-active');
-            const el = $('mapStats');
-            if (el && _savedGlobalStats) { el.innerHTML = _savedGlobalStats; _savedGlobalStats = ''; }
+            _savedGlobalStats = '';
+            const isFiltered = _activeStates.size > 0 || _activeTiers.size < 4;
+            if (isFiltered) {
+                applyFilters();
+            } else {
+                if (_clusterLayer) { _map.removeLayer(_clusterLayer); _clusterLayer = null; }
+                addDealerMarkers(_allDealers);
+                updateMapStats(_allDealers);
+            }
             $('routeTripLabel').textContent = 'Select trip...';
             $('routeTripMenu').querySelectorAll('.route-dropdown-item').forEach(el => el.classList.remove('active'));
             $('routeClearBtn').style.display = 'none';
