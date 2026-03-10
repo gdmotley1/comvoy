@@ -1222,6 +1222,168 @@
         .marker-cluster-large div { background-color: rgba(236,72,153,0.6) !important; color: #fff !important; }
         .marker-cluster div { font-family: 'Inter', sans-serif !important; font-weight: 600 !important; }
 
+        /* ========== HOVER TOOLTIPS ========== */
+        .map-hover-tooltip {
+            background: rgba(15,18,30,0.92) !important;
+            border: 1px solid var(--glass-border) !important;
+            border-radius: 8px !important;
+            padding: 5px 10px !important;
+            color: var(--text-primary) !important;
+            font-family: 'Inter', sans-serif !important;
+            font-size: 11px !important;
+            font-weight: 500 !important;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
+            backdrop-filter: blur(12px);
+            white-space: nowrap;
+        }
+        .map-hover-tooltip::before { border-top-color: rgba(15,18,30,0.92) !important; }
+
+        /* ========== ROUTE OVERLAY PANEL ========== */
+        .route-panel {
+            position: fixed;
+            top: 72px;
+            right: 16px;
+            z-index: 15;
+            background: rgba(15,18,30,0.92);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 14px 16px;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            width: 240px;
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            animation: routePanelIn .3s var(--spring);
+        }
+        body.map-view .route-panel { display: flex; }
+        @keyframes routePanelIn {
+            from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .route-panel-header { display: flex; align-items: center; gap: 8px; }
+        .route-panel-icon { width: 16px; height: 16px; color: var(--accent-blue); flex-shrink: 0; }
+        .route-panel-title {
+            font-size: 12px; font-weight: 600; color: var(--text-secondary);
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .route-panel-body { display: flex; flex-direction: column; gap: 10px; }
+        .route-select-wrap { display: flex; flex-direction: column; gap: 4px; }
+        .route-select-label {
+            font-size: 10px; font-weight: 500; color: var(--text-tertiary);
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        /* Route dropdowns */
+        .route-dropdown { position: relative; user-select: none; }
+        .route-dropdown.disabled { opacity: 0.4; pointer-events: none; }
+        .route-dropdown-trigger {
+            display: flex; align-items: center; justify-content: space-between; gap: 6px;
+            padding: 7px 12px; border-radius: 10px;
+            border: 1px solid var(--glass-border); background: rgba(255,255,255,0.03);
+            color: var(--text-secondary); font-size: 12px; font-family: inherit; font-weight: 400;
+            cursor: pointer; transition: all .2s var(--smooth);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .route-dropdown-trigger:hover {
+            border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.06);
+            color: var(--text-primary);
+        }
+        .route-dropdown.open .route-dropdown-trigger {
+            border-color: rgba(79,143,255,0.3); color: var(--text-primary);
+        }
+        .route-dropdown-chevron {
+            width: 12px; height: 12px; opacity: 0.4; flex-shrink: 0;
+            transition: transform .25s var(--spring);
+        }
+        .route-dropdown.open .route-dropdown-chevron { transform: rotate(180deg); }
+        .route-dropdown-menu {
+            position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+            padding: 4px; border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: rgba(14,17,30,0.95);
+            backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+            box-shadow: 0 12px 48px rgba(0,0,0,0.5);
+            opacity: 0; pointer-events: none;
+            transform: translateY(-4px) scale(0.96);
+            transition: all .2s var(--spring);
+            z-index: 110; max-height: 220px; overflow-y: auto;
+        }
+        .route-dropdown.open .route-dropdown-menu {
+            opacity: 1; pointer-events: auto; transform: translateY(0) scale(1);
+        }
+        .route-dropdown-item {
+            padding: 8px 10px; border-radius: 8px;
+            font-size: 12px; color: var(--text-secondary);
+            cursor: pointer; transition: all .15s var(--smooth);
+        }
+        .route-dropdown-item:hover { background: rgba(79,143,255,0.1); color: var(--text-primary); }
+        .route-dropdown-item.active { color: var(--accent-blue); font-weight: 500; }
+        .route-dropdown-item-sub { font-size: 10px; color: var(--text-tertiary); margin-top: 2px; }
+
+        /* Route dropdown scrollbar */
+        .route-dropdown-menu::-webkit-scrollbar { width: 4px; }
+        .route-dropdown-menu::-webkit-scrollbar-track { background: transparent; }
+        .route-dropdown-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+        /* Clear route button */
+        .route-clear-btn {
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            padding: 7px 12px; border-radius: 10px;
+            border: 1px solid rgba(239,68,68,0.2); background: rgba(239,68,68,0.06);
+            color: rgba(239,68,68,0.7); font-size: 11px; font-family: inherit; font-weight: 500;
+            cursor: pointer; transition: all .2s var(--smooth);
+        }
+        .route-clear-btn:hover {
+            background: rgba(239,68,68,0.12); color: #ef4444;
+            border-color: rgba(239,68,68,0.35);
+        }
+
+        /* Route polyline glow + endpoints */
+        .route-endpoint {
+            display: flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px; border-radius: 50%;
+            border: 2px solid #fff; font-size: 12px; font-weight: 700;
+            font-family: 'Inter', sans-serif; color: #fff;
+        }
+        .route-endpoint.start { background: #22c55e; box-shadow: 0 0 16px rgba(34,197,94,0.4); }
+        .route-endpoint.end { background: #ef4444; box-shadow: 0 0 16px rgba(239,68,68,0.4); }
+
+        /* Animated dashes on route polyline */
+        path.route-dash-animated { animation: routeDash 1.2s linear infinite; }
+        @keyframes routeDash { to { stroke-dashoffset: -23; } }
+
+        /* Pulsing route dealer markers */
+        .route-dealer-marker { position: relative; width: 16px; height: 16px; }
+        .route-dealer-marker .dot {
+            width: 12px; height: 12px; border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.5);
+            position: absolute; top: 2px; left: 2px;
+        }
+        .route-dealer-marker .pulse-ring {
+            position: absolute; inset: -4px; border-radius: 50%;
+            border: 2px solid; opacity: 0;
+            animation: routePulse 2s ease-out infinite;
+        }
+        @keyframes routePulse {
+            0% { transform: scale(0.8); opacity: 0.8; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        /* Dim background markers when route active */
+        body.map-view.route-active .leaflet-marker-pane > .leaflet-marker-icon:not(.route-marker) {
+            opacity: 0.15 !important; transition: opacity .4s var(--smooth);
+        }
+        body.map-view.route-active .marker-cluster {
+            opacity: 0.12 !important; transition: opacity .4s var(--smooth);
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 600px) {
+            .route-panel { width: 200px; right: 8px; top: 68px; padding: 10px 12px; }
+        }
+
         /* ========== TRIP MANAGER VIEW ========== */
         body.trip-manager .topbar-center,
         body.trip-manager .topbar .btn-ghost,
@@ -1570,6 +1732,39 @@
         <div class="map-legend-item"><div class="map-legend-dot" style="background:#4f8fff"></div> Not scored</div>
     </div>
     <div class="map-stats" id="mapStats"></div>
+
+    <div class="route-panel" id="routePanel">
+        <div class="route-panel-header">
+            <svg class="route-panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+            <span class="route-panel-title">Trip Routes</span>
+        </div>
+        <div class="route-panel-body">
+            <div class="route-select-wrap">
+                <label class="route-select-label">Rep</label>
+                <div class="route-dropdown" id="routeRepDropdown">
+                    <div class="route-dropdown-trigger" onclick="toggleRouteDropdown('rep')">
+                        <span id="routeRepLabel">Select rep...</span>
+                        <svg class="route-dropdown-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                    </div>
+                    <div class="route-dropdown-menu" id="routeRepMenu"></div>
+                </div>
+            </div>
+            <div class="route-select-wrap">
+                <label class="route-select-label">Trip</label>
+                <div class="route-dropdown disabled" id="routeTripDropdown">
+                    <div class="route-dropdown-trigger" onclick="toggleRouteDropdown('trip')">
+                        <span id="routeTripLabel">Select trip...</span>
+                        <svg class="route-dropdown-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                    </div>
+                    <div class="route-dropdown-menu" id="routeTripMenu"></div>
+                </div>
+            </div>
+        </div>
+        <button class="route-clear-btn" id="routeClearBtn" onclick="clearRoute()" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            Clear Route
+        </button>
+    </div>
 
     <div class="main">
         <div class="chat-scroll" id="chatScroll">
@@ -2427,6 +2622,17 @@
         // ===== DEALER MAP =====
         let _map = null;
         let _mapLoaded = false;
+        let _clusterLayer = null;
+        let _routeLayer = null;
+        let _routeDealerLayer = null;
+        let _routeReps = [];
+        let _routeTrips = [];
+        let _routeSelectedRep = '';
+        let _routeSelectedTrip = null;
+        let _routeActive = false;
+        let _savedGlobalStats = '';
+        let _routeRepDdOpen = false;
+        let _routeTripDdOpen = false;
 
         async function openDealerMap() {
             document.body.classList.remove('chatting', 'trip-manager');
@@ -2461,6 +2667,7 @@
                 }
 
                 _mapLoaded = true;
+                loadRouteReps();
             } else {
                 _map.invalidateSize();
             }
@@ -2494,7 +2701,7 @@
         }
 
         function addDealerMarkers(dealers) {
-            const clusters = L.markerClusterGroup({
+            _clusterLayer = L.markerClusterGroup({
                 maxClusterRadius: 40,
                 spiderfyOnMaxZoom: true,
                 showCoverageOnHover: false,
@@ -2541,10 +2748,14 @@
                     <span class="map-popup-tier ${tierClass}">${tierLabel}</span>
                 `, { maxWidth: 280 });
 
-                clusters.addLayer(marker);
+                marker.bindTooltip(`${d.name} — ${d.vehicles || 0} vehicles`, {
+                    direction: 'top', offset: [0, -10], className: 'map-hover-tooltip'
+                });
+
+                _clusterLayer.addLayer(marker);
             });
 
-            _map.addLayer(clusters);
+            _map.addLayer(_clusterLayer);
         }
 
         function updateMapStats(dealers) {
@@ -2561,6 +2772,322 @@
                 <div class="map-stat"><span class="map-stat-value">${hot}</span> hot leads</div>
                 <div class="map-stat"><span class="map-stat-value">${withSmyrna}</span> Smyrna dealers</div>
             `;
+        }
+
+        // ===== ROUTE OVERLAY =====
+        function parseWktLinestring(wkt) {
+            if (!wkt || !wkt.startsWith('LINESTRING')) return [];
+            const coordStr = wkt.replace('LINESTRING(', '').replace(')', '');
+            return coordStr.split(',').map(pair => {
+                const [lng, lat] = pair.trim().split(/\s+/).map(Number);
+                return [lat, lng];
+            }).filter(p => !isNaN(p[0]) && !isNaN(p[1]));
+        }
+
+        function toggleRouteDropdown(which) {
+            if (which === 'rep') {
+                _routeRepDdOpen = !_routeRepDdOpen;
+                $('routeRepDropdown').classList.toggle('open', _routeRepDdOpen);
+                _routeTripDdOpen = false;
+                $('routeTripDropdown').classList.remove('open');
+            } else if (which === 'trip') {
+                if ($('routeTripDropdown').classList.contains('disabled')) return;
+                _routeTripDdOpen = !_routeTripDdOpen;
+                $('routeTripDropdown').classList.toggle('open', _routeTripDdOpen);
+                _routeRepDdOpen = false;
+                $('routeRepDropdown').classList.remove('open');
+            }
+        }
+
+        document.addEventListener('click', e => {
+            const repDd = $('routeRepDropdown');
+            const tripDd = $('routeTripDropdown');
+            if (repDd && _routeRepDdOpen && !repDd.contains(e.target)) {
+                _routeRepDdOpen = false; repDd.classList.remove('open');
+            }
+            if (tripDd && _routeTripDdOpen && !tripDd.contains(e.target)) {
+                _routeTripDdOpen = false; tripDd.classList.remove('open');
+            }
+        });
+
+        async function loadRouteReps() {
+            if (_tmReps && _tmReps.length > 0) {
+                _routeReps = _tmReps;
+            } else {
+                try {
+                    const res = await fetch(API_BASE + '/api/travel/reps');
+                    if (!res.ok) return;
+                    _routeReps = await res.json();
+                } catch(e) { console.error('Failed to load route reps:', e); return; }
+            }
+            const menu = $('routeRepMenu');
+            if (!menu) return;
+            menu.innerHTML = _routeReps.map(r =>
+                `<div class="route-dropdown-item" data-id="${r.id}" onclick="selectRouteRep('${r.id}','${esc(r.name)}')">
+                    ${esc(r.name)}
+                    <div class="route-dropdown-item-sub">${(r.territory_states || []).join(', ')}</div>
+                </div>`
+            ).join('');
+        }
+
+        async function selectRouteRep(repId, repName) {
+            _routeSelectedRep = repId;
+            _routeSelectedTrip = null;
+            _routeTrips = [];
+            $('routeRepLabel').textContent = repName;
+            $('routeRepDropdown').classList.remove('open');
+            _routeRepDdOpen = false;
+            $('routeRepMenu').querySelectorAll('.route-dropdown-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.id === repId);
+            });
+            $('routeTripDropdown').classList.remove('disabled');
+            $('routeTripLabel').textContent = 'Loading...';
+            clearRouteOverlay();
+            try {
+                const res = await fetch(API_BASE + `/api/travel/plans/${repId}`);
+                if (!res.ok) throw new Error('Failed to load trips');
+                _routeTrips = await res.json();
+                const menu = $('routeTripMenu');
+                if (!menu) return;
+                if (_routeTrips.length === 0) {
+                    $('routeTripLabel').textContent = 'No trips';
+                    $('routeTripDropdown').classList.add('disabled');
+                    menu.innerHTML = '';
+                    return;
+                }
+                $('routeTripLabel').textContent = 'Select trip...';
+                menu.innerHTML = _routeTrips.map(t => {
+                    const d = new Date(t.travel_date + 'T12:00:00');
+                    const dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                    return `<div class="route-dropdown-item" data-id="${t.id}" onclick="selectRouteTrip('${t.id}')">
+                        <div>${dateStr}</div>
+                        <div class="route-dropdown-item-sub">${esc(t.start_location)} → ${esc(t.end_location)}</div>
+                    </div>`;
+                }).join('');
+            } catch(e) {
+                $('routeTripLabel').textContent = 'Error loading';
+                console.error(e);
+            }
+        }
+
+        async function selectRouteTrip(tripId) {
+            let trip = _routeTrips.find(t => t.id === tripId);
+            if (!trip) return;
+            _routeSelectedTrip = trip;
+            const d = new Date(trip.travel_date + 'T12:00:00');
+            const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            $('routeTripLabel').textContent = `${dateStr} — ${trip.start_location.split(',')[0]} → ${trip.end_location.split(',')[0]}`;
+            $('routeTripDropdown').classList.remove('open');
+            _routeTripDdOpen = false;
+            $('routeTripMenu').querySelectorAll('.route-dropdown-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.id === tripId);
+            });
+            $('routeClearBtn').style.display = 'flex';
+            document.body.classList.add('route-active');
+            _routeActive = true;
+            clearRouteOverlay();
+
+            // Fetch route-dealers first — backend auto-generates polyline via Google Directions if missing
+            await loadRouteDealers(trip);
+
+            // Re-fetch trip data to get the (potentially backfilled) real driving polyline
+            if (!trip.route_polyline) {
+                try {
+                    const res = await fetch(API_BASE + `/api/travel/plans/${_routeSelectedRep}`);
+                    if (res.ok) {
+                        const updated = await res.json();
+                        const freshTrip = updated.find(t => t.id === tripId);
+                        if (freshTrip && freshTrip.route_polyline) {
+                            trip = freshTrip;
+                            _routeSelectedTrip = trip;
+                            // Update cached trip list too
+                            const idx = _routeTrips.findIndex(t => t.id === tripId);
+                            if (idx >= 0) _routeTrips[idx] = trip;
+                        }
+                    }
+                } catch(e) { /* proceed with straight line fallback */ }
+            }
+
+            drawRoutePolyline(trip);
+            updateLegendForRoute(true);
+        }
+
+        function drawRoutePolyline(trip) {
+            _routeLayer = L.layerGroup().addTo(_map);
+            let coords = parseWktLinestring(trip.route_polyline);
+            if (coords.length < 2 && trip.start_lat && trip.end_lat) {
+                coords = [[trip.start_lat, trip.start_lng], [trip.end_lat, trip.end_lng]];
+            }
+            if (coords.length < 2) return;
+
+            // Outer glow
+            L.polyline(coords, {
+                color: '#4f8fff', weight: 10, opacity: 0.15,
+                smoothFactor: 1, lineCap: 'round', lineJoin: 'round',
+            }).addTo(_routeLayer);
+
+            // Main line
+            const mainLine = L.polyline(coords, {
+                color: '#4f8fff', weight: 4, opacity: 0.8,
+                smoothFactor: 1, lineCap: 'round', lineJoin: 'round',
+            }).addTo(_routeLayer);
+
+            // Animated dash overlay
+            L.polyline(coords, {
+                color: '#7ab4ff', weight: 2, opacity: 0.6,
+                smoothFactor: 1, lineCap: 'round',
+                dashArray: '8 15', className: 'route-dash-animated',
+            }).addTo(_routeLayer);
+
+            // Start marker
+            L.marker(coords[0], {
+                icon: L.divIcon({
+                    html: '<div class="route-endpoint start">S</div>',
+                    className: 'route-marker', iconSize: [28, 28], iconAnchor: [14, 14],
+                }), zIndexOffset: 1000
+            }).bindPopup(`<div class="map-popup-name">Start</div><div class="map-popup-loc">${esc(trip.start_location)}</div>`)
+              .addTo(_routeLayer);
+
+            // End marker
+            L.marker(coords[coords.length - 1], {
+                icon: L.divIcon({
+                    html: '<div class="route-endpoint end">E</div>',
+                    className: 'route-marker', iconSize: [28, 28], iconAnchor: [14, 14],
+                }), zIndexOffset: 1000
+            }).bindPopup(`<div class="map-popup-name">End</div><div class="map-popup-loc">${esc(trip.end_location)}</div>`)
+              .addTo(_routeLayer);
+
+            _map.fitBounds(mainLine.getBounds(), { padding: [60, 280], maxZoom: 10 });
+        }
+
+        async function loadRouteDealers(trip) {
+            _routeDealerLayer = L.layerGroup().addTo(_map);
+            try {
+                const params = new URLSearchParams({
+                    rep_id: _routeSelectedRep,
+                    travel_date: trip.travel_date,
+                    buffer_miles: '20',
+                    limit: '25',
+                });
+                const res = await fetch(API_BASE + `/api/travel/route-dealers?${params}`);
+                if (!res.ok) throw new Error('Failed to load route dealers');
+                const data = await res.json();
+                if (_routeSelectedTrip?.id !== trip.id) return;
+                if (!data.dealers || data.dealers.length === 0) {
+                    updateRouteStats(data.dealers || []);
+                    return;
+                }
+                data.dealers.forEach((d, i) => {
+                    const color = tierColor(d.lead_tier);
+                    const isTop5 = i < 5;
+                    const icon = L.divIcon({
+                        html: `<div class="route-dealer-marker">
+                            <div class="dot" style="background:${color};box-shadow:0 0 8px ${color}80;"></div>
+                            ${isTop5 ? `<div class="pulse-ring" style="border-color:${color};"></div>` : ''}
+                        </div>`,
+                        className: 'route-marker', iconSize: [16, 16], iconAnchor: [8, 8],
+                    });
+                    const tierLabel = d.lead_tier ? d.lead_tier.charAt(0).toUpperCase() + d.lead_tier.slice(1) : 'Unscored';
+                    const tierClass = d.lead_tier || 'cold';
+                    const distStr = d.dist_from_route_mi != null ? d.dist_from_route_mi.toFixed(1) : '?';
+                    const posStr = d.route_position != null ? Math.round(d.route_position * 100) + '%' : '';
+                    const popup = `
+                        <div class="map-popup-name">${esc(d.name)}</div>
+                        <div class="map-popup-loc">${esc(d.city)}, ${esc(d.state)}</div>
+                        <div class="map-popup-stats">
+                            <div class="map-popup-stat">
+                                <span class="map-popup-stat-label">Vehicles</span>
+                                <span class="map-popup-stat-value">${d.vehicles || 0}</span>
+                            </div>
+                            <div class="map-popup-stat">
+                                <span class="map-popup-stat-label">Score</span>
+                                <span class="map-popup-stat-value">${d.lead_score ?? '—'}</span>
+                            </div>
+                            <div class="map-popup-stat">
+                                <span class="map-popup-stat-label">Off Route</span>
+                                <span class="map-popup-stat-value">${distStr} mi</span>
+                            </div>
+                        </div>
+                        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;">
+                            ${d.top_brand ? 'Top: ' + esc(d.top_brand) : ''}
+                            ${d.opportunity ? ' &middot; ' + esc(d.opportunity) : ''}
+                            ${posStr ? ' &middot; Route ' + posStr : ''}
+                        </div>
+                        <span class="map-popup-tier ${tierClass}">${tierLabel}</span>
+                        ${isTop5 ? '<div style="margin-top:6px;font-size:10px;color:#ff6b35;font-weight:600;">&#9733; RECOMMENDED STOP</div>' : ''}
+                    `;
+                    const marker = L.marker([d.lat, d.lng], { icon, zIndexOffset: 500 })
+                        .bindPopup(popup, { maxWidth: 280 })
+                        .addTo(_routeDealerLayer);
+                    marker.bindTooltip(`${esc(d.name)} — ${d.vehicles || 0} vehicles`, {
+                        direction: 'top', offset: [0, -10], className: 'map-hover-tooltip'
+                    });
+                });
+                updateRouteStats(data.dealers);
+            } catch(e) { console.error('Route dealers error:', e); }
+        }
+
+        function updateRouteStats(dealers) {
+            const el = $('mapStats');
+            if (!el) return;
+            if (!_savedGlobalStats) _savedGlobalStats = el.innerHTML;
+            const total = dealers.length;
+            const hot = dealers.filter(d => d.lead_tier === 'hot').length;
+            const warm = dealers.filter(d => d.lead_tier === 'warm').length;
+            const totalVehicles = dealers.reduce((s, d) => s + (d.vehicles || 0), 0);
+            const avgDist = total > 0
+                ? (dealers.reduce((s, d) => s + (d.dist_from_route_mi || 0), 0) / total).toFixed(1) : '0';
+            el.innerHTML = `
+                <div class="map-stat" style="color:var(--accent-blue);font-weight:600;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="opacity:0.7"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                    Route
+                </div>
+                <div class="map-stat"><span class="map-stat-value">${total}</span> dealers</div>
+                <div class="map-stat"><span class="map-stat-value">${totalVehicles.toLocaleString()}</span> vehicles</div>
+                <div class="map-stat"><span class="map-stat-value">${hot}</span> hot</div>
+                <div class="map-stat"><span class="map-stat-value">${warm}</span> warm</div>
+                <div class="map-stat"><span class="map-stat-value">${avgDist}</span> avg mi off route</div>
+            `;
+        }
+
+        function clearRouteOverlay() {
+            if (_routeLayer) { _map.removeLayer(_routeLayer); _routeLayer = null; }
+            if (_routeDealerLayer) { _map.removeLayer(_routeDealerLayer); _routeDealerLayer = null; }
+        }
+
+        function clearRoute() {
+            clearRouteOverlay();
+            _routeActive = false;
+            _routeSelectedTrip = null;
+            document.body.classList.remove('route-active');
+            const el = $('mapStats');
+            if (el && _savedGlobalStats) { el.innerHTML = _savedGlobalStats; _savedGlobalStats = ''; }
+            $('routeTripLabel').textContent = 'Select trip...';
+            $('routeTripMenu').querySelectorAll('.route-dropdown-item').forEach(el => el.classList.remove('active'));
+            $('routeClearBtn').style.display = 'none';
+            updateLegendForRoute(false);
+            _map.setView([33.5, -86.8], 6, { animate: true, duration: 0.5 });
+        }
+
+        function updateLegendForRoute(active) {
+            const legend = $('mapLegend');
+            if (!legend) return;
+            const existing = legend.querySelector('.map-legend-route');
+            if (active && !existing) {
+                const div = document.createElement('div');
+                div.className = 'map-legend-route';
+                div.style.cssText = 'margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);';
+                div.innerHTML = `
+                    <div class="map-legend-title" style="margin-bottom:8px">Route</div>
+                    <div class="map-legend-item"><div class="map-legend-dot" style="background:#22c55e"></div> Start</div>
+                    <div class="map-legend-item"><div class="map-legend-dot" style="background:#ef4444"></div> End</div>
+                    <div class="map-legend-item"><div class="map-legend-dot" style="background:#4f8fff;box-shadow:0 0 6px #4f8fff;"></div> Route line</div>
+                    <div class="map-legend-item"><div class="map-legend-dot" style="background:#ff6b35;box-shadow:0 0 6px #ff6b35;animation:routePulse 2s ease-out infinite;"></div> Recommended</div>
+                `;
+                legend.appendChild(div);
+            } else if (!active && existing) {
+                existing.remove();
+            }
         }
 
         // ===== EYE TRACKING + MAGNETIC HOVER =====
