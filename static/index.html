@@ -1158,7 +1158,7 @@
         }
         .leaflet-popup-tip { background: rgba(12, 14, 28, 0.88) !important; }
         .leaflet-popup-content { color: var(--text-primary) !important; font-family: 'Inter', sans-serif; margin: 14px 18px !important; }
-        .leaflet-popup { animation: popupEnter 200ms var(--ease-out-expo) forwards; }
+        .leaflet-popup-content-wrapper { animation: popupEnter 200ms var(--ease-out-expo) forwards; }
         @keyframes popupEnter {
             from { opacity: 0; transform: translateY(4px) scale(0.97); }
             to { opacity: 1; transform: translateY(0) scale(1); }
@@ -1421,6 +1421,112 @@
             transition: opacity 200ms ease;
         }
         .filter-result-count.filtering { color: rgba(79,143,255,0.7); }
+
+        /* ========== MAP SEARCH BAR ========== */
+        .map-search {
+            position: fixed;
+            top: 110px;
+            right: 230px;
+            z-index: 16;
+            display: none;
+            flex-direction: column;
+            width: 220px;
+        }
+        body.map-view .map-search { display: flex; }
+        body.map-view.route-active .map-search { display: none; }
+
+        .map-search-input-wrap {
+            display: flex; align-items: center; gap: 8px;
+            padding: 7px 12px;
+            background: rgba(12, 14, 28, 0.78);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            transition: border-color 200ms var(--ease-out-expo), box-shadow 200ms var(--ease-out-expo);
+        }
+        .map-search-input-wrap:focus-within {
+            border-color: rgba(79,143,255,0.3);
+            box-shadow: 0 0 0 3px rgba(79,143,255,0.06), 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .map-search-icon {
+            width: 14px; height: 14px; flex-shrink: 0;
+            color: rgba(255,255,255,0.3);
+            transition: color 200ms ease;
+        }
+        .map-search-input-wrap:focus-within .map-search-icon { color: rgba(79,143,255,0.6); }
+        .map-search-input {
+            flex: 1; background: none; border: none; outline: none;
+            color: var(--text-primary); font-family: inherit;
+            font-size: 12px; font-weight: 400;
+        }
+        .map-search-input::placeholder { color: rgba(255,255,255,0.25); }
+        .map-search-clear {
+            width: 16px; height: 16px; flex-shrink: 0;
+            background: rgba(255,255,255,0.08); border: none; border-radius: 50%;
+            color: rgba(255,255,255,0.4); cursor: pointer;
+            display: none; align-items: center; justify-content: center;
+            transition: all 120ms ease;
+            padding: 0;
+        }
+        .map-search-clear:hover { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); }
+        .map-search.has-query .map-search-clear { display: flex; }
+
+        /* Results dropdown */
+        .map-search-results {
+            margin-top: 4px;
+            background: rgba(12, 14, 28, 0.92);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(79,143,255,0.04);
+            display: none; flex-direction: column;
+            max-height: 280px; overflow-y: auto;
+            scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;
+            padding: 4px;
+            animation: dropIn 150ms var(--ease-out-expo) forwards;
+        }
+        .map-search-results::-webkit-scrollbar { width: 4px; }
+        .map-search-results::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+        .map-search-results.open { display: flex; }
+
+        .map-search-result {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 10px; border-radius: 7px;
+            cursor: pointer; transition: background 80ms ease;
+        }
+        .map-search-result:hover, .map-search-result.active {
+            background: rgba(79,143,255,0.08);
+        }
+        .map-search-result-dot {
+            width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+            box-shadow: 0 0 6px currentColor;
+        }
+        .map-search-result-info { flex: 1; min-width: 0; }
+        .map-search-result-name {
+            font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.88);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .map-search-result-name mark {
+            background: none; color: #4f8fff; font-weight: 700;
+        }
+        .map-search-result-meta {
+            font-size: 10px; color: rgba(255,255,255,0.35);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .map-search-result-score {
+            font-size: 10px; font-weight: 600; flex-shrink: 0;
+            font-variant-numeric: tabular-nums;
+        }
+        .map-search-empty {
+            padding: 16px 10px; text-align: center;
+            font-size: 11px; color: rgba(255,255,255,0.25);
+        }
+        .map-search-hint {
+            padding: 6px 10px; text-align: center;
+            font-size: 10px; color: rgba(255,255,255,0.2);
+        }
 
         /* ========== GLASS CLUSTER SYSTEM ========== */
         .marker-cluster { background: none !important; border: none !important; }
@@ -2112,6 +2218,17 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><path d="M18 6L6 18M6 6l12 12"/></svg>Reset
         </button>
         <span class="filter-result-count" id="filterResultCount"></span>
+    </div>
+
+    <div class="map-search" id="mapSearch">
+        <div class="map-search-input-wrap">
+            <svg class="map-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input class="map-search-input" id="mapSearchInput" type="text" placeholder="Search dealers..." autocomplete="off" spellcheck="false">
+            <button class="map-search-clear" id="mapSearchClear" onclick="clearMapSearch()">
+                <svg viewBox="0 0 12 12" width="8" height="8" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 2l8 8M10 2l-8 8"/></svg>
+            </button>
+        </div>
+        <div class="map-search-results" id="mapSearchResults"></div>
     </div>
 
     <div class="route-panel" id="routePanel">
@@ -3004,6 +3121,7 @@
         let _map = null;
         let _mapLoaded = false;
         let _clusterLayer = null;
+        let _markerMap = new Map(); // dealer_id → Leaflet marker
         let _routeLayer = null;
         let _routeDealerLayer = null;
         let _routeReps = [];
@@ -3167,10 +3285,12 @@
                 },
             });
 
+            _markerMap = new Map();
             dealers.forEach(d => {
                 if (!d.lat || !d.lng) return;
                 const color = tierColor(d.tier);
                 const marker = L.marker([d.lat, d.lng], { icon: createTacticalIcon(d.tier, color) });
+                if (d.id) _markerMap.set(d.id, marker);
 
                 const tierLabel = d.tier ? d.tier.charAt(0).toUpperCase() + d.tier.slice(1) : 'Unscored';
                 const tierClass = d.tier || 'cold';
@@ -3361,11 +3481,160 @@
             applyFilters();
         }
 
+        // ===== DEALER SEARCH + FLY-TO =====
+        let _searchActiveIdx = -1;
+        let _searchResults = [];
+
+        (function initMapSearch() {
+            const input = document.getElementById('mapSearchInput');
+            const wrap = document.getElementById('mapSearch');
+            if (!input) return;
+
+            input.addEventListener('input', function() {
+                const q = this.value.trim();
+                wrap.classList.toggle('has-query', q.length > 0);
+                if (q.length < 2) { closeSearchResults(); return; }
+                _searchResults = searchDealers(q);
+                _searchActiveIdx = -1;
+                renderSearchResults(_searchResults, q);
+            });
+
+            input.addEventListener('keydown', function(e) {
+                const resultsEl = document.getElementById('mapSearchResults');
+                if (!resultsEl.classList.contains('open')) {
+                    if (e.key === 'Escape') { this.blur(); return; }
+                    return;
+                }
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    _searchActiveIdx = Math.min(_searchActiveIdx + 1, _searchResults.length - 1);
+                    highlightSearchResult();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    _searchActiveIdx = Math.max(_searchActiveIdx - 1, 0);
+                    highlightSearchResult();
+                } else if (e.key === 'Enter' && _searchActiveIdx >= 0) {
+                    e.preventDefault();
+                    flyToDealer(_searchResults[_searchActiveIdx]);
+                } else if (e.key === 'Escape') {
+                    closeSearchResults();
+                    this.blur();
+                }
+            });
+        })();
+
+        function searchDealers(query) {
+            const q = query.toLowerCase();
+            const terms = q.split(/\s+/).filter(Boolean);
+            const scored = [];
+            for (const d of _allDealers) {
+                if (!d.lat || !d.lng) continue;
+                const name = (d.name || '').toLowerCase();
+                const city = (d.city || '').toLowerCase();
+                const state = (d.state || '').toLowerCase();
+                const haystack = name + ' ' + city + ' ' + state;
+                let score = 0;
+                let allMatch = true;
+                for (const t of terms) {
+                    if (!haystack.includes(t)) { allMatch = false; break; }
+                    if (name.startsWith(t)) score += 10;
+                    else if (name.includes(t)) score += 5;
+                    if (city.includes(t)) score += 2;
+                    if (state === t) score += 3;
+                }
+                if (!allMatch) continue;
+                // Boost hot/warm dealers
+                if (d.tier === 'hot') score += 3;
+                else if (d.tier === 'warm') score += 1;
+                scored.push({ ...d, _searchScore: score });
+            }
+            scored.sort((a, b) => b._searchScore - a._searchScore);
+            return scored.slice(0, 8);
+        }
+
+        function renderSearchResults(results, query) {
+            const el = document.getElementById('mapSearchResults');
+            if (results.length === 0) {
+                el.innerHTML = '<div class="map-search-empty">No dealers found</div>';
+                el.classList.add('open');
+                return;
+            }
+            const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+            el.innerHTML = results.map((d, i) => {
+                const color = tierColor(d.tier);
+                const name = highlightTerms(d.name, terms);
+                const meta = `${d.city}, ${d.state} · ${d.vehicles || 0} vehicles`;
+                const scoreStr = d.score != null ? d.score : '—';
+                return `<div class="map-search-result" data-idx="${i}" onmouseenter="_searchActiveIdx=${i};highlightSearchResult()" onclick="flyToDealer(_searchResults[${i}])">
+                    <span class="map-search-result-dot" style="color:${color};background:${color}"></span>
+                    <div class="map-search-result-info">
+                        <div class="map-search-result-name">${name}</div>
+                        <div class="map-search-result-meta">${meta}</div>
+                    </div>
+                    <span class="map-search-result-score" style="color:${color}">${scoreStr}</span>
+                </div>`;
+            }).join('') + '<div class="map-search-hint">↑↓ navigate · Enter to fly · Esc close</div>';
+            el.classList.add('open');
+        }
+
+        function highlightTerms(text, terms) {
+            let result = text;
+            for (const t of terms) {
+                const regex = new RegExp(`(${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                result = result.replace(regex, '<mark>$1</mark>');
+            }
+            return result;
+        }
+
+        function highlightSearchResult() {
+            document.querySelectorAll('.map-search-result').forEach((el, i) => {
+                el.classList.toggle('active', i === _searchActiveIdx);
+                if (i === _searchActiveIdx) el.scrollIntoView({ block: 'nearest' });
+            });
+        }
+
+        function flyToDealer(d) {
+            closeSearchResults();
+            document.getElementById('mapSearchInput').value = d.name;
+            document.getElementById('mapSearch').classList.add('has-query');
+
+            const marker = _markerMap.get(d.id);
+            const targetZoom = Math.max(_map.getZoom(), 14);
+            _map.flyTo([d.lat, d.lng], targetZoom, { duration: 1.2 });
+
+            // Open a standalone popup after fly animation settles
+            setTimeout(() => {
+                const content = marker ? marker.getPopup()?.getContent() : null;
+                if (content) {
+                    L.popup({ maxWidth: 260, className: 'map-popup', autoPan: true, autoPanPadding: L.point(50, 50) })
+                        .setLatLng([d.lat, d.lng])
+                        .setContent(content)
+                        .openOn(_map);
+                }
+            }, 1400);
+        }
+
+        function closeSearchResults() {
+            const el = document.getElementById('mapSearchResults');
+            if (el) { el.classList.remove('open'); el.innerHTML = ''; }
+            _searchActiveIdx = -1;
+            _searchResults = [];
+        }
+
+        function clearMapSearch() {
+            document.getElementById('mapSearchInput').value = '';
+            document.getElementById('mapSearch').classList.remove('has-query');
+            closeSearchResults();
+        }
+
         // Close dropdowns on click outside
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.filter-pill-wrap')) {
                 document.querySelectorAll('.filter-dropdown').forEach(dd => dd.classList.remove('open'));
                 document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('open'));
+            }
+            if (!e.target.closest('.map-search')) {
+                closeSearchResults();
             }
         });
 
