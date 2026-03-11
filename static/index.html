@@ -1437,25 +1437,27 @@
         /* Map stats bar — slim floating pill */
         .map-stats {
             position: fixed;
-            top: 72px;
+            bottom: 48px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
-            background: rgba(12, 14, 28, 0.75);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 9999px;
-            padding: 5px 18px;
+            background: rgba(12, 14, 28, 0.72);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 6px 16px;
             backdrop-filter: blur(16px) saturate(180%);
             -webkit-backdrop-filter: blur(16px) saturate(180%);
             display: none;
-            gap: 16px;
-            font-size: 11px;
+            gap: 14px;
+            font-size: 13px;
+            white-space: nowrap;
             animation: statsIn 300ms var(--ease-out-expo) forwards;
         }
-        @keyframes statsIn { from { opacity: 0; transform: translateX(-50%) translateY(-6px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+        @keyframes statsIn { from { opacity: 0; transform: translateX(-50%) translateY(6px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
         body.map-view .map-stats { display: flex; }
-        .map-stat { display: flex; align-items: center; gap: 4px; color: rgba(255,255,255,0.45); font-variant-numeric: tabular-nums; }
-        .map-stat-value { font-weight: 600; color: rgba(255,255,255,0.88); }
+        .map-stat { display: flex; align-items: center; gap: 4px; color: rgba(255,255,255,0.4); font-variant-numeric: tabular-nums; font-size: 12px; white-space: nowrap; }
+        .map-stat-value { font-weight: 600; color: rgba(255,255,255,0.9); font-size: 13px; }
+        .map-stat-sep { color: rgba(255,255,255,0.12); font-size: 10px; }
 
         /* ========== MAP FILTER BAR ========== */
         .map-filters {
@@ -3866,11 +3868,15 @@
             const states = new Set(dealers.map(d => d.state)).size;
 
             document.getElementById('mapStats').innerHTML = `
-                <div class="map-stat"><span class="map-stat-value">${total}</span> dealers</div>
-                <div class="map-stat"><span class="map-stat-value">${totalVehicles.toLocaleString()}</span> vehicles</div>
-                <div class="map-stat"><span class="map-stat-value">${states}</span> states</div>
-                <div class="map-stat"><span class="map-stat-value">${hot}</span> hot leads</div>
-                <div class="map-stat"><span class="map-stat-value">${withSmyrna}</span> carry Smyrna</div>
+                <div class="map-stat"><span class="map-stat-value">${total.toLocaleString()}</span> Dealers</div>
+                <span class="map-stat-sep">·</span>
+                <div class="map-stat"><span class="map-stat-value">${totalVehicles.toLocaleString()}</span> Vehicles</div>
+                <span class="map-stat-sep">·</span>
+                <div class="map-stat"><span class="map-stat-value">${states}</span> States</div>
+                <span class="map-stat-sep">·</span>
+                <div class="map-stat"><span class="map-stat-value">${hot}</span> Hot</div>
+                <span class="map-stat-sep">·</span>
+                <div class="map-stat"><span class="map-stat-value">${withSmyrna}</span> Smyrna</div>
             `;
         }
 
