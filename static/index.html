@@ -2161,6 +2161,9 @@
         }
         body.map-view.trip-create-open .route-panel { display: none; }
         body.map-view.trip-create-open .map-search { right: 360px; }
+        body.map-view.trip-create-open .otto-fab,
+        body.map-view.trip-create-open .otto-fab-label,
+        body.map-view.trip-create-open .otto-popup { display: none !important; }
 
         .trip-create-header {
             display: flex;
@@ -2225,6 +2228,56 @@
         }
         .tc-field textarea { height: 60px; resize: vertical; }
         .tc-field select option { background: #1a1a2e; color: var(--text-primary); }
+
+        .tc-nearby-summary {
+            padding: 4px 0 0;
+            display: none;
+        }
+        .tc-nearby-summary.visible { display: block; }
+        .tc-nearby-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+        .tc-nearby-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .tc-nearby-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.04);
+            transition: background 0.2s;
+        }
+        .tc-nearby-item:hover { background: rgba(255,255,255,0.06); }
+        .tc-nearby-dot {
+            width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+        }
+        .tc-nearby-icon {
+            width: 18px; height: 18px; flex-shrink: 0;
+        }
+        .tc-nearby-name {
+            font-size: 13px;
+            color: var(--text-primary);
+            font-weight: 500;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .tc-nearby-meta {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            flex-shrink: 0;
+        }
 
         .tc-preview-status {
             font-size: 12px;
@@ -2878,6 +2931,10 @@
                 <textarea id="tcNotes" placeholder="Hotel info, dealer meeting times..."></textarea>
             </div>
             <div class="tc-preview-status" id="tcPreviewStatus"></div>
+            <div class="tc-nearby-summary" id="tcNearbySummary">
+                <div class="tc-nearby-title">Top Dealers on Route</div>
+                <div class="tc-nearby-list" id="tcNearbyList"></div>
+            </div>
         </div>
         <div class="tc-actions">
             <button class="tc-btn secondary" onclick="closeTripCreatePanel()">Cancel</button>
@@ -3926,8 +3983,9 @@
                     // Fit bounds to the full route
                     _map.fitBounds(_tcPreviewLayer.getBounds(), { padding: [60, 380], maxZoom: 10 });
 
-                    // Highlight dealers near the route
-                    highlightRouteProximity(coords, 20);
+                    // Highlight dealers near the route + show summary
+                    const nearbyDealers = highlightRouteProximity(coords, 20);
+                    renderNearbySummary(nearbyDealers);
 
                     if (status) { status.textContent = 'Driving route preview shown on map'; status.className = 'tc-preview-status success'; }
                 }
@@ -3945,6 +4003,9 @@
             _tcPreviewMarkers.forEach(m => { if (_map) _map.removeLayer(m); });
             _tcPreviewMarkers = [];
             clearRouteProximity();
+            // Clear nearby summary
+            const summary = document.getElementById('tcNearbySummary');
+            if (summary) summary.classList.remove('visible');
         }
 
         let _routeNearbyLayer = null;
@@ -3971,7 +4032,7 @@
                 if (dist <= bufferKm) nearbyDealers.push(d);
             });
 
-            if (nearbyDealers.length === 0) return;
+            if (nearbyDealers.length === 0) return nearbyDealers;
 
             // Dim non-route markers via CSS class
             document.body.classList.add('route-preview');
@@ -4038,6 +4099,48 @@
                     })
                     .addTo(_routeNearbyLayer);
             });
+
+            return nearbyDealers;
+        }
+
+        function renderNearbySummary(dealers) {
+            const container = document.getElementById('tcNearbySummary');
+            const list = document.getElementById('tcNearbyList');
+            if (!container || !list) return;
+
+            if (!dealers || dealers.length === 0) {
+                container.classList.remove('visible');
+                return;
+            }
+
+            // Sort by score descending, take top 5
+            const top5 = [...dealers]
+                .sort((a, b) => (b.score || 0) - (a.score || 0))
+                .slice(0, 5);
+
+            list.innerHTML = top5.map(d => {
+                const tier = d.tier || 'unscored';
+                const color = tierColor(tier);
+                const vehicles = d.vehicles || 0;
+
+                // Tier icon: hot = diamond, warm = hexagon, otherwise just a dot
+                let icon = '';
+                if (tier === 'hot') {
+                    icon = `<svg class="tc-nearby-icon" viewBox="0 0 18 18" fill="none"><rect x="3" y="3" width="12" height="12" rx="1.5" transform="rotate(45 9 9)" fill="${color}" fill-opacity="0.3" stroke="${color}" stroke-width="1.5"/><circle cx="9" cy="9" r="3" fill="${color}"/></svg>`;
+                } else if (tier === 'warm') {
+                    icon = `<svg class="tc-nearby-icon" viewBox="0 0 18 18" fill="none"><polygon points="9,1 17,5 17,13 9,17 1,13 1,5" fill="${color}" fill-opacity="0.2" stroke="${color}" stroke-width="1.2" stroke-linejoin="round"/><circle cx="9" cy="9" r="3" fill="${color}"/></svg>`;
+                } else {
+                    icon = `<div class="tc-nearby-dot" style="background:${color};opacity:0.6;"></div>`;
+                }
+
+                return `<div class="tc-nearby-item">
+                    ${icon}
+                    <span class="tc-nearby-name">${esc(d.name)}</span>
+                    <span class="tc-nearby-meta">${vehicles} veh</span>
+                </div>`;
+            }).join('');
+
+            container.classList.add('visible');
         }
 
         function clearRouteProximity() {
