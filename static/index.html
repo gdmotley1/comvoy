@@ -1206,6 +1206,53 @@
         .map-legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: rgba(255,255,255,0.5); white-space: nowrap; }
         .map-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
+        /* Scoring key popup on legend hover */
+        .map-legend { cursor: default; transition: border-color 200ms ease; }
+        .map-legend:hover { border-color: rgba(79,143,255,0.15); }
+        .scoring-key {
+            position: absolute; bottom: calc(100% + 10px); left: 0;
+            min-width: 260px;
+            background: rgba(10, 12, 24, 0.94);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 14px 16px;
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(79,143,255,0.04);
+            opacity: 0; pointer-events: none;
+            transform: translateY(6px);
+            transition: opacity 180ms var(--ease-out-expo), transform 180ms var(--ease-out-expo);
+            z-index: 20;
+        }
+        .map-legend:hover .scoring-key { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .scoring-key-title {
+            font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.5);
+            text-transform: uppercase; letter-spacing: 0.08em;
+            margin-bottom: 10px; padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .scoring-key-tier {
+            display: flex; align-items: center; gap: 8px;
+            padding: 5px 0; font-size: 11px; color: rgba(255,255,255,0.6);
+        }
+        .scoring-key-tier + .scoring-key-tier { border-top: 1px solid rgba(255,255,255,0.03); }
+        .sk-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .sk-name { font-weight: 600; min-width: 56px; }
+        .sk-range { font-variant-numeric: tabular-nums; color: rgba(255,255,255,0.35); font-size: 10px; }
+        .scoring-key-factors {
+            margin-top: 10px; padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+        .scoring-key-factors-title {
+            font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.35);
+            text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;
+        }
+        .sk-factor {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 3px 0; font-size: 10px; color: rgba(255,255,255,0.45);
+        }
+        .sk-factor-pts { font-weight: 600; color: rgba(79,143,255,0.6); font-variant-numeric: tabular-nums; }
+
         /* Map stats bar — slim floating pill */
         .map-stats {
             position: fixed;
@@ -1347,6 +1394,15 @@
             cursor: pointer; transition: all 150ms var(--ease-out-expo);
         }
         .filter-reset:hover { border-color: rgba(239,68,68,0.35); color: #ef4444; background: rgba(239,68,68,0.06); }
+
+        /* Result count */
+        .filter-result-count {
+            font-size: 10px; font-weight: 500; color: rgba(255,255,255,0.35);
+            padding: 4px 0; white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+            transition: opacity 200ms ease;
+        }
+        .filter-result-count.filtering { color: rgba(79,143,255,0.7); }
 
         /* ========== GLASS CLUSTER SYSTEM ========== */
         .marker-cluster { background: none !important; border: none !important; }
@@ -1913,6 +1969,20 @@
         <div class="map-legend-item"><svg width="10" height="10" viewBox="0 0 22 22"><polygon points="11,1 21,6 21,16 11,21 1,16 1,6" fill="#22c55e" fill-opacity="0.2" stroke="#22c55e" stroke-width="1.2"/><circle cx="11" cy="11" r="2.5" fill="#22c55e"/></svg>Warm</div>
         <div class="map-legend-item"><svg width="10" height="10" viewBox="0 0 18 18"><circle cx="9" cy="9" r="6" fill="none" stroke="#475569" stroke-width="1"/><circle cx="9" cy="9" r="2" fill="#475569"/></svg>Cold</div>
         <div class="map-legend-item"><svg width="10" height="10" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="none" stroke="#4f8fff" stroke-width="0.8" opacity="0.4"/><circle cx="8" cy="8" r="2" fill="#4f8fff" opacity="0.6"/></svg>N/A</div>
+        <div class="scoring-key">
+            <div class="scoring-key-title">Lead Scoring Guide</div>
+            <div class="scoring-key-tier"><span class="sk-dot" style="background:#ff6b35;box-shadow:0 0 6px #ff6b35"></span><span class="sk-name" style="color:#ff6b35">Hot</span><span class="sk-range">70 – 100</span></div>
+            <div class="scoring-key-tier"><span class="sk-dot" style="background:#22c55e;box-shadow:0 0 4px #22c55e"></span><span class="sk-name" style="color:#22c55e">Warm</span><span class="sk-range">40 – 69</span></div>
+            <div class="scoring-key-tier"><span class="sk-dot" style="background:#475569"></span><span class="sk-name" style="color:#475569">Cold</span><span class="sk-range">0 – 39</span></div>
+            <div class="scoring-key-tier"><span class="sk-dot" style="background:#4f8fff;opacity:0.5"></span><span class="sk-name" style="color:rgba(79,143,255,0.6)">N/A</span><span class="sk-range">Not scored</span></div>
+            <div class="scoring-key-factors">
+                <div class="scoring-key-factors-title">Score Factors</div>
+                <div class="sk-factor"><span>Inventory Size</span><span class="sk-factor-pts">30 pts</span></div>
+                <div class="sk-factor"><span>Body Type Match</span><span class="sk-factor-pts">30 pts</span></div>
+                <div class="sk-factor"><span>Smyrna Opportunity</span><span class="sk-factor-pts">25 pts</span></div>
+                <div class="sk-factor"><span>Growth Momentum</span><span class="sk-factor-pts">15 pts</span></div>
+            </div>
+        </div>
     </div>
     <div class="map-stats" id="mapStats"></div>
 
@@ -1923,6 +1993,10 @@
                 <svg class="filter-pill-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
             </button>
             <div class="filter-dropdown" id="tierDd">
+                <div class="filter-toggle-row">
+                    <button class="filter-toggle-btn" onclick="setAllFilter('tier',true)">All</button>
+                    <button class="filter-toggle-btn" onclick="setAllFilter('tier',false)">None</button>
+                </div>
                 <div class="filter-row" data-filter="tier" data-val="hot" onclick="toggleFilterRow(this)">
                     <span class="filter-check"><svg class="filter-check-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></span>
                     <span class="filter-dot" style="background:#ff6b35"></span>
@@ -1954,6 +2028,10 @@
                 <svg class="filter-pill-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
             </button>
             <div class="filter-dropdown" id="scoreDd">
+                <div class="filter-toggle-row">
+                    <button class="filter-toggle-btn" onclick="setAllFilter('score',true)">All</button>
+                    <button class="filter-toggle-btn" onclick="setAllFilter('score',false)">None</button>
+                </div>
                 <div class="filter-row" data-filter="score" data-val="80-100" onclick="toggleFilterRow(this)">
                     <span class="filter-check"><svg class="filter-check-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></span>
                     <span class="filter-label">80–100</span>
@@ -1992,14 +2070,15 @@
             </button>
             <div class="filter-dropdown state-dd" id="stateDd">
                 <div class="filter-toggle-row">
-                    <button class="filter-toggle-btn" onclick="setAllStates(true)">All</button>
-                    <button class="filter-toggle-btn" onclick="setAllStates(false)">None</button>
+                    <button class="filter-toggle-btn" onclick="setAllFilter('state',true)">All</button>
+                    <button class="filter-toggle-btn" onclick="setAllFilter('state',false)">None</button>
                 </div>
             </div>
         </div>
         <button class="filter-reset" id="filterResetBtn" onclick="resetFilters()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><path d="M18 6L6 18M6 6l12 12"/></svg>Reset
         </button>
+        <span class="filter-result-count" id="filterResultCount"></span>
     </div>
 
     <div class="route-panel" id="routePanel">
@@ -3107,12 +3186,17 @@
         }
 
         // ===== MAP FILTERS =====
+        // All filters use the same model: active set contains checked items.
+        // All items start checked (default). Unchecking = excluding.
+        const _allTierVals = ['hot','warm','cold','unscored'];
+        const _allScoreVals = ['80-100','60-79','40-59','20-39','0-19','unscored'];
+        let _allStateVals = [];
+
         function buildStateRows(dealers) {
             const states = [...new Set(dealers.map(d => d.state))].filter(Boolean).sort();
+            _allStateVals = states;
             const dd = document.getElementById('stateDd');
             if (!dd) return;
-            const toggleRow = dd.querySelector('.filter-toggle-row');
-            // Remove old state rows
             dd.querySelectorAll('.filter-row').forEach(r => r.remove());
             states.forEach(st => {
                 const row = document.createElement('div');
@@ -3123,7 +3207,7 @@
                 row.innerHTML = `<span class="filter-check"><svg class="filter-check-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></span><span class="filter-label">${st}</span>`;
                 dd.appendChild(row);
             });
-            _activeStates = new Set();
+            _activeStates = new Set(states);
         }
 
         function toggleDropdown(name) {
@@ -3149,57 +3233,25 @@
             const sets = { tier: _activeTiers, score: _activeScores, state: _activeStates };
             const set = sets[type];
             if (!set) return;
-
-            if (type === 'state') {
-                // State: empty set = all pass; toggling adds/removes
-                if (_activeStates.size === 0) {
-                    // First click: all were "active", now isolate this one
-                    const allStates = [...document.querySelectorAll('#stateDd .filter-row')].map(r => r.dataset.val);
-                    _activeStates = new Set(allStates);
-                    _activeStates.delete(val);
-                    // Update all rows visually
-                    document.querySelectorAll('#stateDd .filter-row').forEach(r => {
-                        r.classList.toggle('unchecked', !_activeStates.has(r.dataset.val));
-                    });
-                } else if (_activeStates.has(val)) {
-                    _activeStates.delete(val);
-                    row.classList.add('unchecked');
-                    // If all removed, reset to empty (= all pass)
-                    const totalStates = document.querySelectorAll('#stateDd .filter-row').length;
-                    if (_activeStates.size === 0) {
-                        document.querySelectorAll('#stateDd .filter-row').forEach(r => r.classList.remove('unchecked'));
-                    }
-                } else {
-                    _activeStates.add(val);
-                    row.classList.remove('unchecked');
-                    // If all checked again, reset to empty set
-                    const totalStates = document.querySelectorAll('#stateDd .filter-row').length;
-                    if (_activeStates.size === totalStates) {
-                        _activeStates = new Set();
-                        document.querySelectorAll('#stateDd .filter-row').forEach(r => r.classList.remove('unchecked'));
-                    }
-                }
-            } else {
-                // Tier / Score: toggle in/out
-                if (set.has(val)) {
-                    set.delete(val);
-                    row.classList.add('unchecked');
-                } else {
-                    set.add(val);
-                    row.classList.remove('unchecked');
-                }
-            }
+            if (set.has(val)) { set.delete(val); row.classList.add('unchecked'); }
+            else { set.add(val); row.classList.remove('unchecked'); }
             applyFilters();
         }
 
-        function setAllStates(checked) {
-            if (checked) {
-                _activeStates = new Set();
-                document.querySelectorAll('#stateDd .filter-row').forEach(r => r.classList.remove('unchecked'));
-            } else {
-                _activeStates = new Set(['__none__']);
-                document.querySelectorAll('#stateDd .filter-row').forEach(r => r.classList.add('unchecked'));
-            }
+        function setAllFilter(type, checked) {
+            const config = {
+                tier:  { set: '_activeTiers',  vals: _allTierVals,  ddId: 'tierDd' },
+                score: { set: '_activeScores', vals: _allScoreVals, ddId: 'scoreDd' },
+                state: { set: '_activeStates', vals: _allStateVals, ddId: 'stateDd' }
+            };
+            const c = config[type];
+            if (!c) return;
+            if (type === 'tier') _activeTiers = checked ? new Set(c.vals) : new Set();
+            else if (type === 'score') _activeScores = checked ? new Set(c.vals) : new Set();
+            else _activeStates = checked ? new Set(c.vals) : new Set();
+            document.querySelectorAll(`#${c.ddId} .filter-row`).forEach(r => {
+                r.classList.toggle('unchecked', !checked);
+            });
             applyFilters();
         }
 
@@ -3215,47 +3267,57 @@
 
         function applyFilters() {
             const filtered = _allDealers.filter(d => {
-                const statePass = _activeStates.size === 0 || _activeStates.has(d.state);
+                const statePass = _activeStates.has(d.state);
                 const tierPass = _activeTiers.has(d.tier || 'unscored');
-                const scorePass = _activeScores.size === 6 || _scorePass(d);
+                const scorePass = _scorePass(d);
                 return statePass && tierPass && scorePass;
             });
             if (_clusterLayer) { _map.removeLayer(_clusterLayer); _clusterLayer = null; }
             addDealerMarkers(filtered);
             updateMapStats(filtered);
-            updatePillBadges();
+            updatePillBadges(filtered.length);
         }
 
-        function updatePillBadges() {
-            const tierTotal = 4, scoreTotal = 6;
-            const tierActive = _activeTiers.size;
-            const scoreActive = _activeScores.size;
-            const stateFiltered = _activeStates.size > 0 && !_activeStates.has('__none__');
-            const stateNone = _activeStates.has('__none__');
+        function updatePillBadges(matchCount) {
+            const tierAll = _activeTiers.size === _allTierVals.length;
+            const scoreAll = _activeScores.size === _allScoreVals.length;
+            const stateAll = _activeStates.size === _allStateVals.length;
 
-            _updateBadge('tierCount', 'tierWrap', tierActive < tierTotal ? tierActive : 0);
-            _updateBadge('scoreCount', 'scoreWrap', scoreActive < scoreTotal ? scoreActive : 0);
-            _updateBadge('stateCount', 'stateWrap', stateNone ? 0 : (stateFiltered ? _activeStates.size : 0));
+            _updateBadge('tierCount', 'tierWrap', tierAll ? 0 : _activeTiers.size, _allTierVals.length);
+            _updateBadge('scoreCount', 'scoreWrap', scoreAll ? 0 : _activeScores.size, _allScoreVals.length);
+            _updateBadge('stateCount', 'stateWrap', stateAll ? 0 : _activeStates.size, _allStateVals.length);
 
-            const isDefault = _activeStates.size === 0 && _activeTiers.size === tierTotal && _activeScores.size === scoreTotal;
+            const isDefault = tierAll && scoreAll && stateAll;
             const resetBtn = document.getElementById('filterResetBtn');
             if (resetBtn) resetBtn.style.display = isDefault ? 'none' : 'flex';
+
+            const countEl = document.getElementById('filterResultCount');
+            if (countEl) {
+                if (isDefault) {
+                    countEl.textContent = '';
+                    countEl.classList.remove('filtering');
+                } else {
+                    countEl.textContent = `${matchCount} of ${_allDealers.length}`;
+                    countEl.classList.add('filtering');
+                }
+            }
         }
 
-        function _updateBadge(countId, wrapId, count) {
+        function _updateBadge(countId, wrapId, active, total) {
             const badge = document.getElementById(countId);
             const pill = document.getElementById(wrapId)?.querySelector('.filter-pill');
+            const isFiltered = active > 0;
             if (badge) {
-                if (count > 0) { badge.textContent = count; badge.style.display = 'inline-flex'; }
+                if (isFiltered) { badge.textContent = active; badge.style.display = 'inline-flex'; }
                 else { badge.style.display = 'none'; }
             }
-            if (pill) pill.classList.toggle('has-filter', count > 0);
+            if (pill) pill.classList.toggle('has-filter', isFiltered);
         }
 
         function resetFilters() {
-            _activeStates = new Set();
-            _activeTiers = new Set(['hot','warm','cold','unscored']);
-            _activeScores = new Set(['80-100','60-79','40-59','20-39','0-19','unscored']);
+            _activeTiers = new Set(_allTierVals);
+            _activeScores = new Set(_allScoreVals);
+            _activeStates = new Set(_allStateVals);
             document.querySelectorAll('.filter-row').forEach(r => r.classList.remove('unchecked'));
             applyFilters();
         }
