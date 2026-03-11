@@ -140,9 +140,10 @@ async def get_dealer_places(dealer_id: str, force_refresh: bool = False) -> dict
     # Check cache
     if not force_refresh:
         try:
-            cached = db.table("dealer_places").select("*").eq(
-                "dealer_id", dealer_id
-            ).execute()
+            cached = db.table("dealer_places").select(
+                "dealer_id, rating, review_count, phone, website, hours_json, "
+                "business_status, photo_refs, fetched_at"
+            ).eq("dealer_id", dealer_id).execute()
             if cached.data and _is_cache_fresh(cached.data[0].get("fetched_at")):
                 return cached.data[0]
         except Exception as e:

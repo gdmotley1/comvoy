@@ -1,7 +1,9 @@
 import logging
+import os
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
@@ -19,17 +21,38 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname
 app = FastAPI(
     title="Comvoy Sales Intelligence",
     description="Agentic AI system for commercial truck sales reps",
-    version="0.2.0",
+    version="0.3.0",
 )
 
-# CORS — allow GitHub Pages frontend + local dev
+# GZIP — compress responses > 1KB (40-60% reduction for JSON)
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# CORS — restricted to GitHub Pages frontend + local dev
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://gdmotley1.github.io",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Security headers middleware
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response: Response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    if request.url.scheme == "https":
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
+
 
 # API routes
 app.include_router(ingest_router)
@@ -42,7 +65,6 @@ app.include_router(reports_router)
 app.include_router(travel_router)
 
 # Static files (web chat UI) — skip in serverless environments
-import os
 if os.path.isdir("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
 

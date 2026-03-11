@@ -14,7 +14,7 @@ import time
 from datetime import date
 
 from fastapi import APIRouter, HTTPException
-from anthropic import Anthropic, APIError, AuthenticationError, RateLimitError
+from anthropic import Anthropic, APIError, APITimeoutError, AuthenticationError, RateLimitError
 
 from app.config import settings
 from app.models import ChatMessage
@@ -24,8 +24,15 @@ from app.agent.tools import TOOL_DEFINITIONS, execute_tool
 router = APIRouter(prefix="/api", tags=["chat"])
 logger = logging.getLogger(__name__)
 
-# In-memory conversation history (per-session)
+# In-memory conversation history (per-session) with timestamps for expiry
 _conversations: dict[str, list] = {}
+_session_last_active: dict[str, float] = {}
+_SESSION_TTL = 3600  # 1 hour — expire idle sessions
+
+# Rate limiter: max 20 chat requests per minute per session
+_rate_window: dict[str, list[float]] = {}
+_RATE_LIMIT = 20
+_RATE_WINDOW_SEC = 60
 
 # --- Sonnet 4 pricing (per million tokens, June 2025) ---
 _INPUT_COST_PER_M = 3.00    # $3 per 1M input tokens
@@ -82,6 +89,23 @@ async def chat(msg: ChatMessage, session_id: str = "default"):
     - Tool results truncated to 8000 chars (configurable)
     - Usage stats returned with every response
     """
+    # Rate limiting — 20 requests/minute per session
+    now = time.time()
+    hits = _rate_window.get(session_id, [])
+    hits = [t for t in hits if now - t < _RATE_WINDOW_SEC]
+    if len(hits) >= _RATE_LIMIT:
+        raise HTTPException(429, "Rate limit exceeded. Please wait a moment before sending another message.")
+    hits.append(now)
+    _rate_window[session_id] = hits
+
+    # Expire stale sessions (> 1 hour idle) — lightweight cleanup each request
+    _session_last_active[session_id] = now
+    stale = [sid for sid, ts in _session_last_active.items() if now - ts > _SESSION_TTL]
+    for sid_key in stale:
+        _conversations.pop(sid_key, None)
+        _session_last_active.pop(sid_key, None)
+        _rate_window.pop(sid_key, None)
+
     # No API key — clean error, not a fake response
     if not settings.anthropic_api_key:
         logger.warning("No Anthropic API key configured")
@@ -93,12 +117,18 @@ async def chat(msg: ChatMessage, session_id: str = "default"):
             "error_message": "Otto needs an Anthropic API key to work. Add ANTHROPIC_API_KEY to your .env file and restart the server.",
         }
 
-    client = Anthropic(api_key=settings.anthropic_api_key)
+    client = Anthropic(api_key=settings.anthropic_api_key, timeout=30.0)
     start_time = time.time()
 
-    # Get or create conversation history
+    # Get or create conversation history.
+    # On serverless cold start, _conversations is empty — recover from
+    # client-sent history if available.
     if session_id not in _conversations:
-        _conversations[session_id] = []
+        if msg.history:
+            _conversations[session_id] = msg.history
+            logger.info(f"Recovered {len(msg.history)} messages from client for session {session_id}")
+        else:
+            _conversations[session_id] = []
 
     history = _conversations[session_id]
     history.append({"role": "user", "content": msg.message})
@@ -133,9 +163,13 @@ async def chat(msg: ChatMessage, session_id: str = "default"):
             logger.warning("Anthropic rate limit hit")
             return {"response": "Rate limit reached. Wait a moment and try again.",
                     "session_id": session_id, "usage": None}
+        except APITimeoutError:
+            logger.warning("Anthropic API request timed out (30s)")
+            return {"response": "Request timed out. Try a simpler question or try again.",
+                    "session_id": session_id, "usage": None}
         except APIError as e:
             logger.exception(f"Anthropic API error: {e}")
-            return {"response": f"API error: {e.message}. Try again in a moment.",
+            return {"response": "Something went wrong. Try again in a moment.",
                     "session_id": session_id, "usage": None}
 
         # Accumulate token usage

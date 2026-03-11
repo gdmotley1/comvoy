@@ -17,7 +17,7 @@
             --glass-hover: rgba(255,255,255,0.1);
             --text-primary: #f0f2f5;
             --text-secondary: rgba(255,255,255,0.5);
-            --text-tertiary: rgba(255,255,255,0.3);
+            --text-tertiary: rgba(255,255,255,0.45);
             --accent-blue: #4f8fff;
             --accent-cyan: #00d4ff;
             --accent-purple: #a855f7;
@@ -581,7 +581,7 @@
         .action-form-select {
             -webkit-appearance: none;
             appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.3)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.45)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 10px center;
             padding-right: 28px;
@@ -1405,7 +1405,7 @@
         }
         .sk-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
         .sk-name { font-weight: 600; }
-        .sk-range { font-variant-numeric: tabular-nums; color: rgba(255,255,255,0.3); font-size: 9px; }
+        .sk-range { font-variant-numeric: tabular-nums; color: rgba(255,255,255,0.45); font-size: 9px; }
         .sk-sep { color: rgba(255,255,255,0.12); font-size: 10px; }
         .scoring-key-section {
             margin-top: 10px; padding-top: 8px;
@@ -1425,7 +1425,7 @@
         }
         .sk-factor-pts { color: rgba(79,143,255,0.6); font-variant-numeric: tabular-nums; font-size: 10px; }
         .sk-factor-desc {
-            font-size: 9.5px; color: rgba(255,255,255,0.3); margin-top: 2px; line-height: 1.35;
+            font-size: 9.5px; color: rgba(255,255,255,0.45); margin-top: 2px; line-height: 1.35;
         }
         .sk-factor-desc em { font-style: normal; color: rgba(255,255,255,0.45); }
         .sk-sweet-spot {
@@ -1537,7 +1537,7 @@
             user-select: none;
         }
         .filter-row:hover { background: rgba(255,255,255,0.05); }
-        .filter-row.unchecked { color: rgba(255,255,255,0.3); }
+        .filter-row.unchecked { color: rgba(255,255,255,0.45); }
         .filter-check {
             width: 16px; height: 16px; border-radius: 5px; flex-shrink: 0;
             border: 1.5px solid rgba(255,255,255,0.2);
@@ -1616,7 +1616,7 @@
         }
         .map-search-icon {
             width: 16px; height: 16px; flex-shrink: 0;
-            color: rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.45);
             transition: color 200ms ease;
         }
         .map-search-input-wrap:focus-within .map-search-icon { color: rgba(79,143,255,0.6); }
@@ -1720,6 +1720,38 @@
         .otto-fab:active { transform: scale(0.95); }
         .otto-fab svg { width: 36px; height: 36px; filter: drop-shadow(0 0 8px rgba(79,143,255,0.4)); }
         .otto-fab.popup-open { animation: none; box-shadow: 0 4px 24px rgba(79,143,255,0.25); border-color: rgba(79,143,255,0.35); }
+        .otto-fab-label {
+            position: absolute;
+            right: 64px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(12, 14, 28, 0.92);
+            border: 1px solid rgba(79,143,255,0.18);
+            border-radius: 10px;
+            padding: 5px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.75);
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.25s var(--ease-out-expo);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        }
+        .otto-fab-label::after {
+            content: '';
+            position: absolute;
+            right: -5px;
+            top: 50%;
+            transform: translateY(-50%) rotate(45deg);
+            width: 8px;
+            height: 8px;
+            background: rgba(12, 14, 28, 0.92);
+            border-right: 1px solid rgba(79,143,255,0.18);
+            border-bottom: 1px solid rgba(79,143,255,0.18);
+        }
+        .otto-fab:hover .otto-fab-label { opacity: 1; }
+        .otto-fab.popup-open .otto-fab-label { display: none; }
         @keyframes fabBreathe {
             0%, 100% { box-shadow: 0 4px 24px rgba(79,143,255,0.15), 0 0 0 1px rgba(79,143,255,0.08); }
             50% { box-shadow: 0 4px 32px rgba(79,143,255,0.28), 0 0 12px rgba(79,143,255,0.1); }
@@ -1943,7 +1975,7 @@
             font-size: 9px; font-weight: 500; color: rgba(255,255,255,0.5);
         }
         .route-panel-chevron {
-            width: 8px; height: 8px; color: rgba(255,255,255,0.3); flex-shrink: 0;
+            width: 8px; height: 8px; color: rgba(255,255,255,0.45); flex-shrink: 0;
             transition: transform 0.25s var(--ease-out-expo);
         }
         .route-panel-toggle.active .route-panel-chevron { transform: rotate(180deg); }
@@ -2389,6 +2421,35 @@
 
         .manage-trips-link:hover { opacity: 1; }
 
+        /* ========== REDUCED MOTION ========== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
+        /* ========== FOCUS VISIBLE ========== */
+        :focus-visible {
+            outline: 2px solid var(--accent-blue);
+            outline-offset: 2px;
+        }
+        button:focus-visible, .btn:focus-visible, .filter-pill:focus-visible,
+        .action-card:focus-visible, .otto-fab:focus-visible {
+            outline: 2px solid var(--accent-blue);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px rgba(79,143,255,0.2);
+        }
+        input:focus-visible, textarea:focus-visible, select:focus-visible {
+            outline: 2px solid var(--accent-blue);
+            outline-offset: 0;
+        }
+        :focus:not(:focus-visible) {
+            outline: none;
+        }
+
         /* ========== RESPONSIVE ========== */
         @media (max-width: 600px) {
             .action-cards { grid-template-columns: 1fr; }
@@ -2407,7 +2468,7 @@
 
     <div class="bg-canvas"><div class="bg-orb-3"></div></div>
 
-    <div class="topbar">
+    <div class="topbar" role="banner">
         <div class="wordmark" onclick="clearChat()">
             <div class="wordmark-text shiny-text">Otto</div>
             <div class="wordmark-sub">Comvoy Sales Intelligence</div>
@@ -2430,7 +2491,7 @@
         </div>
     </div>
 
-    <div id="dealerMap"></div>
+    <div id="dealerMap" role="application" aria-label="Dealer map"></div>
     <div class="map-legend" id="mapLegend">
         <div class="map-legend-item"><svg width="10" height="10" viewBox="0 0 26 26"><rect x="5" y="5" width="16" height="16" rx="2" transform="rotate(45 13 13)" fill="#ff6b35" fill-opacity="0.3" stroke="#ff6b35" stroke-width="1.5"/><circle cx="13" cy="13" r="3" fill="#ff6b35"/></svg>Hot</div>
         <div class="map-legend-item"><svg width="10" height="10" viewBox="0 0 22 22"><polygon points="11,1 21,6 21,16 11,21 1,16 1,6" fill="#22c55e" fill-opacity="0.2" stroke="#22c55e" stroke-width="1.2"/><circle cx="11" cy="11" r="2.5" fill="#22c55e"/></svg>Warm</div>
@@ -2576,7 +2637,7 @@
     <div class="map-search" id="mapSearch">
         <div class="map-search-input-wrap">
             <svg class="map-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
-            <input class="map-search-input" id="mapSearchInput" type="text" placeholder="Search dealers..." autocomplete="off" spellcheck="false">
+            <input class="map-search-input" id="mapSearchInput" type="text" placeholder="Search dealers..." autocomplete="off" spellcheck="false" aria-label="Search dealers on map">
             <button class="map-search-clear" id="mapSearchClear" onclick="clearMapSearch()">
                 <svg viewBox="0 0 12 12" width="8" height="8" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 2l8 8M10 2l-8 8"/></svg>
             </button>
@@ -2585,12 +2646,12 @@
     </div>
 
     <!-- Otto Floating Chat (Map View) -->
-    <div class="otto-fab" id="ottoFab" onclick="toggleOttoPopup()"></div>
-    <div class="otto-popup" id="ottoPopup">
+    <div class="otto-fab" id="ottoFab" onclick="toggleOttoPopup()" role="button" aria-label="Chat with Otto" aria-expanded="false"><span class="otto-fab-label">Ask Otto</span></div>
+    <div class="otto-popup" id="ottoPopup" role="dialog" aria-label="Otto chat">
         <div class="otto-popup-header">
             <div class="otto-popup-header-eye" id="ottoPopupEye"></div>
             <span class="otto-popup-header-title">Otto</span>
-            <button class="otto-popup-close" onclick="toggleOttoPopup()">
+            <button class="otto-popup-close" onclick="toggleOttoPopup()" aria-label="Close chat">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
         </div>
@@ -2598,7 +2659,7 @@
             <div class="otto-popup-messages" id="ottoPopupMessages"></div>
         </div>
         <div class="otto-popup-input-bar">
-            <input type="text" class="otto-popup-input" id="ottoPopupInput" placeholder="Ask Otto..."
+            <input type="text" class="otto-popup-input" id="ottoPopupInput" placeholder="Ask Otto..." aria-label="Message Otto"
                 onkeydown="if(event.key==='Enter'){event.preventDefault();popupSend();}">
             <button class="otto-popup-send" id="ottoPopupSendBtn" onclick="popupSend()">
                 <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
@@ -2640,8 +2701,8 @@
         </button>
     </div>
 
-    <div class="main">
-        <div class="chat-scroll" id="chatScroll">
+    <div class="main" role="main">
+        <div class="chat-scroll" id="chatScroll" role="log" aria-live="polite" aria-label="Chat messages">
             <div class="welcome" id="welcome">
                 <div class="orb-hero">
                     <div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
@@ -2686,14 +2747,14 @@
     <div class="input-area">
         <div class="input-bar" id="inputBar">
             <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" hidden>
-            <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="Upload report file">
+            <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="Upload report file" aria-label="Upload report file">
                 <svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
             </button>
-            <textarea id="input" placeholder="Ask Otto anything..." rows="1"
+            <textarea id="input" placeholder="Ask Otto anything..." rows="1" aria-label="Message Otto"
                 onkeydown="onKey(event)" oninput="autoGrow(this)"
                 onfocus="document.getElementById('inputBar').classList.add('focused')"
                 onblur="document.getElementById('inputBar').classList.remove('focused')"></textarea>
-            <button class="send-btn" id="sendBtn" onclick="send()">
+            <button class="send-btn" id="sendBtn" onclick="send()" aria-label="Send message">
                 <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
             </button>
         </div>
@@ -2701,6 +2762,14 @@
 
     <script>
         const API_BASE = location.hostname === 'localhost' ? '' : 'https://comvoy-api.vercel.app';
+
+        // Fetch wrapper with timeout (default 15s, chat gets 45s)
+        function fetchT(url, opts = {}, timeoutMs = 15000) {
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+            return fetch(url, { ...opts, signal: ctrl.signal })
+                .finally(() => clearTimeout(timer));
+        }
         const _uid = (() => { let n = 0; return () => 'm' + (n++); })();
         function ottoEyeSvg() {
             const id = _uid();
@@ -2714,6 +2783,8 @@
         let busy = false;
         let messagesDiv = null;
         const sid = 'otto_' + Date.now();
+        // Client-side conversation history for serverless cold-start recovery
+        let _chatHistory = [];
 
         function onKey(e) {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
@@ -2792,7 +2863,7 @@
         async function loadReps() {
             if (_repsLoaded) return;
             try {
-                const res = await fetch(API_BASE + '/api/travel/reps');
+                const res = await fetchT(API_BASE + '/api/travel/reps');
                 if (!res.ok) return;
                 const reps = await res.json();
                 const sel = document.getElementById('tripRep');
@@ -2841,15 +2912,17 @@
             scrollDown();
 
             try {
-                const res = await fetch(API_BASE + '/api/chat?session_id=' + sid, {
+                _chatHistory.push({ role: 'user', content: text });
+                const res = await fetchT(API_BASE + '/api/chat?session_id=' + sid, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text }),
-                });
+                    body: JSON.stringify({ message: text, history: _chatHistory }),
+                }, 45000);
                 think.remove();
                 if (!res.ok) {
                     const err = await res.json().catch(() => ({ detail: 'Unknown error' }));
                     addBot('Something went wrong: ' + (err.detail || 'Unknown error'));
+                    _chatHistory.pop();
                     return;
                 }
                 const data = await res.json();
@@ -2857,13 +2930,17 @@
                     addBot('I need an API key to work. Add **ANTHROPIC_API_KEY** to your `.env` file and restart the server.');
                     const notice = $('apiNotice');
                     if (notice) notice.classList.add('show');
+                    _chatHistory.pop();
                 } else {
                     addBot(data.response);
+                    _chatHistory.push({ role: 'assistant', content: data.response });
                 }
                 if (data.usage) updateUsage(data.usage);
             } catch (e) {
                 think.remove();
-                addBot('Connection error. Is the server running?');
+                _chatHistory.pop();
+                if (e.name === 'AbortError') addBot('Request timed out. Try a simpler question or try again.');
+                else addBot('Connection error. Is the server running?');
             } finally {
                 busy = false;
                 sendBtn.disabled = false;
@@ -2976,8 +3053,9 @@
         }
 
         async function clearChat() {
-            try { await fetch(API_BASE + '/api/chat/' + sid, { method: 'DELETE' }); } catch(_) {}
+            try { await fetchT(API_BASE + '/api/chat/' + sid, { method: 'DELETE' }); } catch(_) {}
             messagesDiv = null;
+            _chatHistory = [];
             sessionTokens = 0; sessionCost = 0;
             const ub = $('usageBadge'); if (ub) { ub.textContent = ''; ub.classList.remove('warn'); }
             document.body.classList.remove('chatting');
@@ -2999,7 +3077,7 @@
             if (_popupInited) return;
             const fab = $('ottoFab');
             const eye = $('ottoPopupEye');
-            if (fab) fab.innerHTML = ottoEyeSvg();
+            if (fab) fab.innerHTML = ottoEyeSvg() + '<span class="otto-fab-label">Ask Otto</span>';
             if (eye) eye.innerHTML = ottoEyeSvg();
             // Add welcome message
             const msgs = $('ottoPopupMessages');
@@ -3026,12 +3104,14 @@
                     popup.removeEventListener('animationend', handler);
                     popup.classList.remove('open', 'closing');
                     _popupOpen = false;
+                    fab.setAttribute('aria-expanded', 'false');
                 });
             } else {
                 // Open
                 popup.classList.remove('closing');
                 popup.classList.add('open');
                 fab.classList.add('popup-open');
+                fab.setAttribute('aria-expanded', 'true');
                 _popupOpen = true;
                 setTimeout(() => $('ottoPopupInput')?.focus(), 100);
                 popupScrollDown();
@@ -3063,27 +3143,33 @@
             popupScrollDown();
 
             try {
-                const res = await fetch(API_BASE + '/api/chat?session_id=' + sid, {
+                _chatHistory.push({ role: 'user', content: text });
+                const res = await fetchT(API_BASE + '/api/chat?session_id=' + sid, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text }),
-                });
+                    body: JSON.stringify({ message: text, history: _chatHistory }),
+                }, 45000);
                 think.remove();
                 if (!res.ok) {
                     const err = await res.json().catch(() => ({ detail: 'Unknown error' }));
                     popupAddBot('Something went wrong: ' + (err.detail || 'Unknown error'));
+                    _chatHistory.pop();
                     return;
                 }
                 const data = await res.json();
                 if (data.error === 'no_api_key') {
                     popupAddBot('I need an API key to work. Add **ANTHROPIC_API_KEY** to your `.env` file.');
+                    _chatHistory.pop();
                 } else {
                     popupAddBot(data.response);
+                    _chatHistory.push({ role: 'assistant', content: data.response });
                 }
                 if (data.usage) updateUsage(data.usage);
             } catch (e) {
                 think.remove();
-                popupAddBot('Connection error. Is the server running?');
+                _chatHistory.pop();
+                if (e.name === 'AbortError') popupAddBot('Request timed out. Try a simpler question or try again.');
+                else popupAddBot('Connection error. Is the server running?');
             } finally {
                 _popupBusy = false;
                 if (sendBtn) sendBtn.disabled = false;
@@ -3211,7 +3297,7 @@
             form.append('file', file);
 
             try {
-                const res = await fetch(API_BASE + '/api/ingest/upload', {
+                const res = await fetchT(API_BASE + '/api/ingest/upload', {
                     method: 'POST',
                     body: form,
                 });
@@ -3242,7 +3328,7 @@
         let _snapshots = [];
         async function loadSnapshots() {
             try {
-                const res = await fetch(API_BASE + '/api/dealers/snapshots');
+                const res = await fetchT(API_BASE + '/api/dealers/snapshots');
                 if (!res.ok) return;
                 _snapshots = await res.json();
                 const dd = $('snapshotDropdown');
@@ -3276,7 +3362,7 @@
         // ===== API STATUS CHECK =====
         async function checkApiStatus() {
             try {
-                const res = await fetch(API_BASE + '/api/status');
+                const res = await fetchT(API_BASE + '/api/status');
                 if (!res.ok) return;
                 const data = await res.json();
                 if (!data.api_key_configured) {
@@ -3324,7 +3410,7 @@
 
         async function loadTmReps() {
             try {
-                const res = await fetch(API_BASE + '/api/travel/reps');
+                const res = await fetchT(API_BASE + '/api/travel/reps');
                 if (!res.ok) return;
                 _tmReps = await res.json();
                 const sel = document.getElementById('tmRepSelect');
@@ -3352,7 +3438,7 @@
             ct.innerHTML = '<div class="tm-empty">Loading trips...</div>';
 
             try {
-                const res = await fetch(API_BASE + `/api/travel/plans/${_tmSelectedRep}`);
+                const res = await fetchT(API_BASE + `/api/travel/plans/${_tmSelectedRep}`);
                 if (!res.ok) throw new Error('Failed to load trips');
                 _tmTrips = await res.json();
                 renderTmTrips();
@@ -3468,14 +3554,14 @@
                     if (endVal !== existing?.end_location) body.end_location = endVal;
                     if (notesVal !== (existing?.notes || '')) body.notes = notesVal;
 
-                    res = await fetch(API_BASE + `/api/travel/plans/${_tmEditId}`, {
+                    res = await fetchT(API_BASE + `/api/travel/plans/${_tmEditId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(body)
                     });
                 } else {
                     // Create
-                    res = await fetch(API_BASE + '/api/travel/plans', {
+                    res = await fetchT(API_BASE + '/api/travel/plans', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -3507,7 +3593,7 @@
         async function deleteTripPlan(planId) {
             if (!confirm('Delete this trip day?')) return;
             try {
-                const res = await fetch(API_BASE + `/api/travel/plans/${planId}`, { method: 'DELETE' });
+                const res = await fetchT(API_BASE + `/api/travel/plans/${planId}`, { method: 'DELETE' });
                 if (!res.ok) throw new Error('Delete failed');
                 await loadTmTrips();
             } catch(e) {
@@ -3594,7 +3680,7 @@
 
                 // Load dealer data
                 try {
-                    const res = await fetch(API_BASE + '/api/dealers/map');
+                    const res = await fetchT(API_BASE + '/api/dealers/map');
                     if (!res.ok) throw new Error('Failed to load map data');
                     const data = await res.json();
                     _allDealers = data.dealers;
@@ -3681,7 +3767,7 @@
                     const name = _stateAbbrToName[abbr];
                     if (name) stateNames.add(name);
                 });
-                const res = await fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json');
+                const res = await fetchT('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json');
                 if (!res.ok) return;
                 const geo = await res.json();
                 const filtered = {
@@ -4229,7 +4315,7 @@
                 _routeReps = _tmReps;
             } else {
                 try {
-                    const res = await fetch(API_BASE + '/api/travel/reps');
+                    const res = await fetchT(API_BASE + '/api/travel/reps');
                     if (!res.ok) return;
                     _routeReps = await res.json();
                 } catch(e) { console.error('Failed to load route reps:', e); return; }
@@ -4258,7 +4344,7 @@
             $('routeTripLabel').textContent = 'Loading...';
             clearRouteOverlay();
             try {
-                const res = await fetch(API_BASE + `/api/travel/plans/${repId}`);
+                const res = await fetchT(API_BASE + `/api/travel/plans/${repId}`);
                 if (!res.ok) throw new Error('Failed to load trips');
                 _routeTrips = await res.json();
                 const menu = $('routeTripMenu');
@@ -4307,7 +4393,7 @@
             // Re-fetch trip data to get the (potentially backfilled) real driving polyline
             if (!trip.route_polyline) {
                 try {
-                    const res = await fetch(API_BASE + `/api/travel/plans/${_routeSelectedRep}`);
+                    const res = await fetchT(API_BASE + `/api/travel/plans/${_routeSelectedRep}`);
                     if (res.ok) {
                         const updated = await res.json();
                         const freshTrip = updated.find(t => t.id === tripId);
@@ -4383,7 +4469,7 @@
                     buffer_miles: '20',
                     limit: '25',
                 });
-                const res = await fetch(API_BASE + `/api/travel/route-dealers?${params}`);
+                const res = await fetchT(API_BASE + `/api/travel/route-dealers?${params}`);
                 if (!res.ok) throw new Error('Failed to load route dealers');
                 const data = await res.json();
                 if (_routeSelectedTrip?.id !== trip.id) return;

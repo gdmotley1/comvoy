@@ -299,7 +299,7 @@ async def create_travel_plan(body: TravelPlanCreate):
         err = str(e)
         if "duplicate" in err.lower() or "unique" in err.lower() or "23505" in err:
             raise HTTPException(409, f"Travel plan already exists for {body.travel_date}")
-        raise HTTPException(500, f"Database error: {err}")
+        raise HTTPException(500, "Failed to save travel plan. Check server logs for details.")
 
     plan = result.data[0] if result.data else record
 

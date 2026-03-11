@@ -10,6 +10,7 @@ class IngestRequest(BaseModel):
 
 class ChatMessage(BaseModel):
     message: str
+    history: list[dict] | None = None  # client-side history for serverless recovery
 
 
 class NearbyQuery(BaseModel):
@@ -56,6 +57,7 @@ class IngestResult(BaseModel):
     body_type_inventory_rows: int
     smyrna_details_loaded: int
     geocoded_count: int
+    warnings: list[str] = []
 
 
 class SnapshotInfo(BaseModel):

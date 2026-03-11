@@ -2,7 +2,7 @@
 
 import logging
 
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, Response
 
 from app.database import get_service_client
 from app.models import DealerSummary, DealerBriefing, NearbyQuery, SnapshotInfo
@@ -20,8 +20,9 @@ def _latest_snapshot_id(db) -> str:
 
 
 @router.get("/snapshots", response_model=list[SnapshotInfo])
-def list_snapshots():
+def list_snapshots(response: Response):
     """List all ingested report snapshots."""
+    response.headers["Cache-Control"] = "public, max-age=300"  # 5 min
     db = get_service_client()
     result = db.table("report_snapshots").select("*").order("report_date", desc=True).execute()
     return result.data
@@ -208,8 +209,9 @@ def get_dealer_briefing(dealer_id: str):
 
 
 @router.get("/map")
-def get_map_data():
+def get_map_data(response: Response):
     """All dealers with lat/lng + lead scores for map display."""
+    response.headers["Cache-Control"] = "public, max-age=300"  # 5 min
     db = get_service_client()
     snap_id = _latest_snapshot_id(db)
 

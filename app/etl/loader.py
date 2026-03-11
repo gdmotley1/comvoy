@@ -24,7 +24,12 @@ BATCH_SIZE = 500
 
 
 async def load_report(parsed: dict, file_name: str) -> dict:
-    """Load a fully parsed report into the database. Returns summary stats."""
+    """Load a fully parsed report into the database. Returns summary stats.
+
+    Uses snapshot-scoped rollback: if any step fails after the snapshot is
+    created, all rows referencing that snapshot_id are deleted to prevent
+    partial/inconsistent data.
+    """
     db = get_service_client()
     meta = parsed["metadata"]
 
@@ -40,41 +45,47 @@ async def load_report(parsed: dict, file_name: str) -> dict:
     snapshot_id = snap.data[0]["id"]
     logger.info(f"Snapshot created: {snapshot_id} for {meta['report_date']}")
 
-    # 2. Upsert brands
-    brand_map = _upsert_brands(db, parsed["brands"])
+    try:
+        # 2. Upsert brands
+        brand_map = _upsert_brands(db, parsed["brands"])
 
-    # 3. Upsert body types
-    body_type_map = _upsert_body_types(db, parsed["body_types"])
+        # 3. Upsert body types
+        body_type_map = _upsert_body_types(db, parsed["body_types"])
 
-    # 4. Geocode + upsert dealers
-    dealers = parsed["dealers"]
-    # Pull existing dealer coords so we don't re-geocode
-    existing = db.table("dealers").select("name, city, state, latitude, longitude").execute()
-    existing_coords = {
-        (r["name"], r["city"], r["state"]): (r["latitude"], r["longitude"])
-        for r in existing.data
-        if r["latitude"] and r["longitude"]
-    }
-    for d in dealers:
-        key = (d["name"], d["city"], d["state"])
-        if key in existing_coords:
-            d["latitude"] = existing_coords[key][0]
-            d["longitude"] = existing_coords[key][1]
+        # 4. Geocode + upsert dealers
+        dealers = parsed["dealers"]
+        # Pull existing dealer coords so we don't re-geocode
+        existing = db.table("dealers").select("name, city, state, latitude, longitude").execute()
+        existing_coords = {
+            (r["name"], r["city"], r["state"]): (r["latitude"], r["longitude"])
+            for r in existing.data
+            if r["latitude"] and r["longitude"]
+        }
+        for d in dealers:
+            key = (d["name"], d["city"], d["state"])
+            if key in existing_coords:
+                d["latitude"] = existing_coords[key][0]
+                d["longitude"] = existing_coords[key][1]
 
-    dealers = await geocode_dealers(dealers)
-    dealer_map = _upsert_dealers(db, dealers)
+        dealers = await geocode_dealers(dealers)
+        dealer_map = _upsert_dealers(db, dealers)
 
-    # 5. Insert dealer_snapshots
-    _load_dealer_snapshots(db, dealers, dealer_map, snapshot_id)
+        # 5. Insert dealer_snapshots
+        _load_dealer_snapshots(db, dealers, dealer_map, snapshot_id)
 
-    # 6. Insert dealer_brand_inventory
-    brand_inv_count = _load_brand_inventory(db, parsed["brand_matrix"], dealer_map, brand_map, snapshot_id)
+        # 6. Insert dealer_brand_inventory
+        brand_inv_count = _load_brand_inventory(db, parsed["brand_matrix"], dealer_map, brand_map, snapshot_id)
 
-    # 7. Insert dealer_body_type_inventory
-    bt_inv_count = _load_body_type_inventory(db, parsed["body_type_matrix"], dealer_map, body_type_map, snapshot_id)
+        # 7. Insert dealer_body_type_inventory
+        bt_inv_count = _load_body_type_inventory(db, parsed["body_type_matrix"], dealer_map, body_type_map, snapshot_id)
 
-    # 8. Insert smyrna details
-    smyrna_count = _load_smyrna_details(db, parsed["smyrna_details"], dealer_map, snapshot_id)
+        # 8. Insert smyrna details
+        smyrna_count = _load_smyrna_details(db, parsed["smyrna_details"], dealer_map, snapshot_id)
+
+    except Exception as e:
+        logger.error(f"ETL failed at snapshot {snapshot_id}, rolling back snapshot-scoped data")
+        _rollback_snapshot(db, snapshot_id)
+        raise
 
     geocoded = sum(1 for d in dealers if d.get("latitude"))
 
@@ -89,6 +100,33 @@ async def load_report(parsed: dict, file_name: str) -> dict:
         "smyrna_details_loaded": smyrna_count,
         "geocoded_count": geocoded,
     }
+
+
+def _rollback_snapshot(db, snapshot_id: str):
+    """Delete all data scoped to a snapshot_id to restore consistency.
+
+    Order matters — delete child rows before parent to respect FK constraints.
+    """
+    tables = [
+        "dealer_smyrna_details",
+        "dealer_body_type_inventory",
+        "dealer_brand_inventory",
+        "dealer_snapshots",
+        "lead_scores",
+    ]
+    for table in tables:
+        try:
+            db.table(table).delete().eq("snapshot_id", snapshot_id).execute()
+            logger.info(f"Rollback: cleaned {table} for snapshot {snapshot_id}")
+        except Exception as cleanup_err:
+            logger.error(f"Rollback failed on {table}: {cleanup_err}")
+
+    # Delete the snapshot record itself
+    try:
+        db.table("report_snapshots").delete().eq("id", snapshot_id).execute()
+        logger.info(f"Rollback: deleted snapshot {snapshot_id}")
+    except Exception as cleanup_err:
+        logger.error(f"Rollback failed on report_snapshots: {cleanup_err}")
 
 
 def _upsert_brands(db, brands: list[dict]) -> dict[str, int]:
@@ -108,7 +146,8 @@ def _upsert_body_types(db, body_types: list[dict]) -> dict[str, int]:
 
 
 def _upsert_dealers(db, dealers: list[dict]) -> dict[tuple, str]:
-    """Upsert dealer rows, return {(name, city, state): id} map."""
+    """Upsert dealer rows in batches, return {(name, city, state): id} map."""
+    rows = []
     for d in dealers:
         row = {
             "name": d["name"],
@@ -119,7 +158,11 @@ def _upsert_dealers(db, dealers: list[dict]) -> dict[tuple, str]:
             row["latitude"] = d["latitude"]
             row["longitude"] = d["longitude"]
             row["geocoded_at"] = datetime.utcnow().isoformat()
-        db.table("dealers").upsert(row, on_conflict="name,city,state").execute()
+        rows.append(row)
+
+    for i in range(0, len(rows), BATCH_SIZE):
+        batch = rows[i:i + BATCH_SIZE]
+        db.table("dealers").upsert(batch, on_conflict="name,city,state").execute()
 
     result = db.table("dealers").select("id, name, city, state").execute()
     return {(r["name"], r["city"], r["state"]): r["id"] for r in result.data}
