@@ -2120,6 +2120,168 @@
             .map-filters { top: 82px; left: 54px; gap: 5px; flex-wrap: wrap; }
         }
 
+        /* ========== MAP TRIP CREATION PANEL ========== */
+        .trip-create-panel {
+            position: fixed;
+            top: 52px;
+            right: 0;
+            bottom: 0;
+            width: 340px;
+            z-index: 18;
+            display: none;
+            flex-direction: column;
+            background: rgba(10, 14, 30, 0.92);
+            border-left: 1px solid rgba(255,255,255,0.06);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            transform: translateX(100%);
+            transition: transform 0.3s var(--ease-out-expo);
+            overflow-y: auto;
+        }
+        body.map-view .trip-create-panel { display: flex; }
+        body.map-view.trip-create-open .trip-create-panel {
+            transform: translateX(0);
+        }
+        body.map-view.trip-create-open .route-panel { display: none; }
+        body.map-view.trip-create-open .map-search { right: 360px; }
+
+        .trip-create-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 20px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .trip-create-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        .trip-create-close {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .trip-create-close:hover {
+            background: rgba(255,255,255,0.06);
+            color: var(--text-primary);
+        }
+
+        .trip-create-body {
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            flex: 1;
+        }
+
+        .tc-field { display: flex; flex-direction: column; gap: 5px; }
+        .tc-field label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .tc-field input, .tc-field select, .tc-field textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+        .tc-field input:focus, .tc-field select:focus, .tc-field textarea:focus {
+            border-color: var(--accent-blue);
+        }
+        .tc-field textarea { height: 60px; resize: vertical; }
+        .tc-field select option { background: #1a1a2e; color: var(--text-primary); }
+
+        .tc-preview-status {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            padding: 6px 0;
+            min-height: 20px;
+        }
+        .tc-preview-status.success { color: #22c55e; }
+        .tc-preview-status.error { color: #ef4444; }
+
+        .tc-actions {
+            display: flex;
+            gap: 10px;
+            padding: 16px 20px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+        .tc-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 12px;
+            border: none;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tc-btn.primary {
+            background: var(--accent-blue);
+            color: #fff;
+        }
+        .tc-btn.primary:hover { filter: brightness(1.15); }
+        .tc-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .tc-btn.secondary {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+        }
+        .tc-btn.secondary:hover { background: var(--glass-hover); }
+
+        /* Plan Trip button on map */
+        .map-plan-trip-btn {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 16;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(79,143,255,0.3);
+            background: rgba(12, 14, 28, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            color: var(--accent-blue);
+            font-size: 14px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s var(--ease-out-expo);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        body.map-view .map-plan-trip-btn { display: flex; }
+        body.map-view.trip-create-open .map-plan-trip-btn { display: none; }
+        body.map-view.route-active .map-plan-trip-btn { display: none; }
+        .map-plan-trip-btn:hover {
+            background: rgba(12, 14, 28, 0.95);
+            border-color: rgba(79,143,255,0.5);
+            box-shadow: 0 4px 24px rgba(79,143,255,0.15);
+        }
+        .map-plan-trip-btn svg { width: 16px; height: 16px; }
+
         /* ========== TRIP MANAGER VIEW ========== */
         body.trip-manager .topbar-center,
         body.trip-manager .topbar .btn-ghost,
@@ -2173,13 +2335,13 @@
         }
 
         .tm-title {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 600;
             color: var(--text-primary);
         }
 
         .tm-subtitle {
-            font-size: 13px;
+            font-size: 14px;
             color: var(--text-tertiary);
             margin-top: 2px;
         }
@@ -2190,8 +2352,8 @@
             border-radius: 12px;
             color: var(--text-primary);
             font-family: inherit;
-            font-size: 13px;
-            padding: 8px 14px;
+            font-size: 14px;
+            padding: 10px 16px;
             outline: none;
             cursor: pointer;
             transition: border-color 0.2s;
@@ -2248,13 +2410,13 @@
         }
 
         .tm-card-date {
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 600;
             color: var(--accent-blue);
         }
 
         .tm-card-route {
-            font-size: 13px;
+            font-size: 14px;
             color: var(--text-secondary);
             margin-top: 4px;
         }
@@ -2265,7 +2427,7 @@
         }
 
         .tm-card-notes {
-            font-size: 12px;
+            font-size: 13px;
             color: var(--text-tertiary);
             margin-top: 6px;
             font-style: italic;
@@ -2278,12 +2440,12 @@
         }
 
         .tm-card-btn {
-            padding: 5px 10px;
+            padding: 7px 14px;
             border-radius: 8px;
             border: 1px solid var(--glass-border);
             background: transparent;
             color: var(--text-secondary);
-            font-size: 11px;
+            font-size: 12px;
             font-family: inherit;
             font-weight: 500;
             cursor: pointer;
@@ -2331,22 +2493,22 @@
         @keyframes tmSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         .tm-modal-title {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 600;
             margin-bottom: 20px;
             color: var(--text-primary);
         }
 
         .tm-field {
-            margin-bottom: 14px;
+            margin-bottom: 16px;
         }
 
         .tm-field label {
             display: block;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 500;
             color: var(--text-secondary);
-            margin-bottom: 5px;
+            margin-bottom: 6px;
         }
 
         .tm-field input, .tm-field textarea {
@@ -2668,6 +2830,49 @@
             Clear Route
         </button>
     </div>
+
+    <!-- Map Trip Creation Panel -->
+    <div class="trip-create-panel" id="tripCreatePanel">
+        <div class="trip-create-header">
+            <h3>Plan a Trip</h3>
+            <button class="trip-create-close" onclick="closeTripCreatePanel()">&times;</button>
+        </div>
+        <div class="trip-create-body">
+            <div class="tc-field">
+                <label>Rep</label>
+                <select id="tcRep">
+                    <option value="">Select a rep...</option>
+                </select>
+            </div>
+            <div class="tc-field">
+                <label>Date</label>
+                <input type="date" id="tcDate">
+            </div>
+            <div class="tc-field">
+                <label>Start Location</label>
+                <input type="text" id="tcStart" placeholder="e.g. Smyrna, GA or Hampton Inn, Macon GA">
+            </div>
+            <div class="tc-field">
+                <label>End Location</label>
+                <input type="text" id="tcEnd" placeholder="e.g. Atlanta, GA">
+            </div>
+            <div class="tc-field">
+                <label>Notes (optional)</label>
+                <textarea id="tcNotes" placeholder="Hotel info, dealer meeting times..."></textarea>
+            </div>
+            <div class="tc-preview-status" id="tcPreviewStatus"></div>
+        </div>
+        <div class="tc-actions">
+            <button class="tc-btn secondary" onclick="closeTripCreatePanel()">Cancel</button>
+            <button class="tc-btn primary" id="tcSaveBtn" onclick="saveMapTrip()">Save Trip</button>
+        </div>
+    </div>
+
+    <!-- Plan Trip floating button on map -->
+    <button class="map-plan-trip-btn" id="mapPlanTripBtn" onclick="openTripCreatePanel()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Plan a Trip
+    </button>
 
     <div class="main" role="main">
         <div class="chat-scroll" id="chatScroll" role="log" aria-live="polite" aria-label="Chat messages">
@@ -3587,6 +3792,184 @@
             scroll.innerHTML = '';
             messagesDiv = null;
             ask(`Full briefing for ${repName}'s ${date} trip`);
+        }
+
+        // ===== MAP TRIP CREATION PANEL =====
+        let _tcPreviewLayer = null;
+        let _tcPreviewMarkers = [];
+        let _tcDebounceTimer = null;
+
+        async function openTripCreatePanel() {
+            document.body.classList.add('trip-create-open');
+            // Load reps
+            const sel = document.getElementById('tcRep');
+            if (sel && sel.options.length <= 1) {
+                try {
+                    const res = await fetchT(API_BASE + '/api/travel/reps');
+                    if (res.ok) {
+                        const reps = await res.json();
+                        sel.innerHTML = '<option value="">Select a rep...</option>' +
+                            reps.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+                    }
+                } catch(e) { console.error('Failed to load reps for trip panel:', e); }
+            }
+            // Attach preview listeners
+            const startEl = document.getElementById('tcStart');
+            const endEl = document.getElementById('tcEnd');
+            if (startEl && !startEl._tcBound) {
+                startEl.addEventListener('blur', () => debouncePreviewRoute());
+                startEl._tcBound = true;
+            }
+            if (endEl && !endEl._tcBound) {
+                endEl.addEventListener('blur', () => debouncePreviewRoute());
+                endEl._tcBound = true;
+            }
+        }
+
+        function closeTripCreatePanel() {
+            document.body.classList.remove('trip-create-open');
+            clearTripPreview();
+            // Reset form
+            const fields = ['tcRep', 'tcDate', 'tcStart', 'tcEnd', 'tcNotes'];
+            fields.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            const status = document.getElementById('tcPreviewStatus');
+            if (status) { status.textContent = ''; status.className = 'tc-preview-status'; }
+            const btn = document.getElementById('tcSaveBtn');
+            if (btn) { btn.disabled = false; btn.textContent = 'Save Trip'; }
+        }
+
+        function debouncePreviewRoute() {
+            clearTimeout(_tcDebounceTimer);
+            _tcDebounceTimer = setTimeout(previewTripRoute, 600);
+        }
+
+        async function previewTripRoute() {
+            const startVal = document.getElementById('tcStart')?.value.trim();
+            const endVal = document.getElementById('tcEnd')?.value.trim();
+            const status = document.getElementById('tcPreviewStatus');
+
+            if (!startVal || !endVal) return;
+
+            if (status) { status.textContent = 'Previewing route...'; status.className = 'tc-preview-status'; }
+
+            try {
+                const [startRes, endRes] = await Promise.all([
+                    fetchT(API_BASE + `/api/travel/geocode?q=${encodeURIComponent(startVal)}`),
+                    fetchT(API_BASE + `/api/travel/geocode?q=${encodeURIComponent(endVal)}`)
+                ]);
+
+                if (!startRes.ok || !endRes.ok) {
+                    const failedLoc = !startRes.ok ? 'start' : 'end';
+                    if (status) { status.textContent = `Could not find ${failedLoc} location`; status.className = 'tc-preview-status error'; }
+                    return;
+                }
+
+                const startCoords = await startRes.json();
+                const endCoords = await endRes.json();
+
+                clearTripPreview();
+
+                // Draw dashed preview line
+                if (_map) {
+                    _tcPreviewLayer = L.polyline(
+                        [[startCoords.lat, startCoords.lng], [endCoords.lat, endCoords.lng]],
+                        { color: '#ff6b35', weight: 3, dashArray: '8 6', opacity: 0.8 }
+                    ).addTo(_map);
+
+                    // Start marker (green)
+                    const startIcon = L.divIcon({
+                        className: 'route-endpoint start',
+                        html: 'S',
+                        iconSize: [28, 28],
+                        iconAnchor: [14, 14]
+                    });
+                    const endIcon = L.divIcon({
+                        className: 'route-endpoint end',
+                        html: 'E',
+                        iconSize: [28, 28],
+                        iconAnchor: [14, 14]
+                    });
+
+                    _tcPreviewMarkers.push(
+                        L.marker([startCoords.lat, startCoords.lng], { icon: startIcon }).addTo(_map),
+                        L.marker([endCoords.lat, endCoords.lng], { icon: endIcon }).addTo(_map)
+                    );
+
+                    // Fit bounds
+                    const bounds = L.latLngBounds(
+                        [startCoords.lat, startCoords.lng],
+                        [endCoords.lat, endCoords.lng]
+                    );
+                    _map.fitBounds(bounds.pad(0.3));
+
+                    if (status) { status.textContent = 'Route preview shown on map'; status.className = 'tc-preview-status success'; }
+                }
+            } catch(e) {
+                console.error('Preview route error:', e);
+                if (status) { status.textContent = 'Preview failed'; status.className = 'tc-preview-status error'; }
+            }
+        }
+
+        function clearTripPreview() {
+            if (_tcPreviewLayer && _map) {
+                _map.removeLayer(_tcPreviewLayer);
+                _tcPreviewLayer = null;
+            }
+            _tcPreviewMarkers.forEach(m => { if (_map) _map.removeLayer(m); });
+            _tcPreviewMarkers = [];
+        }
+
+        async function saveMapTrip() {
+            const repId = document.getElementById('tcRep')?.value;
+            const dateVal = document.getElementById('tcDate')?.value;
+            const startVal = document.getElementById('tcStart')?.value.trim();
+            const endVal = document.getElementById('tcEnd')?.value.trim();
+            const notesVal = document.getElementById('tcNotes')?.value.trim();
+
+            if (!repId) { document.getElementById('tcRep')?.focus(); return; }
+            if (!dateVal) { document.getElementById('tcDate')?.focus(); return; }
+            if (!startVal) { document.getElementById('tcStart')?.focus(); return; }
+            if (!endVal) { document.getElementById('tcEnd')?.focus(); return; }
+
+            const btn = document.getElementById('tcSaveBtn');
+            if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+
+            try {
+                const res = await fetchT(API_BASE + '/api/travel/plans', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        rep_id: repId,
+                        travel_date: dateVal,
+                        start_location: startVal,
+                        end_location: endVal,
+                        notes: notesVal || null
+                    })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    alert(err.detail || 'Save failed');
+                    if (btn) { btn.disabled = false; btn.textContent = 'Save Trip'; }
+                    return;
+                }
+
+                clearTripPreview();
+                closeTripCreatePanel();
+
+                // Show success toast
+                const toast = document.createElement('div');
+                toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:10px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);color:#22c55e;font-size:13px;z-index:100;animation:tmFadeIn 0.2s ease-out;';
+                toast.textContent = 'Trip saved! Briefing email sent.';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            } catch(e) {
+                alert('Error saving trip: ' + e.message);
+                if (btn) { btn.disabled = false; btn.textContent = 'Save Trip'; }
+            }
         }
 
         // ===== DEALER MAP =====

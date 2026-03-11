@@ -47,6 +47,15 @@ def list_reps():
     return result.data
 
 
+@router.get("/geocode")
+async def geocode_location_endpoint(q: str = Query(..., description="Location text to geocode")):
+    """Geocode a location string to lat/lng for live route preview."""
+    coords = await _geocode_location(q)
+    if not coords:
+        raise HTTPException(404, f"Could not geocode: {q}")
+    return {"lat": coords[0], "lng": coords[1]}
+
+
 @router.get("/plans/{rep_id}")
 def get_travel_plans(
     rep_id: str,
