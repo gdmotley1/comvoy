@@ -25,6 +25,8 @@
             --orb-glow: rgba(79,143,255,0.4);
             --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
             --smooth: cubic-bezier(0.4, 0, 0.2, 1);
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-spring: cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1144,93 +1146,107 @@
         }
         .leaflet-control-attribution a { color: var(--text-secondary) !important; }
 
-        /* Custom popups */
+        /* ========== PREMIUM POPUPS ========== */
         .leaflet-popup-content-wrapper {
-            background: rgba(15,18,30,0.95) !important;
-            border: 1px solid var(--glass-border) !important;
-            border-radius: 12px !important;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+            background: rgba(12, 14, 28, 0.88) !important;
+            border: 1px solid rgba(255,255,255,0.07) !important;
+            border-top-color: rgba(255,255,255,0.11) !important;
+            border-radius: 14px !important;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.25), 0 4px 16px rgba(0,0,0,0.2), 0 12px 40px rgba(0,0,0,0.18) !important;
         }
-        .leaflet-popup-tip { background: rgba(15,18,30,0.95) !important; }
-        .leaflet-popup-content { color: var(--text-primary) !important; font-family: 'Inter', sans-serif; margin: 12px 16px !important; }
+        .leaflet-popup-tip { background: rgba(12, 14, 28, 0.88) !important; }
+        .leaflet-popup-content { color: var(--text-primary) !important; font-family: 'Inter', sans-serif; margin: 14px 18px !important; }
+        .leaflet-popup { animation: popupEnter 200ms var(--ease-out-expo) forwards; }
+        @keyframes popupEnter {
+            from { opacity: 0; transform: translateY(4px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
 
-        .map-popup-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
-        .map-popup-loc { color: var(--text-secondary); font-size: 12px; margin-bottom: 8px; }
-        .map-popup-stats { display: flex; gap: 16px; font-size: 12px; margin-bottom: 6px; }
-        .map-popup-stat { display: flex; flex-direction: column; gap: 2px; }
-        .map-popup-stat-label { color: var(--text-tertiary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .map-popup-stat-value { font-weight: 600; }
+        .map-popup-name { font-weight: 600; font-size: 13px; margin-bottom: 2px; letter-spacing: -0.01em; color: rgba(255,255,255,0.95); }
+        .map-popup-loc { color: rgba(255,255,255,0.45); font-size: 11px; margin-bottom: 6px; }
+        .map-popup-row { display: flex; align-items: center; gap: 0; font-size: 11px; color: rgba(255,255,255,0.7); margin-bottom: 6px; font-variant-numeric: tabular-nums; flex-wrap: wrap; }
+        .map-popup-kv b { color: rgba(255,255,255,0.92); font-weight: 600; }
+        .map-popup-sep { margin: 0 6px; color: rgba(255,255,255,0.2); }
+        .map-popup-meta { font-size: 10px; color: rgba(255,255,255,0.35); margin-bottom: 4px; }
         .map-popup-tier {
             display: inline-block;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 6px;
+            font-size: 9px;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 4px;
+            letter-spacing: 0.04em;
+            margin-top: 6px;
         }
-        .map-popup-tier.hot { background: rgba(255,107,53,0.2); color: #ff6b35; }
-        .map-popup-tier.warm { background: rgba(34,197,94,0.2); color: #22c55e; }
-        .map-popup-tier.cold { background: rgba(71,85,105,0.2); color: #94a3b8; }
+        .map-popup-tier.hot { background: rgba(255,107,53,0.12); color: #ff6b35; box-shadow: 0 0 8px rgba(255,107,53,0.15); }
+        .map-popup-tier.warm { background: rgba(34,197,94,0.12); color: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.12); }
+        .map-popup-tier.cold { background: rgba(71,85,105,0.15); color: #94a3b8; }
 
-        /* Map legend */
+        /* Map legend — compact horizontal strip */
         .map-legend {
             position: fixed;
-            bottom: 24px;
-            left: 24px;
+            bottom: 20px;
+            left: 20px;
             z-index: 10;
-            background: rgba(15,18,30,0.9);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 14px 18px;
-            backdrop-filter: blur(20px);
+            background: rgba(12, 14, 28, 0.75);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+            padding: 8px 14px;
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
             display: none;
+            flex-direction: row;
+            gap: 12px;
+            align-items: center;
         }
-        body.map-view .map-legend { display: block; }
-        .map-legend-title { font-size: 11px; font-weight: 600; margin-bottom: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
-        .map-legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; color: var(--text-secondary); }
-        .map-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        body.map-view .map-legend { display: flex; }
+        .map-legend-title { font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.06em; flex-shrink: 0; }
+        .map-legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: rgba(255,255,255,0.5); white-space: nowrap; }
+        .map-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
-        /* Map stats bar */
+        /* Map stats bar — slim floating pill */
         .map-stats {
             position: fixed;
             top: 72px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
-            background: rgba(15,18,30,0.9);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 8px 20px;
-            backdrop-filter: blur(20px);
+            background: rgba(12, 14, 28, 0.75);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 9999px;
+            padding: 5px 18px;
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
             display: none;
-            gap: 20px;
-            font-size: 12px;
+            gap: 16px;
+            font-size: 11px;
+            animation: statsIn 300ms var(--ease-out-expo) forwards;
         }
+        @keyframes statsIn { from { opacity: 0; transform: translateX(-50%) translateY(-6px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
         body.map-view .map-stats { display: flex; }
-        .map-stat { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); }
-        .map-stat-value { font-weight: 600; color: var(--text-primary); }
+        .map-stat { display: flex; align-items: center; gap: 4px; color: rgba(255,255,255,0.45); font-variant-numeric: tabular-nums; }
+        .map-stat-value { font-weight: 600; color: rgba(255,255,255,0.88); }
 
         /* ========== MAP FILTER BAR ========== */
         .map-filters {
             position: fixed;
-            top: 118px;
+            top: 110px;
             left: 20px;
-            right: 230px;
+            right: 220px;
             z-index: 10;
-            background: rgba(15,18,30,0.88);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 6px 14px;
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            background: rgba(12, 14, 28, 0.72);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+            padding: 5px 12px;
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
             display: none;
             align-items: center;
-            gap: 10px;
-            font-size: 12px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+            gap: 8px;
+            font-size: 11px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.2);
             overflow: hidden;
         }
         .map-filters::-webkit-scrollbar { display: none; }
@@ -1247,17 +1263,17 @@
         .map-filter-divider { width: 1px; height: 18px; background: var(--glass-border); flex-shrink: 0; }
         .map-chip {
             display: flex; align-items: center; gap: 4px;
-            padding: 3px 9px; border-radius: 8px;
-            border: 1px solid var(--glass-border);
-            background: rgba(255,255,255,0.03);
-            color: var(--text-tertiary);
+            padding: 2px 8px; border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.02);
+            color: rgba(255,255,255,0.35);
             font-size: 10px; font-family: inherit; font-weight: 500;
-            cursor: pointer; transition: all .2s ease; white-space: nowrap; user-select: none;
+            cursor: pointer; transition: all 150ms var(--ease-out-expo); white-space: nowrap; user-select: none;
         }
-        .map-chip:hover { border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); color: var(--text-secondary); }
-        .map-chip.active { border-color: var(--chip-color-dim, rgba(79,143,255,0.35)); background: var(--chip-bg, rgba(79,143,255,0.1)); color: var(--text-primary); }
-        .map-chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; opacity: 0.35; transition: opacity .2s; }
-        .map-chip.active .map-chip-dot { opacity: 1; }
+        .map-chip:hover { border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.6); }
+        .map-chip.active { border-color: var(--chip-color-dim, rgba(79,143,255,0.25)); background: var(--chip-bg, rgba(79,143,255,0.08)); color: rgba(255,255,255,0.9); }
+        .map-chip-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; opacity: 0.3; transition: all 150ms var(--ease-out-expo); }
+        .map-chip.active .map-chip-dot { opacity: 1; box-shadow: 0 0 4px currentColor; }
         .map-filter-reset {
             display: none; align-items: center; gap: 3px;
             padding: 3px 8px; border-radius: 8px;
@@ -1267,14 +1283,32 @@
         }
         .map-filter-reset:hover { background: rgba(239,68,68,0.12); color: #ef4444; border-color: rgba(239,68,68,0.35); }
 
-        /* Cluster styling override for dark theme */
-        .marker-cluster-small { background-color: rgba(79,143,255,0.3) !important; }
-        .marker-cluster-small div { background-color: rgba(79,143,255,0.6) !important; color: #fff !important; }
-        .marker-cluster-medium { background-color: rgba(168,85,247,0.3) !important; }
-        .marker-cluster-medium div { background-color: rgba(168,85,247,0.6) !important; color: #fff !important; }
-        .marker-cluster-large { background-color: rgba(236,72,153,0.3) !important; }
-        .marker-cluster-large div { background-color: rgba(236,72,153,0.6) !important; color: #fff !important; }
-        .marker-cluster div { font-family: 'Inter', sans-serif !important; font-weight: 600 !important; }
+        /* ========== GLASS CLUSTER SYSTEM ========== */
+        .marker-cluster { background: none !important; border: none !important; }
+        .marker-cluster div { background: none !important; }
+        .glass-cluster {
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 9999px;
+            background: rgba(15, 20, 40, 0.65);
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 0 1px rgba(79,143,255,0.06);
+            color: rgba(255, 255, 255, 0.88);
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.01em;
+            will-change: transform;
+            transition: transform 120ms var(--ease-spring), box-shadow 200ms var(--ease-out-expo);
+        }
+        .glass-cluster:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(79,143,255,0.15), 0 0 16px rgba(79,143,255,0.1);
+        }
+        .glass-cluster.gc-sm { width: 34px; height: 34px; font-size: 11px; }
+        .glass-cluster.gc-md { width: 42px; height: 42px; font-size: 12px; }
+        .glass-cluster.gc-lg { width: 50px; height: 50px; font-size: 13px; min-width: 50px; padding: 0 4px; }
 
         /* ========== TACTICAL MARKER SYSTEM ========== */
         .tac-marker { position: relative; display: flex; align-items: center; justify-content: center; }
@@ -1326,33 +1360,33 @@
         .route-panel {
             position: fixed;
             top: 72px;
-            right: 16px;
+            right: 14px;
             z-index: 15;
-            background: rgba(15,18,30,0.92);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 14px 16px;
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            width: 240px;
+            background: rgba(12, 14, 28, 0.8);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 12px 14px;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            width: 210px;
             display: none;
             flex-direction: column;
-            gap: 12px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-            animation: routePanelIn .3s var(--spring);
+            gap: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2), 0 8px 32px rgba(0,0,0,0.15);
+            animation: routePanelIn .25s var(--ease-out-expo);
         }
         body.map-view .route-panel { display: flex; }
         @keyframes routePanelIn {
             from { opacity: 0; transform: translateY(-8px) scale(0.96); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
-        .route-panel-header { display: flex; align-items: center; gap: 8px; }
-        .route-panel-icon { width: 16px; height: 16px; color: var(--accent-blue); flex-shrink: 0; }
+        .route-panel-header { display: flex; align-items: center; gap: 6px; }
+        .route-panel-icon { width: 14px; height: 14px; color: var(--accent-blue); flex-shrink: 0; opacity: 0.7; }
         .route-panel-title {
-            font-size: 12px; font-weight: 600; color: var(--text-secondary);
-            text-transform: uppercase; letter-spacing: 0.5px;
+            font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.4);
+            text-transform: uppercase; letter-spacing: 0.06em;
         }
-        .route-panel-body { display: flex; flex-direction: column; gap: 10px; }
+        .route-panel-body { display: flex; flex-direction: column; gap: 8px; }
         .route-select-wrap { display: flex; flex-direction: column; gap: 4px; }
         .route-select-label {
             font-size: 10px; font-weight: 500; color: var(--text-tertiary);
@@ -1364,10 +1398,10 @@
         .route-dropdown.disabled { opacity: 0.4; pointer-events: none; }
         .route-dropdown-trigger {
             display: flex; align-items: center; justify-content: space-between; gap: 6px;
-            padding: 7px 12px; border-radius: 10px;
-            border: 1px solid var(--glass-border); background: rgba(255,255,255,0.03);
-            color: var(--text-secondary); font-size: 12px; font-family: inherit; font-weight: 400;
-            cursor: pointer; transition: all .2s var(--smooth);
+            padding: 6px 10px; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.03);
+            color: rgba(255,255,255,0.5); font-size: 11px; font-family: inherit; font-weight: 400;
+            cursor: pointer; transition: all 150ms var(--ease-out-expo);
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .route-dropdown-trigger:hover {
@@ -1810,11 +1844,10 @@
 
     <div id="dealerMap"></div>
     <div class="map-legend" id="mapLegend">
-        <div class="map-legend-title">Lead Tier</div>
-        <div class="map-legend-item"><svg width="12" height="12" viewBox="0 0 26 26"><rect x="5" y="5" width="16" height="16" rx="2" transform="rotate(45 13 13)" fill="#ff6b35" fill-opacity="0.3" stroke="#ff6b35" stroke-width="1.5"/><circle cx="13" cy="13" r="3" fill="#ff6b35"/></svg> Hot (70-100)</div>
-        <div class="map-legend-item"><svg width="12" height="12" viewBox="0 0 22 22"><polygon points="11,1 21,6 21,16 11,21 1,16 1,6" fill="#22c55e" fill-opacity="0.2" stroke="#22c55e" stroke-width="1.2"/><circle cx="11" cy="11" r="2.5" fill="#22c55e"/></svg> Warm (40-69)</div>
-        <div class="map-legend-item"><svg width="12" height="12" viewBox="0 0 18 18"><circle cx="9" cy="9" r="6" fill="none" stroke="#475569" stroke-width="1"/><circle cx="9" cy="9" r="2" fill="#475569"/></svg> Cold (0-39)</div>
-        <div class="map-legend-item"><svg width="12" height="12" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="none" stroke="#4f8fff" stroke-width="0.8" opacity="0.4"/><circle cx="8" cy="8" r="2" fill="#4f8fff" opacity="0.6"/></svg> Not scored</div>
+        <div class="map-legend-item"><svg width="10" height="10" viewBox="0 0 26 26"><rect x="5" y="5" width="16" height="16" rx="2" transform="rotate(45 13 13)" fill="#ff6b35" fill-opacity="0.3" stroke="#ff6b35" stroke-width="1.5"/><circle cx="13" cy="13" r="3" fill="#ff6b35"/></svg>Hot</div>
+        <div class="map-legend-item"><svg width="10" height="10" viewBox="0 0 22 22"><polygon points="11,1 21,6 21,16 11,21 1,16 1,6" fill="#22c55e" fill-opacity="0.2" stroke="#22c55e" stroke-width="1.2"/><circle cx="11" cy="11" r="2.5" fill="#22c55e"/></svg>Warm</div>
+        <div class="map-legend-item"><svg width="10" height="10" viewBox="0 0 18 18"><circle cx="9" cy="9" r="6" fill="none" stroke="#475569" stroke-width="1"/><circle cx="9" cy="9" r="2" fill="#475569"/></svg>Cold</div>
+        <div class="map-legend-item"><svg width="10" height="10" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="none" stroke="#4f8fff" stroke-width="0.8" opacity="0.4"/><circle cx="8" cy="8" r="2" fill="#4f8fff" opacity="0.6"/></svg>N/A</div>
     </div>
     <div class="map-stats" id="mapStats"></div>
 
@@ -2878,13 +2911,13 @@
                 showCoverageOnHover: false,
                 iconCreateFunction: function(cluster) {
                     const count = cluster.getChildCount();
-                    let size = 'small';
-                    if (count > 50) size = 'large';
-                    else if (count > 20) size = 'medium';
+                    let sc = 'gc-sm', sz = 34;
+                    if (count > 50) { sc = 'gc-lg'; sz = count > 99 ? 54 : 50; }
+                    else if (count > 20) { sc = 'gc-md'; sz = 42; }
                     return L.divIcon({
-                        html: '<div>' + count + '</div>',
-                        className: 'marker-cluster marker-cluster-' + size,
-                        iconSize: L.point(40, 40),
+                        html: '<div class="glass-cluster ' + sc + '">' + count + '</div>',
+                        className: 'marker-cluster',
+                        iconSize: L.point(sz, sz),
                     });
                 },
             });
@@ -2903,23 +2936,16 @@
                     <div class="map-popup-name">${d.name}</div>
                     <div class="map-popup-loc">${d.city}, ${d.state}</div>
                     ${ratingLine}
-                    <div class="map-popup-stats">
-                        <div class="map-popup-stat">
-                            <span class="map-popup-stat-label">Vehicles</span>
-                            <span class="map-popup-stat-value">${d.vehicles || 0}</span>
-                        </div>
-                        <div class="map-popup-stat">
-                            <span class="map-popup-stat-label">Smyrna</span>
-                            <span class="map-popup-stat-value">${d.smyrna || 0} (${smyrnaPct})</span>
-                        </div>
-                        <div class="map-popup-stat">
-                            <span class="map-popup-stat-label">Score</span>
-                            <span class="map-popup-stat-value">${d.score ?? '—'}</span>
-                        </div>
+                    <div class="map-popup-row">
+                        <span class="map-popup-kv"><b>${d.vehicles || 0}</b> veh</span>
+                        <span class="map-popup-sep">·</span>
+                        <span class="map-popup-kv"><b>${d.smyrna || 0}</b> Smyrna (${smyrnaPct})</span>
+                        <span class="map-popup-sep">·</span>
+                        <span class="map-popup-kv">Score <b>${d.score ?? '—'}</b></span>
                     </div>
-                    ${d.top_brand ? `<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;">Top: ${d.top_brand}${d.opportunity ? ' · ' + d.opportunity : ''}</div>` : ''}
+                    ${d.top_brand ? `<div class="map-popup-meta">Top: ${d.top_brand}${d.opportunity ? ' · ' + d.opportunity : ''}</div>` : ''}
                     <span class="map-popup-tier ${tierClass}">${tierLabel}</span>
-                `, { maxWidth: 280 });
+                `, { maxWidth: 260 });
 
                 marker.bindTooltip(`${d.name} — ${d.vehicles || 0} vehicles`, {
                     direction: 'top', offset: [0, -10], className: 'map-hover-tooltip'
@@ -3231,27 +3257,18 @@
                     const popup = `
                         <div class="map-popup-name">${esc(d.name)}</div>
                         <div class="map-popup-loc">${esc(d.city)}, ${esc(d.state)}</div>
-                        <div class="map-popup-stats">
-                            <div class="map-popup-stat">
-                                <span class="map-popup-stat-label">Vehicles</span>
-                                <span class="map-popup-stat-value">${d.vehicles || 0}</span>
-                            </div>
-                            <div class="map-popup-stat">
-                                <span class="map-popup-stat-label">Score</span>
-                                <span class="map-popup-stat-value">${d.lead_score ?? '—'}</span>
-                            </div>
-                            <div class="map-popup-stat">
-                                <span class="map-popup-stat-label">${driveTimeStr ? 'Drive' : 'Off Route'}</span>
-                                <span class="map-popup-stat-value">${driveTimeStr || distStr + ' mi'}</span>
-                            </div>
+                        <div class="map-popup-row">
+                            <span class="map-popup-kv"><b>${d.vehicles || 0}</b> veh</span>
+                            <span class="map-popup-sep">·</span>
+                            <span class="map-popup-kv">Score <b>${d.lead_score ?? '—'}</b></span>
+                            <span class="map-popup-sep">·</span>
+                            <span class="map-popup-kv"><b>${driveTimeStr || distStr + ' mi'}</b> ${driveTimeStr ? '' : 'off route'}</span>
                         </div>
-                        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;">
-                            ${d.top_brand ? 'Top: ' + esc(d.top_brand) : ''}
-                            ${d.opportunity ? ' &middot; ' + esc(d.opportunity) : ''}
-                            ${posStr ? ' &middot; Route ' + posStr : ''}
+                        <div class="map-popup-meta">
+                            ${d.top_brand ? 'Top: ' + esc(d.top_brand) : ''}${d.opportunity ? ' · ' + esc(d.opportunity) : ''}${posStr ? ' · Route ' + posStr : ''}
                         </div>
                         <span class="map-popup-tier ${tierClass}">${tierLabel}</span>
-                        ${isTop5 ? '<div style="margin-top:6px;font-size:10px;color:#ff6b35;font-weight:600;">&#9733; RECOMMENDED STOP</div>' : ''}
+                        ${isTop5 ? '<div style="margin-top:4px;font-size:9px;color:#ff6b35;font-weight:600;letter-spacing:0.04em;">&#9733; RECOMMENDED STOP</div>' : ''}
                     `;
                     const marker = L.marker([d.lat, d.lng], { icon, zIndexOffset: 500 })
                         .bindPopup(popup, { maxWidth: 280 })
