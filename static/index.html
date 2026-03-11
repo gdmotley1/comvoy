@@ -105,6 +105,13 @@
             padding: 20px 28px;
             flex-shrink: 0;
             pointer-events: none;
+            transition: background 0.3s var(--smooth), border-color 0.3s var(--smooth);
+        }
+        body.map-view .topbar {
+            background: rgba(6, 8, 15, 0.5);
+            backdrop-filter: blur(16px) saturate(150%);
+            -webkit-backdrop-filter: blur(16px) saturate(150%);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
         }
 
         .topbar > * { pointer-events: auto; }
@@ -1260,13 +1267,30 @@
 
         /* Dark map tiles */
         .leaflet-container { background: #0a0e1a; }
-        .leaflet-control-zoom a {
-            background: rgba(15,18,30,0.9) !important;
-            color: var(--text-primary) !important;
-            border-color: var(--glass-border) !important;
+        .leaflet-control-zoom {
+            border: none !important;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.4) !important;
+            border-radius: 10px !important;
+            overflow: hidden;
+            margin-left: 14px !important;
+            margin-top: 10px !important;
         }
+        .leaflet-control-zoom a {
+            background: rgba(12, 14, 28, 0.85) !important;
+            color: var(--text-primary) !important;
+            border: none !important;
+            border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+            width: 36px !important;
+            height: 36px !important;
+            line-height: 36px !important;
+            font-size: 18px !important;
+            font-weight: 300 !important;
+            transition: background 0.15s !important;
+        }
+        .leaflet-control-zoom a:last-child { border-bottom: none !important; }
         .leaflet-control-zoom a:hover {
-            background: rgba(30,35,55,0.95) !important;
+            background: rgba(79,143,255,0.12) !important;
+            color: #fff !important;
         }
         .leaflet-control-attribution {
             background: rgba(6,8,15,0.7) !important;
@@ -1426,8 +1450,8 @@
         /* ========== MAP FILTER BAR ========== */
         .map-filters {
             position: fixed;
-            top: 110px;
-            left: 20px;
+            top: 72px;
+            left: 64px;
             z-index: 10;
             display: none;
             align-items: center;
@@ -2015,7 +2039,7 @@
         /* Mobile responsive */
         @media (max-width: 600px) {
             .route-panel { width: 200px; right: 8px; top: 68px; padding: 10px 12px; }
-            .map-filters { top: 110px; left: 8px; gap: 4px; flex-wrap: wrap; }
+            .map-filters { top: 72px; left: 54px; gap: 4px; flex-wrap: wrap; }
         }
 
         /* ========== TRIP MANAGER VIEW ========== */
