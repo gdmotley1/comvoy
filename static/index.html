@@ -303,22 +303,23 @@
         @keyframes irisShift { 0%, 100% { stop-color: #4f8fff; } 33% { stop-color: #00d4ff; } 66% { stop-color: #a855f7; } }
 
         .welcome-title {
-            font-size: 28px;
-            font-weight: 300;
-            letter-spacing: -0.5px;
+            font-size: 36px;
+            font-weight: 200;
+            letter-spacing: -1px;
             color: var(--text-primary);
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             text-align: center;
         }
 
         .welcome-sub {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-bottom: 12px;
+            font-size: 15px;
+            color: rgba(255,255,255,0.35);
+            margin-bottom: 32px;
             text-align: center;
             font-weight: 400;
-            max-width: 480px;
+            max-width: 440px;
             line-height: 1.6;
+            letter-spacing: 0.2px;
         }
 
         /* ---- LANDING STATS ROW ---- */
@@ -406,13 +407,14 @@
             stroke-linejoin: round;
         }
         .hero-card-title {
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 600;
             color: var(--text-primary);
+            letter-spacing: -0.3px;
         }
         .hero-card-desc {
-            font-size: 12px;
-            color: var(--text-secondary);
+            font-size: 13px;
+            color: rgba(255,255,255,0.4);
             line-height: 1.5;
         }
 
@@ -2646,13 +2648,7 @@
                     <svg class="otto-eye" viewBox="0 0 60 60"><defs><radialGradient id="irisGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"><animate attributeName="stop-color" values="#4f8fff;#00d4ff;#a855f7;#4f8fff" dur="6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#1a1a3e"/></radialGradient><radialGradient id="pupilGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient></defs><circle cx="30" cy="30" r="29" fill="none" stroke="url(#irisGrad)" stroke-width="0.5" opacity="0.3"><animate attributeName="opacity" values="0.3;0.5;0.3" dur="3s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="url(#irisGrad)" stroke-width="2" opacity="0.9"/><circle cx="30" cy="30" r="27" fill="url(#irisGrad)" opacity="0.06"/><circle cx="30" cy="30" r="22" fill="url(#irisGrad)" opacity="0.18"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="360 30 30" dur="12s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="16" fill="none" stroke="url(#irisGrad)" stroke-width="2.5" opacity="0.45"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="-360 30 30" dur="8s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="10" fill="url(#irisGrad)" opacity="0.6"><animate attributeName="r" values="10;12.5;10" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0.85;0.6" dur="3s" repeatCount="indefinite"/></circle><circle class="otto-pupil" cx="30" cy="30" r="6" fill="#060810"/><circle class="pupil-glow" cx="30" cy="30" r="4" fill="url(#pupilGlow)" opacity="0.8"><animate attributeName="opacity" values="0.8;0.35;0.8" dur="2.5s" repeatCount="indefinite"/><animate attributeName="r" values="4;5;4" dur="2.5s" repeatCount="indefinite"/></circle><circle class="specular-1" cx="23" cy="23" r="3" fill="white" opacity="0.25"/><circle class="specular-2" cx="25" cy="25" r="1.5" fill="white" opacity="0.45"/></svg>
                 </div>
                 <div class="welcome-title" id="welcomeTitle"></div>
-                <div class="welcome-sub welcome-sub-reveal">Connected to 588 dealers across 12 states. Real-time inventory, lead scoring, route planning — powered by AI.</div>
-                <div class="welcome-stats">
-                    <span class="welcome-stat"><strong>588</strong> Dealers</span><span class="welcome-stat-sep">&middot;</span>
-                    <span class="welcome-stat"><strong>13</strong> Brands</span><span class="welcome-stat-sep">&middot;</span>
-                    <span class="welcome-stat"><strong>12</strong> States</span><span class="welcome-stat-sep">&middot;</span>
-                    <span class="welcome-stat"><strong>~13,400</strong> Vehicles</span>
-                </div>
+                <div class="welcome-sub welcome-sub-reveal">Real-time inventory, lead scoring, route planning — powered by AI.</div>
                 <div class="hero-cards">
                     <div class="hero-card" onclick="openDealerMap()">
                         <div class="hero-card-icon"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
@@ -2670,16 +2666,7 @@
                         <div class="hero-card-desc">Dealer intel, territory trends, hot leads — just ask</div>
                     </div>
                 </div>
-                <div class="quick-actions">
-                    <button class="quick-chip" onclick="ask('Show me the top 15 hot leads across all territories')">Top Hot Leads</button>
-                    <button class="quick-chip" onclick="ask('Give me the latest monthly report with territory changes and top opportunities')">Monthly Report</button>
-                    <button class="quick-chip" onclick="expandQuickForm('dealer')">Research a Dealer</button>
-                    <button class="quick-chip" onclick="expandQuickForm('territory')">Territory Overview</button>
-                </div>
-                <div class="action-cards" id="actionCards" style="display:none">
-                    <div class="action-card" data-action="dealer" onclick="handleActionCard(this)"><div class="action-card-title">Research a Dealer</div><div class="action-card-form" onclick="event.stopPropagation()"><div class="action-form-row"><span class="action-form-label">Name</span><input class="action-form-input" id="dealerName" placeholder="e.g. Century Trucks" /><button class="action-form-go" onclick="submitDealer()">Research</button></div></div></div>
-                    <div class="action-card" data-action="territory" onclick="handleActionCard(this)"><div class="action-card-title">Review Territory</div><div class="action-card-form" onclick="event.stopPropagation()"><div class="action-form-row"><span class="action-form-label">State</span><select class="action-form-select" id="territoryState"><option value="">Select a state...</option><option value="NC">North Carolina</option><option value="FL">Florida</option><option value="TX">Texas</option><option value="GA">Georgia</option><option value="TN">Tennessee</option><option value="AL">Alabama</option><option value="SC">South Carolina</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option><option value="AR">Arkansas</option><option value="OK">Oklahoma</option><option value="MS">Mississippi</option></select><button class="action-form-go" onclick="submitTerritory()">Review</button></div></div></div>
-                </div>
+                <div class="action-cards" id="actionCards" style="display:none"></div>
                 <div class="api-notice" id="apiNotice"><div class="api-notice-icon"><svg viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg></div><div class="api-notice-text"><strong>API key required.</strong> Add <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">ANTHROPIC_API_KEY</code> to your <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">.env</code> file and restart the server.</div></div>
             </div>
         </div>
@@ -2965,13 +2952,7 @@
 <div class="orb-hero"><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
 <svg class="otto-eye" viewBox="0 0 60 60"><defs><radialGradient id="irisGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"><animate attributeName="stop-color" values="#4f8fff;#00d4ff;#a855f7;#4f8fff" dur="6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#1a1a3e"/></radialGradient><radialGradient id="pupilGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient></defs><circle cx="30" cy="30" r="29" fill="none" stroke="url(#irisGrad)" stroke-width="0.5" opacity="0.3"><animate attributeName="opacity" values="0.3;0.5;0.3" dur="3s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="url(#irisGrad)" stroke-width="2" opacity="0.9"/><circle cx="30" cy="30" r="27" fill="url(#irisGrad)" opacity="0.06"/><circle cx="30" cy="30" r="22" fill="url(#irisGrad)" opacity="0.18"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="360 30 30" dur="12s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="16" fill="none" stroke="url(#irisGrad)" stroke-width="2.5" opacity="0.45"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="-360 30 30" dur="8s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="10" fill="url(#irisGrad)" opacity="0.6"><animate attributeName="r" values="10;12.5;10" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0.85;0.6" dur="3s" repeatCount="indefinite"/></circle><circle class="otto-pupil" cx="30" cy="30" r="6" fill="#060810"/><circle class="pupil-glow" cx="30" cy="30" r="4" fill="url(#pupilGlow)" opacity="0.8"><animate attributeName="opacity" values="0.8;0.35;0.8" dur="2.5s" repeatCount="indefinite"/><animate attributeName="r" values="4;5;4" dur="2.5s" repeatCount="indefinite"/></circle><circle class="specular-1" cx="23" cy="23" r="3" fill="white" opacity="0.25"/><circle class="specular-2" cx="25" cy="25" r="1.5" fill="white" opacity="0.45"/></svg></div>
 <div class="welcome-title" id="welcomeTitle"></div>
-<div class="welcome-sub welcome-sub-reveal">Connected to 588 dealers across 12 states. Real-time inventory, lead scoring, route planning — powered by AI.</div>
-<div class="welcome-stats">
-<span class="welcome-stat"><strong>588</strong> Dealers</span><span class="welcome-stat-sep">&middot;</span>
-<span class="welcome-stat"><strong>13</strong> Brands</span><span class="welcome-stat-sep">&middot;</span>
-<span class="welcome-stat"><strong>12</strong> States</span><span class="welcome-stat-sep">&middot;</span>
-<span class="welcome-stat"><strong>~13,400</strong> Vehicles</span>
-</div>
+<div class="welcome-sub welcome-sub-reveal">Real-time inventory, lead scoring, route planning — powered by AI.</div>
 <div class="hero-cards">
 <div class="hero-card" onclick="openDealerMap()">
 <div class="hero-card-icon"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
@@ -2989,16 +2970,7 @@
 <div class="hero-card-desc">Dealer intel, territory trends, hot leads — just ask</div>
 </div>
 </div>
-<div class="quick-actions">
-<button class="quick-chip" onclick="ask('Show me the top 15 hot leads across all territories')">Top Hot Leads</button>
-<button class="quick-chip" onclick="ask('Give me the latest monthly report with territory changes and top opportunities')">Monthly Report</button>
-<button class="quick-chip" onclick="expandQuickForm('dealer')">Research a Dealer</button>
-<button class="quick-chip" onclick="expandQuickForm('territory')">Territory Overview</button>
-</div>
-<div class="action-cards" id="actionCards" style="display:none">
-<div class="action-card" data-action="dealer" onclick="handleActionCard(this)"><div class="action-card-title">Research a Dealer</div><div class="action-card-form" onclick="event.stopPropagation()"><div class="action-form-row"><span class="action-form-label">Name</span><input class="action-form-input" id="dealerName" placeholder="e.g. Century Trucks" /><button class="action-form-go" onclick="submitDealer()">Research</button></div></div></div>
-<div class="action-card" data-action="territory" onclick="handleActionCard(this)"><div class="action-card-title">Review Territory</div><div class="action-card-form" onclick="event.stopPropagation()"><div class="action-form-row"><span class="action-form-label">State</span><select class="action-form-select" id="territoryState"><option value="">Select a state...</option><option value="NC">North Carolina</option><option value="FL">Florida</option><option value="TX">Texas</option><option value="GA">Georgia</option><option value="TN">Tennessee</option><option value="AL">Alabama</option><option value="SC">South Carolina</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option><option value="AR">Arkansas</option><option value="OK">Oklahoma</option><option value="MS">Mississippi</option></select><button class="action-form-go" onclick="submitTerritory()">Review</button></div></div></div>
-</div>
+<div class="action-cards" id="actionCards" style="display:none"></div>
 <div class="api-notice" id="apiNotice"><div class="api-notice-icon"><svg viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg></div><div class="api-notice-text"><strong>API key required.</strong> Add <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">ANTHROPIC_API_KEY</code> to your <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">.env</code> file and restart the server.</div></div>
 </div>`;
         }
