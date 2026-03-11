@@ -1911,31 +1911,67 @@
             top: 72px;
             right: 14px;
             z-index: 15;
-            background: rgba(12, 14, 28, 0.8);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 12px;
-            padding: 12px 14px;
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            width: 210px;
             display: none;
             flex-direction: column;
-            gap: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2), 0 8px 32px rgba(0,0,0,0.15);
-            animation: routePanelIn .25s var(--ease-out-expo);
         }
         body.map-view .route-panel { display: flex; }
+
+        .route-panel-toggle {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 14px; border-radius: 10px;
+            background: rgba(12, 14, 28, 0.8);
+            border: 1px solid rgba(255,255,255,0.06);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2), 0 8px 32px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: all 0.2s var(--ease-out-expo);
+            user-select: none;
+            animation: routePanelIn .25s var(--ease-out-expo);
+        }
+        .route-panel-toggle:hover {
+            border-color: rgba(255,255,255,0.12);
+            background: rgba(12, 14, 28, 0.9);
+        }
+        .route-panel-toggle.active {
+            border-color: rgba(79,143,255,0.25);
+        }
+        .route-panel-icon { width: 14px; height: 14px; color: var(--accent-blue); flex-shrink: 0; opacity: 0.7; }
+        .route-panel-title {
+            font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.5);
+        }
+        .route-panel-chevron {
+            width: 12px; height: 12px; color: rgba(255,255,255,0.3); flex-shrink: 0;
+            transition: transform 0.25s var(--ease-out-expo);
+        }
+        .route-panel-toggle.active .route-panel-chevron { transform: rotate(180deg); }
+
+        .route-panel-body {
+            display: flex; flex-direction: column; gap: 8px;
+            margin-top: 6px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: rgba(12, 14, 28, 0.8);
+            border: 1px solid rgba(255,255,255,0.06);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2), 0 8px 32px rgba(0,0,0,0.15);
+            width: 220px;
+            opacity: 0; pointer-events: none;
+            transform: translateY(-6px) scale(0.96);
+            transition: all 0.2s var(--ease-out-expo);
+            max-height: 0; overflow: visible;
+        }
+        .route-panel.open .route-panel-body {
+            opacity: 1; pointer-events: auto;
+            transform: translateY(0) scale(1);
+            max-height: 400px;
+        }
+
         @keyframes routePanelIn {
             from { opacity: 0; transform: translateY(-8px) scale(0.96); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
-        .route-panel-header { display: flex; align-items: center; gap: 6px; }
-        .route-panel-icon { width: 14px; height: 14px; color: var(--accent-blue); flex-shrink: 0; opacity: 0.7; }
-        .route-panel-title {
-            font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.4);
-            text-transform: uppercase; letter-spacing: 0.06em;
-        }
-        .route-panel-body { display: flex; flex-direction: column; gap: 8px; }
         .route-select-wrap { display: flex; flex-direction: column; gap: 4px; }
         .route-select-label {
             font-size: 10px; font-weight: 500; color: var(--text-tertiary);
@@ -2048,7 +2084,8 @@
 
         /* Mobile responsive */
         @media (max-width: 600px) {
-            .route-panel { width: 200px; right: 8px; top: 68px; padding: 10px 12px; }
+            .route-panel { right: 8px; top: 68px; }
+            .route-panel-body { width: 200px; padding: 10px 12px; }
             .map-filters { top: 72px; left: 54px; gap: 4px; flex-wrap: wrap; }
         }
 
@@ -2570,9 +2607,10 @@
     </div>
 
     <div class="route-panel" id="routePanel">
-        <div class="route-panel-header">
+        <div class="route-panel-toggle" onclick="toggleRoutePanel()">
             <svg class="route-panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
             <span class="route-panel-title">Trip Routes</span>
+            <svg class="route-panel-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
         </div>
         <div class="route-panel-body">
             <div class="route-select-wrap">
@@ -4159,6 +4197,14 @@
             if (!e.target.closest('.map-search')) {
                 closeSearchResults();
             }
+            if (!e.target.closest('.route-panel')) {
+                const panel = document.getElementById('routePanel');
+                if (panel) {
+                    panel.classList.remove('open');
+                    const toggle = panel.querySelector('.route-panel-toggle');
+                    if (toggle) toggle.classList.remove('active');
+                }
+            }
         });
 
         // ===== ROUTE OVERLAY =====
@@ -4169,6 +4215,13 @@
                 const [lng, lat] = pair.trim().split(/\s+/).map(Number);
                 return [lat, lng];
             }).filter(p => !isNaN(p[0]) && !isNaN(p[1]));
+        }
+
+        function toggleRoutePanel() {
+            const panel = document.getElementById('routePanel');
+            const toggle = panel.querySelector('.route-panel-toggle');
+            const isOpen = panel.classList.toggle('open');
+            toggle.classList.toggle('active', isOpen);
         }
 
         function toggleRouteDropdown(which) {
