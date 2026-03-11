@@ -1234,54 +1234,119 @@
             position: fixed;
             top: 110px;
             left: 20px;
-            right: 220px;
             z-index: 10;
-            background: rgba(12, 14, 28, 0.72);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 10px;
-            padding: 5px 12px;
-            backdrop-filter: blur(16px) saturate(180%);
-            -webkit-backdrop-filter: blur(16px) saturate(180%);
             display: none;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             font-size: 11px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.2);
-            overflow: hidden;
         }
-        .map-filters::-webkit-scrollbar { display: none; }
         body.map-view .map-filters { display: flex; }
         body.map-view.route-active .map-filters { display: none; }
-        .map-filter-group { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
-        .map-filter-states { flex-shrink: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
-        .map-filter-states::-webkit-scrollbar { display: none; }
-        .map-filter-label {
-            font-size: 9px; font-weight: 700; color: var(--text-tertiary);
-            text-transform: uppercase; letter-spacing: 0.8px; flex-shrink: 0;
+
+        /* Filter pill buttons */
+        .filter-pill-wrap { position: relative; }
+        .filter-pill {
+            display: flex; align-items: center; gap: 5px;
+            padding: 5px 10px; border-radius: 8px;
+            background: rgba(12, 14, 28, 0.72);
+            border: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            color: rgba(255,255,255,0.55);
+            font-size: 11px; font-family: inherit; font-weight: 500;
+            cursor: pointer; user-select: none;
+            transition: all 150ms var(--ease-out-expo);
+            white-space: nowrap;
         }
-        .map-filter-chips { display: flex; gap: 3px; flex-wrap: nowrap; }
-        .map-filter-divider { width: 1px; height: 18px; background: var(--glass-border); flex-shrink: 0; }
-        .map-chip {
-            display: flex; align-items: center; gap: 4px;
-            padding: 2px 8px; border-radius: 6px;
-            border: 1px solid rgba(255,255,255,0.06);
-            background: rgba(255,255,255,0.02);
-            color: rgba(255,255,255,0.35);
-            font-size: 10px; font-family: inherit; font-weight: 500;
-            cursor: pointer; transition: all 150ms var(--ease-out-expo); white-space: nowrap; user-select: none;
+        .filter-pill:hover { border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.75); background: rgba(12, 14, 28, 0.85); }
+        .filter-pill.open { border-color: rgba(79,143,255,0.3); color: rgba(255,255,255,0.9); background: rgba(12, 14, 28, 0.88); }
+        .filter-pill.has-filter { border-color: rgba(79,143,255,0.25); color: rgba(255,255,255,0.88); }
+        .filter-pill-count {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 16px; height: 16px; padding: 0 4px;
+            border-radius: 8px; background: rgba(79,143,255,0.2);
+            color: #4f8fff; font-size: 9px; font-weight: 700;
+            font-variant-numeric: tabular-nums;
         }
-        .map-chip:hover { border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.6); }
-        .map-chip.active { border-color: var(--chip-color-dim, rgba(79,143,255,0.25)); background: var(--chip-bg, rgba(79,143,255,0.08)); color: rgba(255,255,255,0.9); }
-        .map-chip-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; opacity: 0.3; transition: all 150ms var(--ease-out-expo); }
-        .map-chip.active .map-chip-dot { opacity: 1; box-shadow: 0 0 4px currentColor; }
-        .map-filter-reset {
+        .filter-pill-chevron {
+            width: 10px; height: 10px; opacity: 0.4;
+            transition: transform 150ms var(--ease-out-expo);
+        }
+        .filter-pill.open .filter-pill-chevron { transform: rotate(180deg); opacity: 0.7; }
+
+        /* Dropdown panels */
+        .filter-dropdown {
+            position: absolute; top: calc(100% + 6px); left: 0;
+            min-width: 160px;
+            background: rgba(12, 14, 28, 0.92);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 6px;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(79,143,255,0.04);
+            display: none; flex-direction: column; gap: 1px;
+            animation: dropIn 150ms var(--ease-out-expo) forwards;
+            z-index: 20;
+        }
+        .filter-dropdown.open { display: flex; }
+        .filter-dropdown.state-dd { max-height: 240px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
+        .filter-dropdown.state-dd::-webkit-scrollbar { width: 4px; }
+        .filter-dropdown.state-dd::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+        @keyframes dropIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Checkbox rows */
+        .filter-row {
+            display: flex; align-items: center; gap: 8px;
+            padding: 6px 8px; border-radius: 6px;
+            cursor: pointer; transition: background 100ms ease;
+            color: rgba(255,255,255,0.7); font-size: 11px; font-weight: 500;
+            user-select: none;
+        }
+        .filter-row:hover { background: rgba(255,255,255,0.05); }
+        .filter-row.unchecked { color: rgba(255,255,255,0.3); }
+        .filter-check {
+            width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0;
+            border: 1.5px solid rgba(255,255,255,0.2);
+            display: flex; align-items: center; justify-content: center;
+            transition: all 120ms var(--ease-out-expo);
+        }
+        .filter-row:not(.unchecked) .filter-check {
+            background: rgba(79,143,255,0.25); border-color: rgba(79,143,255,0.5);
+        }
+        .filter-check-icon { width: 8px; height: 8px; opacity: 0; transition: opacity 100ms ease; }
+        .filter-row:not(.unchecked) .filter-check-icon { opacity: 1; }
+        .filter-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .filter-label { flex: 1; }
+        .filter-sublabel { font-size: 9px; color: rgba(255,255,255,0.25); font-variant-numeric: tabular-nums; }
+
+        /* All/None toggle row */
+        .filter-toggle-row {
+            display: flex; gap: 6px; padding: 4px 8px 6px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 2px;
+        }
+        .filter-toggle-btn {
+            font-size: 9px; font-weight: 600; font-family: inherit;
+            color: rgba(79,143,255,0.7); background: none; border: none;
+            cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em;
+            padding: 2px 0; transition: color 100ms ease;
+        }
+        .filter-toggle-btn:hover { color: #4f8fff; }
+
+        /* Reset pill */
+        .filter-reset {
             display: none; align-items: center; gap: 3px;
-            padding: 3px 8px; border-radius: 8px;
-            border: 1px solid rgba(239,68,68,0.2); background: rgba(239,68,68,0.06);
-            color: rgba(239,68,68,0.7); font-size: 10px; font-family: inherit; font-weight: 500;
-            cursor: pointer; transition: all .2s ease; flex-shrink: 0;
+            padding: 5px 10px; border-radius: 8px;
+            background: rgba(12, 14, 28, 0.72);
+            border: 1px solid rgba(239,68,68,0.15);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            color: rgba(239,68,68,0.6); font-size: 11px; font-family: inherit; font-weight: 500;
+            cursor: pointer; transition: all 150ms var(--ease-out-expo);
         }
-        .map-filter-reset:hover { background: rgba(239,68,68,0.12); color: #ef4444; border-color: rgba(239,68,68,0.35); }
+        .filter-reset:hover { border-color: rgba(239,68,68,0.35); color: #ef4444; background: rgba(239,68,68,0.06); }
 
         /* ========== GLASS CLUSTER SYSTEM ========== */
         .marker-cluster { background: none !important; border: none !important; }
@@ -1500,7 +1565,7 @@
         /* Mobile responsive */
         @media (max-width: 600px) {
             .route-panel { width: 200px; right: 8px; top: 68px; padding: 10px 12px; }
-            .map-filters { top: 110px; padding: 5px 8px; gap: 6px; left: 8px; right: 8px; }
+            .map-filters { top: 110px; left: 8px; gap: 4px; flex-wrap: wrap; }
         }
 
         /* ========== TRIP MANAGER VIEW ========== */
@@ -1852,21 +1917,87 @@
     <div class="map-stats" id="mapStats"></div>
 
     <div class="map-filters" id="mapFilters">
-        <div class="map-filter-group">
-            <span class="map-filter-label">Tier</span>
-            <div class="map-filter-chips" id="tierChips">
-                <button class="map-chip active" data-tier="hot" style="--chip-color-dim:rgba(255,107,53,0.35);--chip-bg:rgba(255,107,53,0.1)" onclick="toggleTierFilter('hot',this)"><span class="map-chip-dot" style="background:#ff6b35"></span>Hot</button>
-                <button class="map-chip active" data-tier="warm" style="--chip-color-dim:rgba(34,197,94,0.35);--chip-bg:rgba(34,197,94,0.1)" onclick="toggleTierFilter('warm',this)"><span class="map-chip-dot" style="background:#22c55e"></span>Warm</button>
-                <button class="map-chip active" data-tier="cold" style="--chip-color-dim:rgba(71,85,105,0.4);--chip-bg:rgba(71,85,105,0.1)" onclick="toggleTierFilter('cold',this)"><span class="map-chip-dot" style="background:#475569"></span>Cold</button>
-                <button class="map-chip active" data-tier="unscored" style="--chip-color-dim:rgba(79,143,255,0.35);--chip-bg:rgba(79,143,255,0.1)" onclick="toggleTierFilter('unscored',this)"><span class="map-chip-dot" style="background:#4f8fff"></span>Unscored</button>
+        <div class="filter-pill-wrap" id="tierWrap">
+            <button class="filter-pill" onclick="toggleDropdown('tier')">
+                Tier <span class="filter-pill-count" id="tierCount" style="display:none"></span>
+                <svg class="filter-pill-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+            </button>
+            <div class="filter-dropdown" id="tierDd">
+                <div class="filter-row" data-filter="tier" data-val="hot" onclick="toggleFilterRow(this)">
+                    <span class="filter-check"><svg class="filter-check-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></span>
+                    <span class="filter-dot" style="background:#ff6b35"></span>
+                    <span class="filter-label">Hot</span>
+                    <span class="filter-sublabel">70–100</span>
+                </div>
+                <div class="filter-row" data-filter="tier" data-val="warm" onclick="toggleFilterRow(this)">
+                    <span class="filter-check"><svg class="filter-check-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></span>
+                    <span class="filter-dot" style="background:#22c55e"></span>
+                    <span class="filter-label">Warm</span>
+                    <span class="filter-sublabel">40–69</span>
+                </div>
+                <div class="filter-row" data-filter="tier" data-val="cold" onclick="toggleFilterRow(this)">
+                    <span class="filter-check"><svg class="filter-check-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></span>
+                    <span class="filter-dot" style="background:#475569"></span>
+                    <span class="filter-label">Cold</span>
+                    <span class="filter-sublabel">0–39</span>
+                </div>
+                <div class="filter-row" data-filter="tier" data-val="unscored" onclick="toggleFilterRow(this)">
+                    <span class="filter-check"><svg class="filter-check-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></span>
+                    <span class="filter-dot" style="background:#4f8fff"></span>
+                    <span class="filter-label">Unscored</span>
+                </div>
             </div>
         </div>
-        <div class="map-filter-divider"></div>
-        <div class="map-filter-group map-filter-states">
-            <span class="map-filter-label">State</span>
-            <div class="map-filter-chips" id="stateChips"></div>
+        <div class="filter-pill-wrap" id="scoreWrap">
+            <button class="filter-pill" onclick="toggleDropdown('score')">
+                Score <span class="filter-pill-count" id="scoreCount" style="display:none"></span>
+                <svg class="filter-pill-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+            </button>
+            <div class="filter-dropdown" id="scoreDd">
+                <div class="filter-row" data-filter="score" data-val="80-100" onclick="toggleFilterRow(this)">
+                    <span class="filter-check"><svg class="filter-check-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></span>
+                    <span class="filter-label">80–100</span>
+                    <span class="filter-sublabel">Elite</span>
+                </div>
+                <div class="filter-row" data-filter="score" data-val="60-79" onclick="toggleFilterRow(this)">
+                    <span class="filter-check"><svg class="filter-check-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></span>
+                    <span class="filter-label">60–79</span>
+                    <span class="filter-sublabel">Strong</span>
+                </div>
+                <div class="filter-row" data-filter="score" data-val="40-59" onclick="toggleFilterRow(this)">
+                    <span class="filter-check"><svg class="filter-check-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></span>
+                    <span class="filter-label">40–59</span>
+                    <span class="filter-sublabel">Moderate</span>
+                </div>
+                <div class="filter-row" data-filter="score" data-val="20-39" onclick="toggleFilterRow(this)">
+                    <span class="filter-check"><svg class="filter-check-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></span>
+                    <span class="filter-label">20–39</span>
+                    <span class="filter-sublabel">Low</span>
+                </div>
+                <div class="filter-row" data-filter="score" data-val="0-19" onclick="toggleFilterRow(this)">
+                    <span class="filter-check"><svg class="filter-check-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></span>
+                    <span class="filter-label">0–19</span>
+                    <span class="filter-sublabel">Minimal</span>
+                </div>
+                <div class="filter-row" data-filter="score" data-val="unscored" onclick="toggleFilterRow(this)">
+                    <span class="filter-check"><svg class="filter-check-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></span>
+                    <span class="filter-label">Unscored</span>
+                </div>
+            </div>
         </div>
-        <button class="map-filter-reset" id="filterResetBtn" onclick="resetFilters()">
+        <div class="filter-pill-wrap" id="stateWrap">
+            <button class="filter-pill" onclick="toggleDropdown('state')">
+                State <span class="filter-pill-count" id="stateCount" style="display:none"></span>
+                <svg class="filter-pill-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+            </button>
+            <div class="filter-dropdown state-dd" id="stateDd">
+                <div class="filter-toggle-row">
+                    <button class="filter-toggle-btn" onclick="setAllStates(true)">All</button>
+                    <button class="filter-toggle-btn" onclick="setAllStates(false)">None</button>
+                </div>
+            </div>
+        </div>
+        <button class="filter-reset" id="filterResetBtn" onclick="resetFilters()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><path d="M18 6L6 18M6 6l12 12"/></svg>Reset
         </button>
     </div>
@@ -2774,6 +2905,8 @@
         let _allDealers = [];
         let _activeStates = new Set();
         let _activeTiers = new Set(['hot','warm','cold','unscored']);
+        let _activeScores = new Set(['80-100','60-79','40-59','20-39','0-19','unscored']);
+        const _scoreRanges = { '80-100':[80,100], '60-79':[60,79], '40-59':[40,59], '20-39':[20,39], '0-19':[0,19] };
 
         async function openDealerMap() {
             document.body.classList.remove('chatting', 'trip-manager');
@@ -2802,7 +2935,7 @@
                     if (!res.ok) throw new Error('Failed to load map data');
                     const data = await res.json();
                     _allDealers = data.dealers;
-                    buildStateChips(_allDealers);
+                    buildStateRows(_allDealers);
                     addDealerMarkers(_allDealers);
                     updateMapStats(_allDealers);
                 } catch(e) {
@@ -2974,67 +3107,166 @@
         }
 
         // ===== MAP FILTERS =====
-        function buildStateChips(dealers) {
+        function buildStateRows(dealers) {
             const states = [...new Set(dealers.map(d => d.state))].filter(Boolean).sort();
-            const el = document.getElementById('stateChips');
-            if (!el) return;
-            el.innerHTML = states.map(st =>
-                `<button class="map-chip active" data-state="${st}" style="--chip-color-dim:rgba(79,143,255,0.3);--chip-bg:rgba(79,143,255,0.08)" onclick="toggleStateFilter('${st}',this)">${st}</button>`
-            ).join('');
+            const dd = document.getElementById('stateDd');
+            if (!dd) return;
+            const toggleRow = dd.querySelector('.filter-toggle-row');
+            // Remove old state rows
+            dd.querySelectorAll('.filter-row').forEach(r => r.remove());
+            states.forEach(st => {
+                const row = document.createElement('div');
+                row.className = 'filter-row';
+                row.dataset.filter = 'state';
+                row.dataset.val = st;
+                row.onclick = function() { toggleFilterRow(this); };
+                row.innerHTML = `<span class="filter-check"><svg class="filter-check-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></span><span class="filter-label">${st}</span>`;
+                dd.appendChild(row);
+            });
             _activeStates = new Set();
         }
 
-        function toggleStateFilter(state, btn) {
-            if (_activeStates.size === 0) {
-                document.querySelectorAll('#stateChips .map-chip').forEach(c => c.classList.remove('active'));
-                btn.classList.add('active');
-                _activeStates = new Set([state]);
-            } else if (_activeStates.has(state)) {
-                _activeStates.delete(state);
-                btn.classList.remove('active');
+        function toggleDropdown(name) {
+            const ids = { tier: 'tierDd', score: 'scoreDd', state: 'stateDd' };
+            const pills = { tier: 'tierWrap', score: 'scoreWrap', state: 'stateWrap' };
+            Object.keys(ids).forEach(k => {
+                const dd = document.getElementById(ids[k]);
+                const pill = document.getElementById(pills[k])?.querySelector('.filter-pill');
+                if (k === name) {
+                    const isOpen = dd.classList.contains('open');
+                    dd.classList.toggle('open', !isOpen);
+                    if (pill) pill.classList.toggle('open', !isOpen);
+                } else {
+                    dd.classList.remove('open');
+                    if (pill) pill.classList.remove('open');
+                }
+            });
+        }
+
+        function toggleFilterRow(row) {
+            const type = row.dataset.filter;
+            const val = row.dataset.val;
+            const sets = { tier: _activeTiers, score: _activeScores, state: _activeStates };
+            const set = sets[type];
+            if (!set) return;
+
+            if (type === 'state') {
+                // State: empty set = all pass; toggling adds/removes
                 if (_activeStates.size === 0) {
-                    document.querySelectorAll('#stateChips .map-chip').forEach(c => c.classList.add('active'));
+                    // First click: all were "active", now isolate this one
+                    const allStates = [...document.querySelectorAll('#stateDd .filter-row')].map(r => r.dataset.val);
+                    _activeStates = new Set(allStates);
+                    _activeStates.delete(val);
+                    // Update all rows visually
+                    document.querySelectorAll('#stateDd .filter-row').forEach(r => {
+                        r.classList.toggle('unchecked', !_activeStates.has(r.dataset.val));
+                    });
+                } else if (_activeStates.has(val)) {
+                    _activeStates.delete(val);
+                    row.classList.add('unchecked');
+                    // If all removed, reset to empty (= all pass)
+                    const totalStates = document.querySelectorAll('#stateDd .filter-row').length;
+                    if (_activeStates.size === 0) {
+                        document.querySelectorAll('#stateDd .filter-row').forEach(r => r.classList.remove('unchecked'));
+                    }
+                } else {
+                    _activeStates.add(val);
+                    row.classList.remove('unchecked');
+                    // If all checked again, reset to empty set
+                    const totalStates = document.querySelectorAll('#stateDd .filter-row').length;
+                    if (_activeStates.size === totalStates) {
+                        _activeStates = new Set();
+                        document.querySelectorAll('#stateDd .filter-row').forEach(r => r.classList.remove('unchecked'));
+                    }
                 }
             } else {
-                _activeStates.add(state);
-                btn.classList.add('active');
+                // Tier / Score: toggle in/out
+                if (set.has(val)) {
+                    set.delete(val);
+                    row.classList.add('unchecked');
+                } else {
+                    set.add(val);
+                    row.classList.remove('unchecked');
+                }
             }
             applyFilters();
         }
 
-        function toggleTierFilter(tier, btn) {
-            if (_activeTiers.has(tier)) {
-                if (_activeTiers.size <= 1) return;
-                _activeTiers.delete(tier);
-                btn.classList.remove('active');
+        function setAllStates(checked) {
+            if (checked) {
+                _activeStates = new Set();
+                document.querySelectorAll('#stateDd .filter-row').forEach(r => r.classList.remove('unchecked'));
             } else {
-                _activeTiers.add(tier);
-                btn.classList.add('active');
+                _activeStates = new Set(['__none__']);
+                document.querySelectorAll('#stateDd .filter-row').forEach(r => r.classList.add('unchecked'));
             }
             applyFilters();
+        }
+
+        function _scorePass(d) {
+            const s = d.score;
+            if (s == null) return _activeScores.has('unscored');
+            for (const key of _activeScores) {
+                const range = _scoreRanges[key];
+                if (range && s >= range[0] && s <= range[1]) return true;
+            }
+            return false;
         }
 
         function applyFilters() {
             const filtered = _allDealers.filter(d => {
                 const statePass = _activeStates.size === 0 || _activeStates.has(d.state);
                 const tierPass = _activeTiers.has(d.tier || 'unscored');
-                return statePass && tierPass;
+                const scorePass = _activeScores.size === 6 || _scorePass(d);
+                return statePass && tierPass && scorePass;
             });
             if (_clusterLayer) { _map.removeLayer(_clusterLayer); _clusterLayer = null; }
             addDealerMarkers(filtered);
             updateMapStats(filtered);
-            const isDefault = _activeStates.size === 0 && _activeTiers.size === 4;
+            updatePillBadges();
+        }
+
+        function updatePillBadges() {
+            const tierTotal = 4, scoreTotal = 6;
+            const tierActive = _activeTiers.size;
+            const scoreActive = _activeScores.size;
+            const stateFiltered = _activeStates.size > 0 && !_activeStates.has('__none__');
+            const stateNone = _activeStates.has('__none__');
+
+            _updateBadge('tierCount', 'tierWrap', tierActive < tierTotal ? tierActive : 0);
+            _updateBadge('scoreCount', 'scoreWrap', scoreActive < scoreTotal ? scoreActive : 0);
+            _updateBadge('stateCount', 'stateWrap', stateNone ? 0 : (stateFiltered ? _activeStates.size : 0));
+
+            const isDefault = _activeStates.size === 0 && _activeTiers.size === tierTotal && _activeScores.size === scoreTotal;
             const resetBtn = document.getElementById('filterResetBtn');
             if (resetBtn) resetBtn.style.display = isDefault ? 'none' : 'flex';
+        }
+
+        function _updateBadge(countId, wrapId, count) {
+            const badge = document.getElementById(countId);
+            const pill = document.getElementById(wrapId)?.querySelector('.filter-pill');
+            if (badge) {
+                if (count > 0) { badge.textContent = count; badge.style.display = 'inline-flex'; }
+                else { badge.style.display = 'none'; }
+            }
+            if (pill) pill.classList.toggle('has-filter', count > 0);
         }
 
         function resetFilters() {
             _activeStates = new Set();
             _activeTiers = new Set(['hot','warm','cold','unscored']);
-            document.querySelectorAll('#stateChips .map-chip').forEach(c => c.classList.add('active'));
-            document.querySelectorAll('#tierChips .map-chip').forEach(c => c.classList.add('active'));
+            _activeScores = new Set(['80-100','60-79','40-59','20-39','0-19','unscored']);
+            document.querySelectorAll('.filter-row').forEach(r => r.classList.remove('unchecked'));
             applyFilters();
         }
+
+        // Close dropdowns on click outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.filter-pill-wrap')) {
+                document.querySelectorAll('.filter-dropdown').forEach(dd => dd.classList.remove('open'));
+                document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('open'));
+            }
+        });
 
         // ===== ROUTE OVERLAY =====
         function parseWktLinestring(wkt) {
