@@ -1358,7 +1358,7 @@
             background: rgba(12, 14, 28, 0.75);
             border: 1px solid rgba(255,255,255,0.06);
             border-radius: 10px;
-            padding: 8px 14px;
+            padding: 7px 14px;
             backdrop-filter: blur(16px) saturate(180%);
             -webkit-backdrop-filter: blur(16px) saturate(180%);
             display: none;
@@ -1367,8 +1367,8 @@
             align-items: center;
         }
         body.map-view .map-legend { display: flex; }
-        .map-legend-title { font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.06em; flex-shrink: 0; }
-        .map-legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: rgba(255,255,255,0.5); white-space: nowrap; }
+        .map-legend-title { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.06em; flex-shrink: 0; }
+        .map-legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: rgba(255,255,255,0.6); white-space: nowrap; }
         .map-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
         /* Scoring key popup on legend hover */
@@ -1376,7 +1376,7 @@
         .map-legend:hover { border-color: rgba(79,143,255,0.15); }
         .scoring-key {
             position: absolute; bottom: calc(100% + 10px); left: 0;
-            width: 300px;
+            width: 340px;
             background: rgba(10, 12, 24, 0.94);
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 12px;
@@ -1391,7 +1391,7 @@
         }
         .map-legend:hover .scoring-key { opacity: 1; pointer-events: auto; transform: translateY(0); }
         .scoring-key-title {
-            font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.5);
+            font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.6);
             text-transform: uppercase; letter-spacing: 0.08em;
             margin-bottom: 6px; padding-bottom: 6px;
             border-bottom: 1px solid rgba(255,255,255,0.06);
@@ -1401,18 +1401,18 @@
         }
         .scoring-key-tier {
             display: flex; align-items: center; gap: 5px;
-            font-size: 10px; color: rgba(255,255,255,0.5);
+            font-size: 12px; color: rgba(255,255,255,0.6);
         }
-        .sk-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .sk-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
         .sk-name { font-weight: 600; }
-        .sk-range { font-variant-numeric: tabular-nums; color: rgba(255,255,255,0.45); font-size: 9px; }
-        .sk-sep { color: rgba(255,255,255,0.12); font-size: 10px; }
+        .sk-range { font-variant-numeric: tabular-nums; color: rgba(255,255,255,0.5); font-size: 11px; }
+        .sk-sep { color: rgba(255,255,255,0.12); font-size: 12px; }
         .scoring-key-section {
             margin-top: 10px; padding-top: 8px;
             border-top: 1px solid rgba(255,255,255,0.06);
         }
         .scoring-key-section-title {
-            font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.35);
+            font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.45);
             text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px;
         }
         .sk-factor {
@@ -1421,11 +1421,11 @@
         .sk-factor + .sk-factor { border-top: 1px solid rgba(255,255,255,0.03); }
         .sk-factor-head {
             display: flex; justify-content: space-between; align-items: center;
-            font-size: 11px; color: rgba(255,255,255,0.65); font-weight: 600;
+            font-size: 13px; color: rgba(255,255,255,0.7); font-weight: 600;
         }
-        .sk-factor-pts { color: rgba(79,143,255,0.6); font-variant-numeric: tabular-nums; font-size: 10px; }
+        .sk-factor-pts { color: rgba(79,143,255,0.7); font-variant-numeric: tabular-nums; font-size: 12px; }
         .sk-factor-desc {
-            font-size: 9.5px; color: rgba(255,255,255,0.45); margin-top: 2px; line-height: 1.35;
+            font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; line-height: 1.4;
         }
         .sk-factor-desc em { font-style: normal; color: rgba(255,255,255,0.45); }
         .sk-sweet-spot {
@@ -1433,7 +1433,7 @@
             background: rgba(79,143,255,0.06);
             border: 1px solid rgba(79,143,255,0.1);
             border-radius: 8px;
-            font-size: 9.5px; color: rgba(79,143,255,0.7); line-height: 1.4;
+            font-size: 11px; color: rgba(79,143,255,0.7); line-height: 1.4;
         }
 
         /* Map stats bar — slim floating pill */
@@ -2490,10 +2490,10 @@
 
     <div id="dealerMap" role="application" aria-label="Dealer map"></div>
     <div class="map-legend" id="mapLegend">
-        <div class="map-legend-item"><svg width="10" height="10" viewBox="0 0 26 26"><rect x="5" y="5" width="16" height="16" rx="2" transform="rotate(45 13 13)" fill="#ff6b35" fill-opacity="0.3" stroke="#ff6b35" stroke-width="1.5"/><circle cx="13" cy="13" r="3" fill="#ff6b35"/></svg>Hot</div>
-        <div class="map-legend-item"><svg width="10" height="10" viewBox="0 0 22 22"><polygon points="11,1 21,6 21,16 11,21 1,16 1,6" fill="#22c55e" fill-opacity="0.2" stroke="#22c55e" stroke-width="1.2"/><circle cx="11" cy="11" r="2.5" fill="#22c55e"/></svg>Warm</div>
-        <div class="map-legend-item"><svg width="10" height="10" viewBox="0 0 18 18"><circle cx="9" cy="9" r="6" fill="none" stroke="#475569" stroke-width="1"/><circle cx="9" cy="9" r="2" fill="#475569"/></svg>Cold</div>
-        <div class="map-legend-item"><svg width="10" height="10" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="none" stroke="#4f8fff" stroke-width="0.8" opacity="0.4"/><circle cx="8" cy="8" r="2" fill="#4f8fff" opacity="0.6"/></svg>Unscored</div>
+        <div class="map-legend-item"><svg width="14" height="14" viewBox="0 0 26 26"><rect x="5" y="5" width="16" height="16" rx="2" transform="rotate(45 13 13)" fill="#ff6b35" fill-opacity="0.3" stroke="#ff6b35" stroke-width="1.5"/><circle cx="13" cy="13" r="3" fill="#ff6b35"/></svg>Hot</div>
+        <div class="map-legend-item"><svg width="14" height="14" viewBox="0 0 22 22"><polygon points="11,1 21,6 21,16 11,21 1,16 1,6" fill="#22c55e" fill-opacity="0.2" stroke="#22c55e" stroke-width="1.2"/><circle cx="11" cy="11" r="2.5" fill="#22c55e"/></svg>Warm</div>
+        <div class="map-legend-item"><svg width="14" height="14" viewBox="0 0 18 18"><circle cx="9" cy="9" r="6" fill="none" stroke="#475569" stroke-width="1"/><circle cx="9" cy="9" r="2" fill="#475569"/></svg>Cold</div>
+        <div class="map-legend-item"><svg width="14" height="14" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="none" stroke="#4f8fff" stroke-width="0.8" opacity="0.4"/><circle cx="8" cy="8" r="2" fill="#4f8fff" opacity="0.6"/></svg>Unscored</div>
         <div class="scoring-key">
             <div class="scoring-key-title">Lead Score (0 – 100)</div>
             <div class="scoring-key-tiers">
