@@ -1913,12 +1913,13 @@
             z-index: 15;
             display: none;
             flex-direction: column;
+            align-items: flex-end;
         }
         body.map-view .route-panel { display: flex; }
 
         .route-panel-toggle {
-            display: flex; align-items: center; gap: 6px;
-            padding: 8px 14px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; gap: 4px;
+            padding: 5px 10px; border-radius: 8px;
             background: rgba(12, 14, 28, 0.8);
             border: 1px solid rgba(255,255,255,0.06);
             backdrop-filter: blur(20px) saturate(180%);
@@ -1928,6 +1929,7 @@
             transition: all 0.2s var(--ease-out-expo);
             user-select: none;
             animation: routePanelIn .25s var(--ease-out-expo);
+            margin-left: auto;
         }
         .route-panel-toggle:hover {
             border-color: rgba(255,255,255,0.12);
@@ -1936,12 +1938,12 @@
         .route-panel-toggle.active {
             border-color: rgba(79,143,255,0.25);
         }
-        .route-panel-icon { width: 14px; height: 14px; color: var(--accent-blue); flex-shrink: 0; opacity: 0.7; }
+        .route-panel-icon { width: 11px; height: 11px; color: var(--accent-blue); flex-shrink: 0; opacity: 0.7; }
         .route-panel-title {
-            font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.5);
+            font-size: 10px; font-weight: 500; color: rgba(255,255,255,0.5);
         }
         .route-panel-chevron {
-            width: 12px; height: 12px; color: rgba(255,255,255,0.3); flex-shrink: 0;
+            width: 10px; height: 10px; color: rgba(255,255,255,0.3); flex-shrink: 0;
             transition: transform 0.25s var(--ease-out-expo);
         }
         .route-panel-toggle.active .route-panel-chevron { transform: rotate(180deg); }
