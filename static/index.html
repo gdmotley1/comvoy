@@ -1211,7 +1211,7 @@
         .map-legend:hover { border-color: rgba(79,143,255,0.15); }
         .scoring-key {
             position: absolute; bottom: calc(100% + 10px); left: 0;
-            min-width: 260px;
+            width: 300px;
             background: rgba(10, 12, 24, 0.94);
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 12px;
@@ -1228,30 +1228,48 @@
         .scoring-key-title {
             font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.5);
             text-transform: uppercase; letter-spacing: 0.08em;
-            margin-bottom: 10px; padding-bottom: 8px;
+            margin-bottom: 6px; padding-bottom: 6px;
             border-bottom: 1px solid rgba(255,255,255,0.06);
         }
-        .scoring-key-tier {
-            display: flex; align-items: center; gap: 8px;
-            padding: 5px 0; font-size: 11px; color: rgba(255,255,255,0.6);
+        .scoring-key-tiers {
+            display: flex; gap: 6px; flex-wrap: wrap;
         }
-        .scoring-key-tier + .scoring-key-tier { border-top: 1px solid rgba(255,255,255,0.03); }
-        .sk-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-        .sk-name { font-weight: 600; min-width: 56px; }
-        .sk-range { font-variant-numeric: tabular-nums; color: rgba(255,255,255,0.35); font-size: 10px; }
-        .scoring-key-factors {
+        .scoring-key-tier {
+            display: flex; align-items: center; gap: 5px;
+            font-size: 10px; color: rgba(255,255,255,0.5);
+        }
+        .sk-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .sk-name { font-weight: 600; }
+        .sk-range { font-variant-numeric: tabular-nums; color: rgba(255,255,255,0.3); font-size: 9px; }
+        .sk-sep { color: rgba(255,255,255,0.12); font-size: 10px; }
+        .scoring-key-section {
             margin-top: 10px; padding-top: 8px;
             border-top: 1px solid rgba(255,255,255,0.06);
         }
-        .scoring-key-factors-title {
+        .scoring-key-section-title {
             font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.35);
-            text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;
+            text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px;
         }
         .sk-factor {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 3px 0; font-size: 10px; color: rgba(255,255,255,0.45);
+            padding: 6px 0;
         }
-        .sk-factor-pts { font-weight: 600; color: rgba(79,143,255,0.6); font-variant-numeric: tabular-nums; }
+        .sk-factor + .sk-factor { border-top: 1px solid rgba(255,255,255,0.03); }
+        .sk-factor-head {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 11px; color: rgba(255,255,255,0.65); font-weight: 600;
+        }
+        .sk-factor-pts { color: rgba(79,143,255,0.6); font-variant-numeric: tabular-nums; font-size: 10px; }
+        .sk-factor-desc {
+            font-size: 9.5px; color: rgba(255,255,255,0.3); margin-top: 2px; line-height: 1.35;
+        }
+        .sk-factor-desc em { font-style: normal; color: rgba(255,255,255,0.45); }
+        .sk-sweet-spot {
+            margin-top: 10px; padding: 8px 10px;
+            background: rgba(79,143,255,0.06);
+            border: 1px solid rgba(79,143,255,0.1);
+            border-radius: 8px;
+            font-size: 9.5px; color: rgba(79,143,255,0.7); line-height: 1.4;
+        }
 
         /* Map stats bar — slim floating pill */
         .map-stats {
@@ -1970,18 +1988,33 @@
         <div class="map-legend-item"><svg width="10" height="10" viewBox="0 0 18 18"><circle cx="9" cy="9" r="6" fill="none" stroke="#475569" stroke-width="1"/><circle cx="9" cy="9" r="2" fill="#475569"/></svg>Cold</div>
         <div class="map-legend-item"><svg width="10" height="10" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="none" stroke="#4f8fff" stroke-width="0.8" opacity="0.4"/><circle cx="8" cy="8" r="2" fill="#4f8fff" opacity="0.6"/></svg>N/A</div>
         <div class="scoring-key">
-            <div class="scoring-key-title">Lead Scoring Guide</div>
-            <div class="scoring-key-tier"><span class="sk-dot" style="background:#ff6b35;box-shadow:0 0 6px #ff6b35"></span><span class="sk-name" style="color:#ff6b35">Hot</span><span class="sk-range">70 – 100</span></div>
-            <div class="scoring-key-tier"><span class="sk-dot" style="background:#22c55e;box-shadow:0 0 4px #22c55e"></span><span class="sk-name" style="color:#22c55e">Warm</span><span class="sk-range">40 – 69</span></div>
-            <div class="scoring-key-tier"><span class="sk-dot" style="background:#475569"></span><span class="sk-name" style="color:#475569">Cold</span><span class="sk-range">0 – 39</span></div>
-            <div class="scoring-key-tier"><span class="sk-dot" style="background:#4f8fff;opacity:0.5"></span><span class="sk-name" style="color:rgba(79,143,255,0.6)">N/A</span><span class="sk-range">Not scored</span></div>
-            <div class="scoring-key-factors">
-                <div class="scoring-key-factors-title">Score Factors</div>
-                <div class="sk-factor"><span>Inventory Size</span><span class="sk-factor-pts">30 pts</span></div>
-                <div class="sk-factor"><span>Body Type Match</span><span class="sk-factor-pts">30 pts</span></div>
-                <div class="sk-factor"><span>Smyrna Opportunity</span><span class="sk-factor-pts">25 pts</span></div>
-                <div class="sk-factor"><span>Growth Momentum</span><span class="sk-factor-pts">15 pts</span></div>
+            <div class="scoring-key-title">Lead Score (0 – 100)</div>
+            <div class="scoring-key-tiers">
+                <div class="scoring-key-tier"><span class="sk-dot" style="background:#ff6b35;box-shadow:0 0 6px #ff6b35"></span><span class="sk-name" style="color:#ff6b35">Hot</span><span class="sk-range">70+</span></div><span class="sk-sep">·</span>
+                <div class="scoring-key-tier"><span class="sk-dot" style="background:#22c55e;box-shadow:0 0 4px #22c55e"></span><span class="sk-name" style="color:#22c55e">Warm</span><span class="sk-range">40–69</span></div><span class="sk-sep">·</span>
+                <div class="scoring-key-tier"><span class="sk-dot" style="background:#475569"></span><span class="sk-name" style="color:#64748b">Cold</span><span class="sk-range">&lt;40</span></div><span class="sk-sep">·</span>
+                <div class="scoring-key-tier"><span class="sk-dot" style="background:#4f8fff;opacity:0.5"></span><span class="sk-name" style="color:rgba(79,143,255,0.5)">N/A</span></div>
             </div>
+            <div class="scoring-key-section">
+                <div class="scoring-key-section-title">What drives the score</div>
+                <div class="sk-factor">
+                    <div class="sk-factor-head"><span>Fleet Size</span><span class="sk-factor-pts">/30</span></div>
+                    <div class="sk-factor-desc">Larger lots score higher</div>
+                </div>
+                <div class="sk-factor">
+                    <div class="sk-factor-head"><span>Body Type Fit</span><span class="sk-factor-pts">/30</span></div>
+                    <div class="sk-factor-desc">% stocking what Smyrna builds</div>
+                </div>
+                <div class="sk-factor">
+                    <div class="sk-factor-head"><span>Whitespace</span><span class="sk-factor-pts">/25</span></div>
+                    <div class="sk-factor-desc">Less Smyrna presence = more opportunity</div>
+                </div>
+                <div class="sk-factor">
+                    <div class="sk-factor-head"><span>Growth</span><span class="sk-factor-pts">/15</span></div>
+                    <div class="sk-factor-desc">Inventory trending up month-over-month</div>
+                </div>
+            </div>
+            <div class="sk-sweet-spot">The sweet spot: a big, growing dealer that stocks our body types but hasn't bought Smyrna yet.</div>
         </div>
     </div>
     <div class="map-stats" id="mapStats"></div>
