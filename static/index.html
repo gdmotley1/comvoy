@@ -1437,15 +1437,13 @@
         /* Map stats bar — slim floating pill */
         .map-stats {
             position: fixed;
-            top: 110px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9;
+            top: 72px;
+            right: 310px;
+            z-index: 10;
             display: none;
             align-items: center;
-            justify-content: center;
             gap: 10px;
-            padding: 6px 14px;
+            padding: 7px 14px;
             background: rgba(12, 14, 28, 0.78);
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 12px;
@@ -1453,9 +1451,7 @@
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             font-size: 12px;
             white-space: nowrap;
-            animation: statsIn 300ms var(--ease-out-expo) forwards;
         }
-        @keyframes statsIn { from { opacity: 0; transform: translateX(-50%) translateY(-4px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
         body.map-view .map-stats { display: flex; }
         .map-stat { display: flex; align-items: center; gap: 4px; color: rgba(255,255,255,0.4); font-variant-numeric: tabular-nums; font-size: 11px; white-space: nowrap; }
         .map-stat-value { font-weight: 600; color: rgba(255,255,255,0.88); font-size: 12px; }
@@ -1912,7 +1908,7 @@
         /* ========== ROUTE OVERLAY PANEL ========== */
         .route-panel {
             position: fixed;
-            top: 148px;
+            top: 124px;
             right: 20px;
             z-index: 15;
             display: none;
@@ -2468,8 +2464,6 @@
             <div class="sk-sweet-spot">The sweet spot: a big, growing dealer that stocks our body types but hasn't bought Smyrna yet.</div>
         </div>
     </div>
-    <div class="map-stats" id="mapStats"></div>
-
     <div class="map-filters" id="mapFilters">
         <div class="filter-pill-wrap" id="tierWrap">
             <button class="filter-pill" onclick="toggleDropdown('tier')">
@@ -2575,6 +2569,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><path d="M18 6L6 18M6 6l12 12"/></svg>Reset
         </button>
     </div>
+    <div class="map-stats" id="mapStats"></div>
 
     <div class="map-search" id="mapSearch">
         <div class="map-search-input-wrap">
