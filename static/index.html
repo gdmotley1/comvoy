@@ -1518,9 +1518,9 @@
             z-index: 20;
         }
         .filter-dropdown.open { display: flex; }
-        .filter-dropdown.state-dd { max-height: 240px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
-        .filter-dropdown.state-dd::-webkit-scrollbar { width: 4px; }
-        .filter-dropdown.state-dd::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+        .filter-dropdown.state-dd, .filter-dropdown.body-type-dd { max-height: 280px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
+        .filter-dropdown.state-dd::-webkit-scrollbar, .filter-dropdown.body-type-dd::-webkit-scrollbar { width: 4px; }
+        .filter-dropdown.state-dd::-webkit-scrollbar-thumb, .filter-dropdown.body-type-dd::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
         @keyframes dropIn {
             from { opacity: 0; transform: translateY(-4px); }
             to { opacity: 1; transform: translateY(0); }
@@ -2515,6 +2515,18 @@
                 <div class="filter-toggle-row">
                     <button class="filter-toggle-btn" onclick="setAllFilter('state',true)">All</button>
                     <button class="filter-toggle-btn" onclick="setAllFilter('state',false)">None</button>
+                </div>
+            </div>
+        </div>
+        <div class="filter-pill-wrap" id="bodyTypeWrap">
+            <button class="filter-pill" onclick="toggleDropdown('bodyType')">
+                Vehicle Type <span class="filter-pill-count" id="bodyTypeCount" style="display:none"></span>
+                <svg class="filter-pill-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+            </button>
+            <div class="filter-dropdown body-type-dd" id="bodyTypeDd">
+                <div class="filter-toggle-row">
+                    <button class="filter-toggle-btn" onclick="setAllFilter('bodyType',true)">All</button>
+                    <button class="filter-toggle-btn" onclick="setAllFilter('bodyType',false)">None</button>
                 </div>
             </div>
         </div>
@@ -3535,6 +3547,8 @@
         let _activeTiers = new Set(['hot','warm','cold','unscored']);
         let _activeScores = new Set(['80-100','60-79','40-59','20-39','0-19','unscored']);
         const _scoreRanges = { '80-100':[80,100], '60-79':[60,79], '40-59':[40,59], '20-39':[20,39], '0-19':[0,19] };
+        let _activeBodyTypes = new Set();
+        let _allBodyTypeVals = [];
 
         async function openDealerMap() {
             document.body.classList.remove('chatting', 'trip-manager');
@@ -3577,6 +3591,7 @@
                     const data = await res.json();
                     _allDealers = data.dealers;
                     buildStateRows(_allDealers);
+                    buildBodyTypeRows(_allDealers);
                     addDealerMarkers(_allDealers);
                     updateMapStats(_allDealers);
                 } catch(e) {
@@ -3785,9 +3800,32 @@
             _activeStates = new Set(states);
         }
 
+        function buildBodyTypeRows(dealers) {
+            // Collect all body types from dealer data, sorted by frequency
+            const btCounts = {};
+            dealers.forEach(d => {
+                (d.body_types || []).forEach(bt => { btCounts[bt] = (btCounts[bt] || 0) + 1; });
+            });
+            const sorted = Object.entries(btCounts).sort((a, b) => b[1] - a[1]).map(e => e[0]);
+            _allBodyTypeVals = sorted;
+            const dd = document.getElementById('bodyTypeDd');
+            if (!dd) return;
+            dd.querySelectorAll('.filter-row').forEach(r => r.remove());
+            sorted.forEach(bt => {
+                const row = document.createElement('div');
+                row.className = 'filter-row';
+                row.dataset.filter = 'bodyType';
+                row.dataset.val = bt;
+                row.onclick = function() { toggleFilterRow(this); };
+                row.innerHTML = `<span class="filter-check"><svg class="filter-check-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></span><span class="filter-label">${bt}</span><span class="filter-sublabel">${btCounts[bt]}</span>`;
+                dd.appendChild(row);
+            });
+            _activeBodyTypes = new Set(sorted);
+        }
+
         function toggleDropdown(name) {
-            const ids = { tier: 'tierDd', score: 'scoreDd', state: 'stateDd' };
-            const pills = { tier: 'tierWrap', score: 'scoreWrap', state: 'stateWrap' };
+            const ids = { tier: 'tierDd', score: 'scoreDd', state: 'stateDd', bodyType: 'bodyTypeDd' };
+            const pills = { tier: 'tierWrap', score: 'scoreWrap', state: 'stateWrap', bodyType: 'bodyTypeWrap' };
             Object.keys(ids).forEach(k => {
                 const dd = document.getElementById(ids[k]);
                 const pill = document.getElementById(pills[k])?.querySelector('.filter-pill');
@@ -3805,7 +3843,7 @@
         function toggleFilterRow(row) {
             const type = row.dataset.filter;
             const val = row.dataset.val;
-            const sets = { tier: _activeTiers, score: _activeScores, state: _activeStates };
+            const sets = { tier: _activeTiers, score: _activeScores, state: _activeStates, bodyType: _activeBodyTypes };
             const set = sets[type];
             if (!set) return;
             if (set.has(val)) { set.delete(val); row.classList.add('unchecked'); }
@@ -3815,14 +3853,16 @@
 
         function setAllFilter(type, checked) {
             const config = {
-                tier:  { set: '_activeTiers',  vals: _allTierVals,  ddId: 'tierDd' },
-                score: { set: '_activeScores', vals: _allScoreVals, ddId: 'scoreDd' },
-                state: { set: '_activeStates', vals: _allStateVals, ddId: 'stateDd' }
+                tier:     { set: '_activeTiers',     vals: _allTierVals,     ddId: 'tierDd' },
+                score:    { set: '_activeScores',    vals: _allScoreVals,    ddId: 'scoreDd' },
+                state:    { set: '_activeStates',    vals: _allStateVals,    ddId: 'stateDd' },
+                bodyType: { set: '_activeBodyTypes', vals: _allBodyTypeVals, ddId: 'bodyTypeDd' }
             };
             const c = config[type];
             if (!c) return;
             if (type === 'tier') _activeTiers = checked ? new Set(c.vals) : new Set();
             else if (type === 'score') _activeScores = checked ? new Set(c.vals) : new Set();
+            else if (type === 'bodyType') _activeBodyTypes = checked ? new Set(c.vals) : new Set();
             else _activeStates = checked ? new Set(c.vals) : new Set();
             document.querySelectorAll(`#${c.ddId} .filter-row`).forEach(r => {
                 r.classList.toggle('unchecked', !checked);
@@ -3841,11 +3881,14 @@
         }
 
         function applyFilters() {
+            const btAll = _activeBodyTypes.size === _allBodyTypeVals.length;
             const filtered = _allDealers.filter(d => {
                 const statePass = _activeStates.has(d.state);
                 const tierPass = _activeTiers.has(d.tier || 'unscored');
                 const scorePass = _scorePass(d);
-                return statePass && tierPass && scorePass;
+                // Body type: pass if ANY of dealer's body types match active set (OR logic)
+                const btPass = btAll || !_allBodyTypeVals.length || (d.body_types || []).some(bt => _activeBodyTypes.has(bt));
+                return statePass && tierPass && scorePass && btPass;
             });
             if (_clusterLayer) { _map.removeLayer(_clusterLayer); _clusterLayer = null; }
             addDealerMarkers(filtered);
@@ -3857,12 +3900,14 @@
             const tierAll = _activeTiers.size === _allTierVals.length;
             const scoreAll = _activeScores.size === _allScoreVals.length;
             const stateAll = _activeStates.size === _allStateVals.length;
+            const btAll = _activeBodyTypes.size === _allBodyTypeVals.length;
 
             _updateBadge('tierCount', 'tierWrap', tierAll ? 0 : _activeTiers.size, _allTierVals.length);
             _updateBadge('scoreCount', 'scoreWrap', scoreAll ? 0 : _activeScores.size, _allScoreVals.length);
             _updateBadge('stateCount', 'stateWrap', stateAll ? 0 : _activeStates.size, _allStateVals.length);
+            _updateBadge('bodyTypeCount', 'bodyTypeWrap', btAll ? 0 : _activeBodyTypes.size, _allBodyTypeVals.length);
 
-            const isDefault = tierAll && scoreAll && stateAll;
+            const isDefault = tierAll && scoreAll && stateAll && btAll;
             const resetBtn = document.getElementById('filterResetBtn');
             if (resetBtn) resetBtn.style.display = isDefault ? 'none' : 'flex';
 
@@ -3893,6 +3938,7 @@
             _activeTiers = new Set(_allTierVals);
             _activeScores = new Set(_allScoreVals);
             _activeStates = new Set(_allStateVals);
+            _activeBodyTypes = new Set(_allBodyTypeVals);
             document.querySelectorAll('.filter-row').forEach(r => r.classList.remove('unchecked'));
             applyFilters();
         }

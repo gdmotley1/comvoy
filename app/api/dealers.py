@@ -237,6 +237,22 @@ def get_map_data():
     except Exception:
         pass  # Table may not exist yet
 
+    # Fetch body type inventory for all dealers (for map filtering)
+    body_type_map: dict[int, list[str]] = {}
+    if dealer_ids:
+        try:
+            bt_data = db.table("dealer_body_type_inventory").select(
+                "dealer_id, vehicle_count, body_types(name)"
+            ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).execute()
+            for r in (bt_data.data or []):
+                did = r["dealer_id"]
+                bt_name = r["body_types"]["name"]
+                if did not in body_type_map:
+                    body_type_map[did] = []
+                body_type_map[did].append(bt_name)
+        except Exception:
+            pass
+
     markers = []
     for row in result.data:
         d = row["dealers"]
@@ -263,6 +279,7 @@ def get_map_data():
             "reviews": pl.get("review_count"),
             "hours": pl.get("hours_json"),
             "biz_status": pl.get("business_status"),
+            "body_types": body_type_map.get(d["id"], []),
         })
 
     return {"dealers": markers, "total": len(markers)}
