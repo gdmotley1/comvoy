@@ -101,17 +101,21 @@
             z-index: 20;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 20px 28px;
+            padding: 14px 20px;
+            gap: 12px;
             flex-shrink: 0;
             pointer-events: none;
             transition: background 0.3s var(--smooth), border-color 0.3s var(--smooth);
         }
         body.map-view .topbar {
-            background: rgba(6, 8, 15, 0.5);
-            backdrop-filter: blur(16px) saturate(150%);
-            -webkit-backdrop-filter: blur(16px) saturate(150%);
-            border-bottom: 1px solid rgba(255,255,255,0.04);
+            background: linear-gradient(180deg, rgba(6, 8, 15, 0.85) 0%, rgba(6, 8, 15, 0.4) 70%, transparent 100%);
+            border-bottom: none;
+        }
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
         }
 
         .topbar > * { pointer-events: auto; }
@@ -154,24 +158,21 @@
         }
 
         .btn-ghost {
-            padding: 8px 16px;
-            border-radius: 20px;
-            border: 1px solid var(--glass-border);
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            color: var(--text-secondary);
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: rgba(255,255,255,0.45);
             font-size: 12px;
             font-family: inherit;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s var(--smooth);
+            transition: all 0.2s var(--smooth);
         }
 
         .btn-ghost:hover {
-            background: var(--glass-hover);
+            background: rgba(255,255,255,0.06);
             color: var(--text-primary);
-            border-color: rgba(255,255,255,0.15);
         }
 
         /* ========== USAGE BADGE ========== */
@@ -1216,23 +1217,25 @@
 
         /* ========== DEALER MAP VIEW ========== */
         .btn-map {
-            padding: 8px 16px;
-            border-radius: 20px;
-            border: 1px solid var(--glass-border);
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            color: var(--text-secondary);
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: rgba(255,255,255,0.45);
             font-size: 12px;
             font-family: inherit;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s var(--smooth);
+            transition: all 0.2s var(--smooth);
         }
         .btn-map:hover {
-            background: var(--glass-hover);
+            background: rgba(255,255,255,0.06);
             color: var(--text-primary);
-            border-color: rgba(255,255,255,0.15);
+        }
+        /* Active state for current view */
+        body.map-view .topbar .btn-map {
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.08);
         }
         body.chatting .topbar .btn-map,
         body.trip-manager .topbar .btn-map,
@@ -2066,24 +2069,25 @@
         body.trip-manager .chat-input-wrap { display: none; }
 
         .btn-trips {
-            padding: 8px 16px;
-            border-radius: 20px;
-            border: 1px solid var(--glass-border);
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            color: var(--text-secondary);
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: rgba(255,255,255,0.45);
             font-size: 12px;
             font-family: inherit;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s var(--smooth);
+            transition: all 0.2s var(--smooth);
         }
 
         .btn-trips:hover {
-            background: var(--glass-hover);
+            background: rgba(255,255,255,0.06);
             color: var(--text-primary);
-            border-color: rgba(255,255,255,0.15);
+        }
+        body.trip-manager .topbar .btn-trips {
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.08);
         }
 
         .tm-container {
@@ -2379,10 +2383,12 @@
             </div>
             <span class="snapshot-count" id="snapshotCount"></span>
         </div>
-        <div class="usage-badge" id="usageBadge" title="Token usage this session"></div>
-        <button class="btn-map" onclick="openDealerMap()">Map</button>
-        <button class="btn-trips" onclick="openTripManager()">Trips</button>
-        <button class="btn-ghost" onclick="clearChat()">New Chat</button>
+        <div class="topbar-right">
+            <div class="usage-badge" id="usageBadge" title="Token usage this session"></div>
+            <button class="btn-map" onclick="openDealerMap()">Map</button>
+            <button class="btn-trips" onclick="openTripManager()">Trips</button>
+            <button class="btn-ghost" onclick="clearChat()">New Chat</button>
+        </div>
     </div>
 
     <div id="dealerMap"></div>
