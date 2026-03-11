@@ -1461,12 +1461,12 @@
         .map-filters {
             position: fixed;
             top: 72px;
-            left: 64px;
+            right: 20px;
             z-index: 10;
             display: none;
             align-items: center;
-            gap: 6px;
-            font-size: 11px;
+            gap: 4px;
+            font-size: 10px;
         }
         body.map-view .map-filters { display: flex; }
         body.map-view.route-active .map-filters { display: none; }
@@ -1474,14 +1474,14 @@
         /* Filter pill buttons */
         .filter-pill-wrap { position: relative; }
         .filter-pill {
-            display: flex; align-items: center; gap: 5px;
-            padding: 5px 10px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center; gap: 4px;
+            padding: 4px 8px; border-radius: 6px;
             background: rgba(12, 14, 28, 0.72);
             border: 1px solid rgba(255,255,255,0.08);
             backdrop-filter: blur(16px) saturate(180%);
             -webkit-backdrop-filter: blur(16px) saturate(180%);
             color: rgba(255,255,255,0.55);
-            font-size: 11px; font-family: inherit; font-weight: 500;
+            font-size: 10px; font-family: inherit; font-weight: 500;
             cursor: pointer; user-select: none;
             transition: all 150ms var(--ease-out-expo);
             white-space: nowrap;
@@ -1491,25 +1491,25 @@
         .filter-pill.has-filter { border-color: rgba(79,143,255,0.25); color: rgba(255,255,255,0.88); }
         .filter-pill-count {
             display: inline-flex; align-items: center; justify-content: center;
-            min-width: 16px; height: 16px; padding: 0 4px;
-            border-radius: 8px; background: rgba(79,143,255,0.2);
-            color: #4f8fff; font-size: 9px; font-weight: 700;
+            min-width: 14px; height: 14px; padding: 0 3px;
+            border-radius: 7px; background: rgba(79,143,255,0.2);
+            color: #4f8fff; font-size: 8px; font-weight: 700;
             font-variant-numeric: tabular-nums;
         }
         .filter-pill-chevron {
-            width: 10px; height: 10px; opacity: 0.4;
+            width: 8px; height: 8px; opacity: 0.4;
             transition: transform 150ms var(--ease-out-expo);
         }
         .filter-pill.open .filter-pill-chevron { transform: rotate(180deg); opacity: 0.7; }
 
         /* Dropdown panels */
         .filter-dropdown {
-            position: absolute; top: calc(100% + 6px); left: 0;
-            min-width: 160px;
+            position: absolute; top: calc(100% + 4px); right: 0;
+            min-width: 140px;
             background: rgba(12, 14, 28, 0.92);
             border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 10px;
-            padding: 6px;
+            border-radius: 8px;
+            padding: 4px;
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(79,143,255,0.04);
@@ -1528,16 +1528,16 @@
 
         /* Checkbox rows */
         .filter-row {
-            display: flex; align-items: center; gap: 8px;
-            padding: 6px 8px; border-radius: 6px;
+            display: flex; align-items: center; gap: 6px;
+            padding: 4px 6px; border-radius: 5px;
             cursor: pointer; transition: background 100ms ease;
-            color: rgba(255,255,255,0.7); font-size: 11px; font-weight: 500;
+            color: rgba(255,255,255,0.7); font-size: 10px; font-weight: 500;
             user-select: none;
         }
         .filter-row:hover { background: rgba(255,255,255,0.05); }
         .filter-row.unchecked { color: rgba(255,255,255,0.3); }
         .filter-check {
-            width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0;
+            width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0;
             border: 1.5px solid rgba(255,255,255,0.2);
             display: flex; align-items: center; justify-content: center;
             transition: all 120ms var(--ease-out-expo);
@@ -1545,11 +1545,11 @@
         .filter-row:not(.unchecked) .filter-check {
             background: rgba(79,143,255,0.25); border-color: rgba(79,143,255,0.5);
         }
-        .filter-check-icon { width: 8px; height: 8px; opacity: 0; transition: opacity 100ms ease; }
+        .filter-check-icon { width: 7px; height: 7px; opacity: 0; transition: opacity 100ms ease; }
         .filter-row:not(.unchecked) .filter-check-icon { opacity: 1; }
-        .filter-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .filter-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
         .filter-label { flex: 1; }
-        .filter-sublabel { font-size: 9px; color: rgba(255,255,255,0.25); font-variant-numeric: tabular-nums; }
+        .filter-sublabel { font-size: 8px; color: rgba(255,255,255,0.25); font-variant-numeric: tabular-nums; }
 
         /* All/None toggle row */
         .filter-toggle-row {
@@ -1565,21 +1565,21 @@
 
         /* Reset pill */
         .filter-reset {
-            display: none; align-items: center; gap: 3px;
-            padding: 5px 10px; border-radius: 8px;
+            display: none; align-items: center; justify-content: center; gap: 3px;
+            padding: 4px 8px; border-radius: 6px;
             background: rgba(12, 14, 28, 0.72);
             border: 1px solid rgba(239,68,68,0.15);
             backdrop-filter: blur(16px) saturate(180%);
             -webkit-backdrop-filter: blur(16px) saturate(180%);
-            color: rgba(239,68,68,0.6); font-size: 11px; font-family: inherit; font-weight: 500;
+            color: rgba(239,68,68,0.6); font-size: 10px; font-family: inherit; font-weight: 500;
             cursor: pointer; transition: all 150ms var(--ease-out-expo);
         }
         .filter-reset:hover { border-color: rgba(239,68,68,0.35); color: #ef4444; background: rgba(239,68,68,0.06); }
 
         /* Result count */
         .filter-result-count {
-            font-size: 10px; font-weight: 500; color: rgba(255,255,255,0.35);
-            padding: 4px 0; white-space: nowrap;
+            font-size: 9px; font-weight: 500; color: rgba(255,255,255,0.35);
+            padding: 3px 0; white-space: nowrap;
             font-variant-numeric: tabular-nums;
             transition: opacity 200ms ease;
         }
@@ -2088,7 +2088,7 @@
         @media (max-width: 600px) {
             .route-panel { right: 8px; top: 116px; }
             .route-panel-body { width: 200px; padding: 10px 12px; }
-            .map-filters { top: 72px; left: 54px; gap: 4px; flex-wrap: wrap; }
+            .map-filters { top: 72px; right: 10px; gap: 3px; flex-wrap: wrap; }
         }
 
         /* ========== TRIP MANAGER VIEW ========== */
