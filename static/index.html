@@ -3594,6 +3594,7 @@
                     buildBodyTypeRows(_allDealers);
                     addDealerMarkers(_allDealers);
                     updateMapStats(_allDealers);
+                    loadStateOutlines(_allDealers);
                 } catch(e) {
                     console.error('Map data error:', e);
                 }
@@ -3654,6 +3655,65 @@
             return `<div style="font-size:11px;color:rgba(255,255,255,0.45);margin-bottom:6px;">${parts.join(' &middot; ')}</div>`;
         }
 
+        // ===== STATE BOUNDARY OUTLINES =====
+        let _stateOutlineLayer = null;
+        const _stateAbbrToName = {
+            'AL':'Alabama','AR':'Arkansas','GA':'Georgia','LA':'Louisiana',
+            'MS':'Mississippi','NC':'North Carolina','OK':'Oklahoma',
+            'SC':'South Carolina','TN':'Tennessee','TX':'Texas',
+            'FL':'Florida','VA':'Virginia','KY':'Kentucky','MO':'Missouri',
+            'IN':'Indiana','OH':'Ohio','WV':'West Virginia','MD':'Maryland',
+            'DE':'Delaware','PA':'Pennsylvania','NJ':'New Jersey','NY':'New York'
+        };
+        async function loadStateOutlines(dealers) {
+            try {
+                const dealerStates = new Set(dealers.map(d => d.state).filter(Boolean));
+                const stateNames = new Set();
+                dealerStates.forEach(abbr => {
+                    const name = _stateAbbrToName[abbr];
+                    if (name) stateNames.add(name);
+                });
+                const res = await fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json');
+                if (!res.ok) return;
+                const geo = await res.json();
+                const filtered = {
+                    type: 'FeatureCollection',
+                    features: geo.features.filter(f => stateNames.has(f.properties.name))
+                };
+                if (_stateOutlineLayer) _map.removeLayer(_stateOutlineLayer);
+                // Create custom pane so outlines render below markers
+                if (!_map.getPane('stateOutlines')) {
+                    _map.createPane('stateOutlines');
+                    _map.getPane('stateOutlines').style.zIndex = 250; // below overlay (400) and markers
+                }
+                // Double layer: wide glow underneath, thin bright line on top
+                const glowLayer = L.geoJson(filtered, {
+                    pane: 'stateOutlines',
+                    style: {
+                        color: '#4f8fff',
+                        weight: 8,
+                        opacity: 0.15,
+                        fillColor: '#4f8fff',
+                        fillOpacity: 0.03,
+                    },
+                    interactive: false,
+                });
+                const lineLayer = L.geoJson(filtered, {
+                    pane: 'stateOutlines',
+                    style: {
+                        color: '#4f8fff',
+                        weight: 1.5,
+                        opacity: 0.45,
+                        fillOpacity: 0,
+                    },
+                    interactive: false,
+                });
+                _stateOutlineLayer = L.layerGroup([glowLayer, lineLayer]).addTo(_map);
+            } catch(e) {
+                console.error('State outlines error:', e);
+            }
+        }
+
         function createTacticalIcon(tier, color) {
             const isHot = tier === 'hot';
             const isWarm = tier === 'warm';
@@ -3671,6 +3731,7 @@
                 svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 22">
                     <polygon points="11,1 21,6 21,16 11,21 1,16 1,6" fill="${color}" fill-opacity="0.15" stroke="${color}" stroke-width="1.2" stroke-linejoin="round"/>
                     <circle cx="11" cy="11" r="3.5" fill="${color}"/>
+                    <circle cx="11" cy="11" r="3.5" fill="${color}" opacity="0.35"><animate attributeName="r" values="3.5;5;3.5" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.35;0.1;0.35" dur="3s" repeatCount="indefinite"/></circle>
                 </svg>`;
             } else if (isCold) {
                 svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18">
