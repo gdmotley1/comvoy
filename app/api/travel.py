@@ -56,6 +56,34 @@ async def geocode_location_endpoint(q: str = Query(..., description="Location te
     return {"lat": coords[0], "lng": coords[1]}
 
 
+@router.get("/preview-route")
+async def preview_route(
+    start: str = Query(..., description="Start location text"),
+    end: str = Query(..., description="End location text"),
+):
+    """Geocode start + end, fetch driving route polyline for live map preview."""
+    start_coords, end_coords = await asyncio.gather(
+        _geocode_location(start),
+        _geocode_location(end),
+    )
+    if not start_coords:
+        raise HTTPException(422, f"Could not geocode start: {start}")
+    if not end_coords:
+        raise HTTPException(422, f"Could not geocode end: {end}")
+
+    # Fetch real driving route (WKT LINESTRING)
+    route_wkt = await get_driving_route(
+        start_coords[0], start_coords[1],
+        end_coords[0], end_coords[1],
+    )
+
+    return {
+        "start": {"lat": start_coords[0], "lng": start_coords[1]},
+        "end": {"lat": end_coords[0], "lng": end_coords[1]},
+        "route_polyline": route_wkt,  # WKT LINESTRING or None
+    }
+
+
 @router.get("/plans/{rep_id}")
 def get_travel_plans(
     rep_id: str,

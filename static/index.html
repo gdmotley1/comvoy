@@ -3856,56 +3856,60 @@
             if (status) { status.textContent = 'Previewing route...'; status.className = 'tc-preview-status'; }
 
             try {
-                const [startRes, endRes] = await Promise.all([
-                    fetchT(API_BASE + `/api/travel/geocode?q=${encodeURIComponent(startVal)}`),
-                    fetchT(API_BASE + `/api/travel/geocode?q=${encodeURIComponent(endVal)}`)
-                ]);
+                const res = await fetchT(API_BASE + `/api/travel/preview-route?start=${encodeURIComponent(startVal)}&end=${encodeURIComponent(endVal)}`);
 
-                if (!startRes.ok || !endRes.ok) {
-                    const failedLoc = !startRes.ok ? 'start' : 'end';
-                    if (status) { status.textContent = `Could not find ${failedLoc} location`; status.className = 'tc-preview-status error'; }
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    if (status) { status.textContent = err.detail || 'Could not find location'; status.className = 'tc-preview-status error'; }
                     return;
                 }
 
-                const startCoords = await startRes.json();
-                const endCoords = await endRes.json();
-
+                const data = await res.json();
                 clearTripPreview();
 
-                // Draw dashed preview line
                 if (_map) {
-                    _tcPreviewLayer = L.polyline(
-                        [[startCoords.lat, startCoords.lng], [endCoords.lat, endCoords.lng]],
-                        { color: '#ff6b35', weight: 3, dashArray: '8 6', opacity: 0.8 }
-                    ).addTo(_map);
+                    // Parse driving route polyline (WKT) or fall back to straight line
+                    let coords;
+                    if (data.route_polyline) {
+                        coords = parseWktLinestring(data.route_polyline);
+                    }
+                    if (!coords || coords.length < 2) {
+                        coords = [[data.start.lat, data.start.lng], [data.end.lat, data.end.lng]];
+                    }
 
-                    // Start marker (green)
+                    // Outer glow
+                    const glow = L.polyline(coords, {
+                        color: '#ff6b35', weight: 8, opacity: 0.15,
+                        smoothFactor: 1, lineCap: 'round', lineJoin: 'round',
+                    }).addTo(_map);
+                    _tcPreviewMarkers.push(glow);
+
+                    // Main line (dashed orange for preview distinction)
+                    _tcPreviewLayer = L.polyline(coords, {
+                        color: '#ff6b35', weight: 3.5, opacity: 0.8,
+                        smoothFactor: 1, lineCap: 'round', lineJoin: 'round',
+                        dashArray: '10 6',
+                    }).addTo(_map);
+
+                    // Start marker (green S)
                     const startIcon = L.divIcon({
-                        className: 'route-endpoint start',
-                        html: 'S',
-                        iconSize: [28, 28],
-                        iconAnchor: [14, 14]
+                        html: '<div class="route-endpoint start">S</div>',
+                        className: 'route-marker', iconSize: [28, 28], iconAnchor: [14, 14],
                     });
                     const endIcon = L.divIcon({
-                        className: 'route-endpoint end',
-                        html: 'E',
-                        iconSize: [28, 28],
-                        iconAnchor: [14, 14]
+                        html: '<div class="route-endpoint end">E</div>',
+                        className: 'route-marker', iconSize: [28, 28], iconAnchor: [14, 14],
                     });
 
                     _tcPreviewMarkers.push(
-                        L.marker([startCoords.lat, startCoords.lng], { icon: startIcon }).addTo(_map),
-                        L.marker([endCoords.lat, endCoords.lng], { icon: endIcon }).addTo(_map)
+                        L.marker(coords[0], { icon: startIcon }).addTo(_map),
+                        L.marker(coords[coords.length - 1], { icon: endIcon }).addTo(_map)
                     );
 
-                    // Fit bounds
-                    const bounds = L.latLngBounds(
-                        [startCoords.lat, startCoords.lng],
-                        [endCoords.lat, endCoords.lng]
-                    );
-                    _map.fitBounds(bounds.pad(0.3));
+                    // Fit bounds to the full route
+                    _map.fitBounds(_tcPreviewLayer.getBounds(), { padding: [60, 380], maxZoom: 10 });
 
-                    if (status) { status.textContent = 'Route preview shown on map'; status.className = 'tc-preview-status success'; }
+                    if (status) { status.textContent = 'Driving route preview shown on map'; status.className = 'tc-preview-status success'; }
                 }
             } catch(e) {
                 console.error('Preview route error:', e);
