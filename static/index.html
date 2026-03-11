@@ -306,12 +306,141 @@
         .welcome-sub {
             font-size: 14px;
             color: var(--text-secondary);
-            margin-bottom: 36px;
+            margin-bottom: 12px;
             text-align: center;
             font-weight: 400;
+            max-width: 480px;
+            line-height: 1.6;
         }
 
-        /* ---- ACTION CARDS ---- */
+        /* ---- LANDING STATS ROW ---- */
+        .welcome-stats {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 36px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .welcome-stat {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-variant-numeric: tabular-nums;
+        }
+        .welcome-stat strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        .welcome-stat-sep {
+            color: var(--text-tertiary);
+            font-size: 10px;
+        }
+
+        /* ---- HERO CARDS (3 primary CTAs) ---- */
+        .hero-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            max-width: 720px;
+            width: 100%;
+            margin-bottom: 24px;
+        }
+        .hero-card {
+            padding: 28px 20px 24px;
+            border-radius: 18px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            cursor: pointer;
+            transition: all 0.3s var(--smooth);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .hero-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 18px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            background: radial-gradient(300px circle at var(--spot-x, 50%) var(--spot-y, 50%), rgba(79,143,255,0.06), transparent 60%);
+            pointer-events: none;
+        }
+        .hero-card:hover::after { opacity: 1; }
+        .hero-card:hover {
+            border-color: rgba(79,143,255,0.25);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(79,143,255,0.08);
+        }
+        .hero-card:active { transform: translateY(0) scale(0.98); }
+        .hero-card-icon {
+            width: 52px; height: 52px;
+            border-radius: 14px;
+            background: rgba(79,143,255,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-bottom: 4px;
+        }
+        .hero-card-icon svg {
+            width: 24px; height: 24px;
+            stroke: var(--accent-blue);
+            fill: none;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .hero-card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .hero-card-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* ---- QUICK ACTIONS (chip row) ---- */
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 640px;
+            margin-bottom: 16px;
+        }
+        .quick-chip {
+            padding: 8px 18px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.03);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s var(--smooth);
+        }
+        .quick-chip:hover {
+            background: rgba(79,143,255,0.08);
+            border-color: rgba(79,143,255,0.25);
+            color: var(--text-primary);
+        }
+        .quick-chip:active { transform: scale(0.96); }
+
+        @media (max-width: 700px) {
+            .hero-cards { grid-template-columns: 1fr; max-width: 320px; }
+        }
+
+        /* ---- ACTION CARDS (kept for quick-action expand forms) ---- */
         .action-cards {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -1528,6 +1657,159 @@
             font-size: 10px; color: rgba(255,255,255,0.2);
         }
 
+        /* ========== OTTO FLOATING CHAT (Map View) ========== */
+        .otto-fab {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: 50;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(12, 14, 28, 0.88);
+            border: 1px solid rgba(79,143,255,0.2);
+            box-shadow: 0 4px 24px rgba(79,143,255,0.15), 0 0 0 1px rgba(79,143,255,0.08);
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s var(--ease-out-expo);
+            animation: fabBreathe 3s ease-in-out infinite;
+        }
+        body.map-view .otto-fab { display: flex; }
+        .otto-fab:hover {
+            transform: scale(1.08);
+            box-shadow: 0 4px 32px rgba(79,143,255,0.3), 0 0 16px rgba(79,143,255,0.15);
+        }
+        .otto-fab:active { transform: scale(0.95); }
+        .otto-fab svg { width: 36px; height: 36px; filter: drop-shadow(0 0 8px rgba(79,143,255,0.4)); }
+        .otto-fab.popup-open { animation: none; box-shadow: 0 4px 24px rgba(79,143,255,0.25); border-color: rgba(79,143,255,0.35); }
+        @keyframes fabBreathe {
+            0%, 100% { box-shadow: 0 4px 24px rgba(79,143,255,0.15), 0 0 0 1px rgba(79,143,255,0.08); }
+            50% { box-shadow: 0 4px 32px rgba(79,143,255,0.28), 0 0 12px rgba(79,143,255,0.1); }
+        }
+
+        .otto-popup {
+            position: fixed;
+            bottom: 96px;
+            right: 28px;
+            z-index: 51;
+            width: 380px;
+            height: 500px;
+            border-radius: 16px;
+            background: rgba(10, 12, 24, 0.95);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 16px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(79,143,255,0.06);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .otto-popup.open {
+            display: flex;
+            animation: popupOpen 300ms var(--ease-spring) forwards;
+        }
+        .otto-popup.closing {
+            animation: popupClose 200ms var(--ease-out-expo) forwards;
+        }
+        @keyframes popupOpen {
+            from { opacity: 0; transform: scale(0.92) translateY(12px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes popupClose {
+            from { opacity: 1; transform: scale(1) translateY(0); }
+            to { opacity: 0; transform: scale(0.92) translateY(12px); }
+        }
+
+        .otto-popup-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            flex-shrink: 0;
+        }
+        .otto-popup-header-eye { width: 28px; height: 28px; flex-shrink: 0; }
+        .otto-popup-header-eye svg { width: 100%; height: 100%; filter: drop-shadow(0 0 6px rgba(79,143,255,0.4)); }
+        .otto-popup-header-title { font-size: 14px; font-weight: 600; color: var(--text-primary); flex: 1; }
+        .otto-popup-close {
+            width: 28px; height: 28px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.4);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+        .otto-popup-close:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
+
+        .otto-popup-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
+        }
+        .otto-popup-scroll::-webkit-scrollbar { width: 4px; }
+        .otto-popup-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+        .otto-popup-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .otto-popup-messages .msg { gap: 10px; }
+        .otto-popup-messages .msg-bubble { font-size: 13px; padding: 10px 14px; border-radius: 14px; }
+        .otto-popup-messages .msg-orb { width: 28px; height: 28px; min-width: 28px; }
+        .otto-popup-messages .thinking { gap: 10px; }
+
+        .otto-popup-input-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 12px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            flex-shrink: 0;
+        }
+        .otto-popup-input {
+            flex: 1;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 9px 14px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .otto-popup-input:focus { border-color: rgba(79,143,255,0.3); }
+        .otto-popup-input::placeholder { color: rgba(255,255,255,0.25); }
+        .otto-popup-send {
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .otto-popup-send:hover { transform: scale(1.06); }
+        .otto-popup-send:active { transform: scale(0.94); }
+        .otto-popup-send:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+        .otto-popup-send svg { width: 16px; height: 16px; fill: none; stroke: white; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+        @media (max-width: 500px) {
+            .otto-fab { width: 48px; height: 48px; bottom: 16px; right: 16px; }
+            .otto-fab svg { width: 30px; height: 30px; }
+            .otto-popup { width: calc(100vw - 32px); right: 16px; bottom: 76px; height: 420px; }
+        }
+
         /* ========== GLASS CLUSTER SYSTEM ========== */
         .marker-cluster { background: none !important; border: none !important; }
         .marker-cluster div { background: none !important; }
@@ -1765,9 +2047,6 @@
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s var(--smooth);
-            opacity: 0;
-            transform: translateY(-6px);
-            pointer-events: none;
         }
 
         .btn-trips:hover {
@@ -2219,6 +2498,28 @@
         <div class="map-search-results" id="mapSearchResults"></div>
     </div>
 
+    <!-- Otto Floating Chat (Map View) -->
+    <div class="otto-fab" id="ottoFab" onclick="toggleOttoPopup()"></div>
+    <div class="otto-popup" id="ottoPopup">
+        <div class="otto-popup-header">
+            <div class="otto-popup-header-eye" id="ottoPopupEye"></div>
+            <span class="otto-popup-header-title">Otto</span>
+            <button class="otto-popup-close" onclick="toggleOttoPopup()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="otto-popup-scroll" id="ottoPopupScroll">
+            <div class="otto-popup-messages" id="ottoPopupMessages"></div>
+        </div>
+        <div class="otto-popup-input-bar">
+            <input type="text" class="otto-popup-input" id="ottoPopupInput" placeholder="Ask Otto..."
+                onkeydown="if(event.key==='Enter'){event.preventDefault();popupSend();}">
+            <button class="otto-popup-send" id="ottoPopupSendBtn" onclick="popupSend()">
+                <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+    </div>
+
     <div class="route-panel" id="routePanel">
         <div class="route-panel-header">
             <svg class="route-panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
@@ -2453,6 +2754,20 @@
 
         function ask(text) { input.value = text; send(); }
 
+        function expandQuickForm(action) {
+            const cards = document.getElementById('actionCards');
+            if (!cards) return;
+            cards.style.display = 'grid';
+            const card = cards.querySelector('[data-action="' + action + '"]');
+            if (card) {
+                document.querySelectorAll('.action-card.expanded').forEach(c => c.classList.remove('expanded'));
+                card.classList.add('expanded');
+                const firstInput = card.querySelector('.action-form-input, .action-form-select');
+                if (firstInput) setTimeout(() => firstInput.focus(), 100);
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
         function handleActionCard(card) {
             const action = card.dataset.action;
             // Direct-send cards (no form)
@@ -2659,13 +2974,39 @@
 <div class="orb-hero"><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
 <svg class="otto-eye" viewBox="0 0 60 60"><defs><radialGradient id="irisGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"><animate attributeName="stop-color" values="#4f8fff;#00d4ff;#a855f7;#4f8fff" dur="6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#1a1a3e"/></radialGradient><radialGradient id="pupilGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient></defs><circle cx="30" cy="30" r="29" fill="none" stroke="url(#irisGrad)" stroke-width="0.5" opacity="0.3"><animate attributeName="opacity" values="0.3;0.5;0.3" dur="3s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="url(#irisGrad)" stroke-width="2" opacity="0.9"/><circle cx="30" cy="30" r="27" fill="url(#irisGrad)" opacity="0.06"/><circle cx="30" cy="30" r="22" fill="url(#irisGrad)" opacity="0.18"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="360 30 30" dur="12s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="16" fill="none" stroke="url(#irisGrad)" stroke-width="2.5" opacity="0.45"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="-360 30 30" dur="8s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="10" fill="url(#irisGrad)" opacity="0.6"><animate attributeName="r" values="10;12.5;10" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0.85;0.6" dur="3s" repeatCount="indefinite"/></circle><circle class="otto-pupil" cx="30" cy="30" r="6" fill="#060810"/><circle class="pupil-glow" cx="30" cy="30" r="4" fill="url(#pupilGlow)" opacity="0.8"><animate attributeName="opacity" values="0.8;0.35;0.8" dur="2.5s" repeatCount="indefinite"/><animate attributeName="r" values="4;5;4" dur="2.5s" repeatCount="indefinite"/></circle><circle class="specular-1" cx="23" cy="23" r="3" fill="white" opacity="0.25"/><circle class="specular-2" cx="25" cy="25" r="1.5" fill="white" opacity="0.45"/></svg></div>
 <div class="welcome-title" id="welcomeTitle"></div>
-<div class="welcome-sub welcome-sub-reveal">Territory intel, dealer briefings, new opportunities — just ask.</div>
-<div class="action-cards" id="actionCards">
-<div class="action-card" data-action="trip" onclick="handleActionCard(this)"><div class="action-card-icon"><svg viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg></div><div class="action-card-title">Plan a Trip</div><div class="action-card-desc">Build a multi-day dealer visit itinerary</div><div class="action-card-form" onclick="event.stopPropagation()"><div class="action-form-row"><span class="action-form-label">Rep</span><select class="action-form-select" id="tripRep"><option value="">Loading...</option></select></div><div class="action-form-row"><span class="action-form-label">States</span><input class="action-form-input" id="tripStates" placeholder="GA, TN, NC" /></div><div class="action-form-row"><span class="action-form-label">Days</span><input class="action-form-input" id="tripDays" type="number" value="3" min="1" max="7" style="max-width:80px" /><button class="action-form-go" onclick="submitTrip()">Plan Trip</button></div><div class="manage-trips-link" onclick="openTripManager()">Manage Trips →</div></div></div>
-<div class="action-card" data-action="dealer" onclick="handleActionCard(this)"><div class="action-card-icon"><svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div><div class="action-card-title">Research a Dealer</div><div class="action-card-desc">Full briefing with talking points</div><div class="action-card-form" onclick="event.stopPropagation()"><div class="action-form-row"><span class="action-form-label">Name</span><input class="action-form-input" id="dealerName" placeholder="e.g. Century Trucks" /><button class="action-form-go" onclick="submitDealer()">Research</button></div></div></div>
-<div class="action-card" data-action="territory" onclick="handleActionCard(this)"><div class="action-card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></div><div class="action-card-title">Review Territory</div><div class="action-card-desc">State-level overview with top dealers</div><div class="action-card-form" onclick="event.stopPropagation()"><div class="action-form-row"><span class="action-form-label">State</span><select class="action-form-select" id="territoryState"><option value="">Select a state...</option><option value="NC">North Carolina</option><option value="FL">Florida</option><option value="TX">Texas</option><option value="GA">Georgia</option><option value="TN">Tennessee</option><option value="AL">Alabama</option><option value="SC">South Carolina</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option><option value="AR">Arkansas</option><option value="OK">Oklahoma</option><option value="MS">Mississippi</option></select><button class="action-form-go" onclick="submitTerritory()">Review</button></div></div></div>
-<div class="action-card" data-action="opportunities" onclick="handleActionCard(this)"><div class="action-card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div><div class="action-card-title">Find Opportunities</div><div class="action-card-desc">Top hot leads across all territories</div></div>
-<div class="action-card" data-action="report" onclick="handleActionCard(this)"><div class="action-card-icon"><svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div><div class="action-card-title">Monthly Report</div><div class="action-card-desc">Territory changes and top opportunities</div></div>
+<div class="welcome-sub welcome-sub-reveal">Connected to 588 dealers across 12 states. Real-time inventory, lead scoring, route planning — powered by AI.</div>
+<div class="welcome-stats">
+<span class="welcome-stat"><strong>588</strong> Dealers</span><span class="welcome-stat-sep">&middot;</span>
+<span class="welcome-stat"><strong>13</strong> Brands</span><span class="welcome-stat-sep">&middot;</span>
+<span class="welcome-stat"><strong>12</strong> States</span><span class="welcome-stat-sep">&middot;</span>
+<span class="welcome-stat"><strong>~13,400</strong> Vehicles</span>
+</div>
+<div class="hero-cards">
+<div class="hero-card" onclick="openDealerMap()">
+<div class="hero-card-icon"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+<div class="hero-card-title">Dealer Map</div>
+<div class="hero-card-desc">Explore all dealers with lead scores, filters &amp; route overlays</div>
+</div>
+<div class="hero-card" onclick="openTripManager()">
+<div class="hero-card-icon"><svg viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg></div>
+<div class="hero-card-title">Plan a Trip</div>
+<div class="hero-card-desc">Build optimized visit routes with auto email briefings</div>
+</div>
+<div class="hero-card" onclick="document.getElementById('input').focus()">
+<div class="hero-card-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+<div class="hero-card-title">Ask Otto</div>
+<div class="hero-card-desc">Dealer intel, territory trends, hot leads — just ask</div>
+</div>
+</div>
+<div class="quick-actions">
+<button class="quick-chip" onclick="ask('Show me the top 15 hot leads across all territories')">Top Hot Leads</button>
+<button class="quick-chip" onclick="ask('Give me the latest monthly report with territory changes and top opportunities')">Monthly Report</button>
+<button class="quick-chip" onclick="expandQuickForm('dealer')">Research a Dealer</button>
+<button class="quick-chip" onclick="expandQuickForm('territory')">Territory Overview</button>
+</div>
+<div class="action-cards" id="actionCards" style="display:none">
+<div class="action-card" data-action="dealer" onclick="handleActionCard(this)"><div class="action-card-title">Research a Dealer</div><div class="action-card-form" onclick="event.stopPropagation()"><div class="action-form-row"><span class="action-form-label">Name</span><input class="action-form-input" id="dealerName" placeholder="e.g. Century Trucks" /><button class="action-form-go" onclick="submitDealer()">Research</button></div></div></div>
+<div class="action-card" data-action="territory" onclick="handleActionCard(this)"><div class="action-card-title">Review Territory</div><div class="action-card-form" onclick="event.stopPropagation()"><div class="action-form-row"><span class="action-form-label">State</span><select class="action-form-select" id="territoryState"><option value="">Select a state...</option><option value="NC">North Carolina</option><option value="FL">Florida</option><option value="TX">Texas</option><option value="GA">Georgia</option><option value="TN">Tennessee</option><option value="AL">Alabama</option><option value="SC">South Carolina</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option><option value="AR">Arkansas</option><option value="OK">Oklahoma</option><option value="MS">Mississippi</option></select><button class="action-form-go" onclick="submitTerritory()">Review</button></div></div></div>
 </div>
 <div class="api-notice" id="apiNotice"><div class="api-notice-icon"><svg viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg></div><div class="api-notice-text"><strong>API key required.</strong> Add <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">ANTHROPIC_API_KEY</code> to your <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">.env</code> file and restart the server.</div></div>
 </div>`;
@@ -2680,12 +3021,138 @@
             document.body.classList.remove('trip-manager', 'map-view');
             scroll.innerHTML = buildWelcomeHTML();
             const wtEl = $('welcomeTitle');
-            if (wtEl) splitTextReveal(wtEl, 'What do you need to know?', 0.3);
+            if (wtEl) splitTextReveal(wtEl, 'Otto — Comvoy Sales Intelligence', 0.3);
             initEyeTracking();
             _repsLoaded = false;
-            loadReps();
             checkApiStatus();
         }
+
+        // ===== OTTO FLOATING CHAT POPUP (Map View) =====
+        let _popupOpen = false;
+        let _popupBusy = false;
+        let _popupInited = false;
+
+        function initPopup() {
+            if (_popupInited) return;
+            const fab = $('ottoFab');
+            const eye = $('ottoPopupEye');
+            if (fab) fab.innerHTML = ottoEyeSvg();
+            if (eye) eye.innerHTML = ottoEyeSvg();
+            // Add welcome message
+            const msgs = $('ottoPopupMessages');
+            if (msgs && !msgs.hasChildNodes()) {
+                const welcome = document.createElement('div');
+                welcome.className = 'msg assistant';
+                welcome.innerHTML = '<div class="msg-orb">' + ottoEyeSvg() + '</div><div class="msg-bubble">I can see the map too. Ask me about any dealer, territory, or route.</div>';
+                msgs.appendChild(welcome);
+            }
+            _popupInited = true;
+        }
+
+        function toggleOttoPopup() {
+            const popup = $('ottoPopup');
+            const fab = $('ottoFab');
+            if (!popup || !fab) return;
+            initPopup();
+
+            if (_popupOpen) {
+                // Close
+                popup.classList.add('closing');
+                fab.classList.remove('popup-open');
+                popup.addEventListener('animationend', function handler() {
+                    popup.removeEventListener('animationend', handler);
+                    popup.classList.remove('open', 'closing');
+                    _popupOpen = false;
+                });
+            } else {
+                // Open
+                popup.classList.remove('closing');
+                popup.classList.add('open');
+                fab.classList.add('popup-open');
+                _popupOpen = true;
+                setTimeout(() => $('ottoPopupInput')?.focus(), 100);
+                popupScrollDown();
+            }
+        }
+
+        async function popupSend() {
+            const inp = $('ottoPopupInput');
+            const text = inp?.value.trim();
+            if (!text || _popupBusy) return;
+
+            const msgs = $('ottoPopupMessages');
+            const userEl = document.createElement('div');
+            userEl.className = 'msg user';
+            userEl.innerHTML = '<div class="msg-bubble">' + esc(text) + '</div>';
+            msgs.appendChild(userEl);
+
+            inp.value = '';
+            popupScrollDown();
+
+            _popupBusy = true;
+            const sendBtn = $('ottoPopupSendBtn');
+            if (sendBtn) sendBtn.disabled = true;
+
+            const think = document.createElement('div');
+            think.className = 'thinking';
+            think.innerHTML = '<div class="msg-orb">' + ottoEyeSvg() + '</div><div class="think-dots"><span></span><span></span><span></span></div>';
+            msgs.appendChild(think);
+            popupScrollDown();
+
+            try {
+                const res = await fetch(API_BASE + '/api/chat?session_id=' + sid, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text }),
+                });
+                think.remove();
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({ detail: 'Unknown error' }));
+                    popupAddBot('Something went wrong: ' + (err.detail || 'Unknown error'));
+                    return;
+                }
+                const data = await res.json();
+                if (data.error === 'no_api_key') {
+                    popupAddBot('I need an API key to work. Add **ANTHROPIC_API_KEY** to your `.env` file.');
+                } else {
+                    popupAddBot(data.response);
+                }
+                if (data.usage) updateUsage(data.usage);
+            } catch (e) {
+                think.remove();
+                popupAddBot('Connection error. Is the server running?');
+            } finally {
+                _popupBusy = false;
+                if (sendBtn) sendBtn.disabled = false;
+                inp?.focus();
+            }
+        }
+
+        function popupAddBot(text) {
+            const msgs = $('ottoPopupMessages');
+            if (!msgs) return;
+            const el = document.createElement('div');
+            el.className = 'msg assistant';
+            el.innerHTML = '<div class="msg-orb">' + ottoEyeSvg() + '</div><div class="msg-bubble">' + fmt(text) + '</div>';
+            msgs.appendChild(el);
+            popupScrollDown();
+            runCountUps(el);
+        }
+
+        function popupScrollDown() {
+            const s = $('ottoPopupScroll');
+            if (s) requestAnimationFrame(() => { s.scrollTop = s.scrollHeight; });
+        }
+
+        // Click outside to close popup
+        document.addEventListener('click', e => {
+            if (!_popupOpen) return;
+            const popup = $('ottoPopup');
+            const fab = $('ottoFab');
+            if (popup && !popup.contains(e.target) && fab && !fab.contains(e.target)) {
+                toggleOttoPopup();
+            }
+        });
 
         // ===== SPLIT TEXT BLUR REVEAL (React Bits style) =====
         function splitTextReveal(el, text, baseDelay) {
@@ -2713,11 +3180,11 @@
             });
         }
         const wtEl = $('welcomeTitle');
-        if (wtEl) splitTextReveal(wtEl, 'What do you need to know?', 0.3);
+        if (wtEl) splitTextReveal(wtEl, 'Otto — Comvoy Sales Intelligence', 0.3);
 
         // ===== SPOTLIGHT GLOW ON CARDS (React Bits style) =====
         document.addEventListener('mousemove', e => {
-            document.querySelectorAll('.action-card').forEach(card => {
+            document.querySelectorAll('.action-card, .hero-card').forEach(card => {
                 const r = card.getBoundingClientRect();
                 const x = e.clientX - r.left;
                 const y = e.clientY - r.top;
@@ -3129,6 +3596,7 @@
         async function openDealerMap() {
             document.body.classList.remove('chatting', 'trip-manager');
             document.body.classList.add('map-view');
+            initPopup();
 
             if (!_mapLoaded) {
                 // Load Leaflet JS dynamically
