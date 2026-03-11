@@ -1904,8 +1904,8 @@
         .tac-marker svg { width: 100%; height: 100%; }
         .tac-marker.tier-hot svg { filter: drop-shadow(0 0 6px #ff6b35); }
         .tac-marker.tier-warm svg { filter: drop-shadow(0 0 5px rgba(34,197,94,0.6)); }
-        .tac-marker.tier-cold svg { filter: drop-shadow(0 0 3px rgba(71,85,105,0.4)); opacity: 0.8; }
-        .tac-marker.tier-unscored svg { filter: drop-shadow(0 0 3px rgba(79,143,255,0.3)); opacity: 0.65; }
+        .tac-marker.tier-cold svg { filter: drop-shadow(0 0 4px rgba(71,85,105,0.5)); opacity: 0.85; }
+        .tac-marker.tier-unscored svg { filter: drop-shadow(0 0 4px rgba(79,143,255,0.4)); opacity: 0.75; }
 
         .tac-ping {
             position: absolute;
@@ -1916,6 +1916,23 @@
             pointer-events: none;
         }
         .tac-ping-2 { display: none; }
+
+        /* Route proximity highlighting */
+        .tac-marker.route-nearby { transform: scale(1.4); transition: transform 0.3s var(--ease-out-expo), filter 0.3s; z-index: 10 !important; }
+        .tac-marker.route-nearby svg { filter: drop-shadow(0 0 10px currentColor) !important; opacity: 1 !important; }
+        .tac-marker.route-nearby.tier-hot svg { filter: drop-shadow(0 0 12px #ff6b35) drop-shadow(0 0 20px rgba(255,107,53,0.4)) !important; }
+        .tac-marker.route-nearby.tier-warm svg { filter: drop-shadow(0 0 10px #22c55e) drop-shadow(0 0 18px rgba(34,197,94,0.4)) !important; }
+        .tac-marker.route-nearby.tier-cold svg { filter: drop-shadow(0 0 8px rgba(71,85,105,0.7)) !important; }
+        .tac-marker.route-nearby.tier-unscored svg { filter: drop-shadow(0 0 8px rgba(79,143,255,0.6)) !important; }
+        .route-dimmed { opacity: 0.2 !important; transition: opacity 0.4s var(--smooth); }
+
+        /* Dim all base markers/clusters when route proximity is active */
+        body.map-view.route-preview .leaflet-marker-pane > .leaflet-marker-icon:not(.route-marker) {
+            opacity: 0.12 !important; transition: opacity 0.4s var(--smooth);
+        }
+        body.map-view.route-preview .marker-cluster {
+            opacity: 0.1 !important; transition: opacity 0.4s var(--smooth);
+        }
         @keyframes tacPing {
             0% { transform: scale(0.8); opacity: 0.6; }
             100% { transform: scale(2.0); opacity: 0; }
@@ -3909,6 +3926,9 @@
                     // Fit bounds to the full route
                     _map.fitBounds(_tcPreviewLayer.getBounds(), { padding: [60, 380], maxZoom: 10 });
 
+                    // Highlight dealers near the route
+                    highlightRouteProximity(coords, 20);
+
                     if (status) { status.textContent = 'Driving route preview shown on map'; status.className = 'tc-preview-status success'; }
                 }
             } catch(e) {
@@ -3924,6 +3944,141 @@
             }
             _tcPreviewMarkers.forEach(m => { if (_map) _map.removeLayer(m); });
             _tcPreviewMarkers = [];
+            clearRouteProximity();
+        }
+
+        let _routeNearbyLayer = null;
+
+        function highlightRouteProximity(routeCoords, bufferMiles) {
+            // Create a separate overlay layer showing dealers near the route prominently
+            clearRouteProximity();
+            if (!routeCoords || routeCoords.length < 2 || !_allDealers || !_map) return;
+
+            const bufferKm = (bufferMiles || 20) * 1.60934;
+            const nearbyDealers = [];
+
+            // Sample route at intervals for faster checking on long routes
+            const step = Math.max(1, Math.floor(routeCoords.length / 100));
+            const sampledCoords = [];
+            for (let i = 0; i < routeCoords.length; i += step) sampledCoords.push(routeCoords[i]);
+            if (sampledCoords[sampledCoords.length-1] !== routeCoords[routeCoords.length-1]) {
+                sampledCoords.push(routeCoords[routeCoords.length-1]);
+            }
+
+            _allDealers.forEach(d => {
+                if (!d.lat || !d.lng) return;
+                const dist = minDistToPolyline(d.lat, d.lng, sampledCoords);
+                if (dist <= bufferKm) nearbyDealers.push(d);
+            });
+
+            if (nearbyDealers.length === 0) return;
+
+            // Dim non-route markers via CSS class
+            document.body.classList.add('route-preview');
+
+            // Create a fresh layer with highlighted nearby dealer markers
+            _routeNearbyLayer = L.layerGroup().addTo(_map);
+
+            nearbyDealers.forEach(d => {
+                const color = tierColor(d.tier);
+                const tier = d.tier || 'unscored';
+                const size = tier === 'hot' ? 32 : tier === 'warm' ? 28 : 24;
+                const half = size / 2;
+
+                let svg;
+                if (tier === 'hot') {
+                    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 26">
+                        <rect x="5" y="5" width="16" height="16" rx="2" transform="rotate(45 13 13)" fill="${color}" fill-opacity="0.35" stroke="${color}" stroke-width="2"/>
+                        <circle cx="13" cy="13" r="5" fill="${color}"/>
+                        <circle cx="13" cy="13" r="8" fill="${color}" opacity="0.2"><animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.2;0;0.2" dur="2s" repeatCount="indefinite"/></circle>
+                    </svg>`;
+                } else if (tier === 'warm') {
+                    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 22">
+                        <polygon points="11,1 21,6 21,16 11,21 1,16 1,6" fill="${color}" fill-opacity="0.25" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"/>
+                        <circle cx="11" cy="11" r="4.5" fill="${color}"/>
+                        <circle cx="11" cy="11" r="7" fill="${color}" opacity="0.15"><animate attributeName="r" values="7;10;7" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.15;0;0.15" dur="3s" repeatCount="indefinite"/></circle>
+                    </svg>`;
+                } else if (tier === 'cold') {
+                    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18">
+                        <circle cx="9" cy="9" r="7" fill="${color}" fill-opacity="0.2" stroke="${color}" stroke-width="1.5" stroke-opacity="0.7"/>
+                        <circle cx="9" cy="9" r="3.5" fill="${color}" fill-opacity="0.9"/>
+                    </svg>`;
+                } else {
+                    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+                        <circle cx="8" cy="8" r="6" fill="none" stroke="${color}" stroke-width="1.2" stroke-opacity="0.5"/>
+                        <circle cx="8" cy="8" r="3" fill="${color}" fill-opacity="0.8"/>
+                    </svg>`;
+                }
+
+                const icon = L.divIcon({
+                    html: `<div class="tac-marker route-nearby tier-${tier}" style="width:${size}px;height:${size}px;">${svg}</div>`,
+                    className: 'route-marker',
+                    iconSize: [size, size],
+                    iconAnchor: [half, half],
+                });
+
+                const tierLabel = d.tier ? d.tier.charAt(0).toUpperCase() + d.tier.slice(1) : 'Unscored';
+                const smyrnaPct = d.smyrna_pct ? d.smyrna_pct.toFixed(1) + '%' : '0%';
+                const popup = `
+                    <div class="map-popup-name">${esc(d.name)}</div>
+                    <div class="map-popup-loc">${d.city}, ${d.state}</div>
+                    <div class="map-popup-row">
+                        <span class="map-popup-kv"><b>${d.vehicles || 0}</b> vehicles</span>
+                        <span class="map-popup-sep">·</span>
+                        <span class="map-popup-kv"><b>${d.smyrna || 0}</b> Smyrna (${smyrnaPct})</span>
+                        <span class="map-popup-sep">·</span>
+                        <span class="map-popup-kv">Score <b>${d.score ?? '—'}</b> <span style="color:${color};font-size:10px;font-weight:600;">${d.score != null ? tierLabel : ''}</span></span>
+                    </div>
+                `;
+
+                L.marker([d.lat, d.lng], { icon, zIndexOffset: 600 })
+                    .bindPopup(popup, { maxWidth: 260 })
+                    .bindTooltip(`${d.name} — ${d.vehicles || 0} vehicles`, {
+                        direction: 'top', offset: [0, -12], className: 'map-hover-tooltip'
+                    })
+                    .addTo(_routeNearbyLayer);
+            });
+        }
+
+        function clearRouteProximity() {
+            if (_routeNearbyLayer && _map) {
+                _map.removeLayer(_routeNearbyLayer);
+                _routeNearbyLayer = null;
+            }
+            // Restore all marker visibility
+            document.body.classList.remove('route-preview');
+        }
+
+        function minDistToPolyline(lat, lng, coords) {
+            // Returns min distance in km from a point to any segment of a polyline
+            let minD = Infinity;
+            for (let i = 0; i < coords.length - 1; i++) {
+                const d = distToSegment(lat, lng, coords[i][0], coords[i][1], coords[i+1][0], coords[i+1][1]);
+                if (d < minD) minD = d;
+            }
+            return minD;
+        }
+
+        function distToSegment(plat, plng, alat, alng, blat, blng) {
+            // Approximate distance from point P to segment AB using simple projection
+            // Works well at these scales (state-level distances)
+            const R = 6371; // km
+            const toRad = Math.PI / 180;
+            const px = plng * toRad * Math.cos(plat * toRad) * R;
+            const py = plat * toRad * R;
+            const ax = alng * toRad * Math.cos(alat * toRad) * R;
+            const ay = alat * toRad * R;
+            const bx = blng * toRad * Math.cos(blat * toRad) * R;
+            const by = blat * toRad * R;
+
+            const dx = bx - ax, dy = by - ay;
+            const lenSq = dx * dx + dy * dy;
+            if (lenSq === 0) return Math.sqrt((px - ax) ** 2 + (py - ay) ** 2);
+
+            let t = ((px - ax) * dx + (py - ay) * dy) / lenSq;
+            t = Math.max(0, Math.min(1, t));
+            const cx = ax + t * dx, cy = ay + t * dy;
+            return Math.sqrt((px - cx) ** 2 + (py - cy) ** 2);
         }
 
         async function saveMapTrip() {
@@ -4168,7 +4323,7 @@
             const isHot = tier === 'hot';
             const isWarm = tier === 'warm';
             const isCold = tier === 'cold';
-            const size = isHot ? 26 : isWarm ? 22 : isCold ? 18 : 16;
+            const size = isHot ? 26 : isWarm ? 22 : isCold ? 20 : 18;
             const half = size / 2;
             let svg;
             if (isHot) {
@@ -4777,6 +4932,10 @@
 
             drawRoutePolyline(trip);
             updateLegendForRoute(true);
+
+            // Highlight dealers near the confirmed route
+            const routeCoords = parseWktLinestring(trip.route_polyline);
+            if (routeCoords.length >= 2) highlightRouteProximity(routeCoords, 20);
         }
 
         function drawRoutePolyline(trip) {
@@ -4915,6 +5074,7 @@
 
         function clearRoute() {
             clearRouteOverlay();
+            clearRouteProximity();
             _routeActive = false;
             _routeSelectedTrip = null;
             document.body.classList.remove('route-active');
