@@ -1425,12 +1425,12 @@
         /* ========== MAP SEARCH BAR ========== */
         .map-search {
             position: fixed;
-            top: 110px;
-            right: 230px;
+            top: 72px;
+            right: 20px;
             z-index: 16;
             display: none;
             flex-direction: column;
-            width: 220px;
+            width: 240px;
         }
         body.map-view .map-search { display: flex; }
         body.map-view.route-active .map-search { display: none; }
@@ -1534,22 +1534,19 @@
         .glass-cluster {
             display: flex; align-items: center; justify-content: center;
             border-radius: 9999px;
-            background: rgba(15, 20, 40, 0.65);
-            backdrop-filter: blur(12px) saturate(180%);
-            -webkit-backdrop-filter: blur(12px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 0 1px rgba(79,143,255,0.06);
-            color: rgba(255, 255, 255, 0.88);
+            background: rgba(15, 20, 40, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4), 0 0 0 1px rgba(79,143,255,0.08);
+            color: rgba(255, 255, 255, 0.9);
             font-family: 'Inter', sans-serif;
             font-weight: 600;
             font-variant-numeric: tabular-nums;
             letter-spacing: 0.01em;
-            will-change: transform;
             transition: transform 120ms var(--ease-spring), box-shadow 200ms var(--ease-out-expo);
         }
         .glass-cluster:hover {
-            transform: scale(1.1);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(79,143,255,0.15), 0 0 16px rgba(79,143,255,0.1);
+            transform: scale(1.08);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5), 0 0 0 1px rgba(79,143,255,0.2), 0 0 12px rgba(79,143,255,0.1);
         }
         .glass-cluster.gc-sm { width: 34px; height: 34px; font-size: 11px; }
         .glass-cluster.gc-md { width: 42px; height: 42px; font-size: 12px; }
@@ -1568,26 +1565,18 @@
             inset: -4px;
             border-radius: 50%;
             border: 1.5px solid #ff6b35;
-            animation: tacPing 2.5s cubic-bezier(0,0,0.2,1) infinite;
+            animation: tacPing 3s ease-out infinite;
             pointer-events: none;
         }
-        .tac-ping-2 {
-            position: absolute;
-            inset: -4px;
-            border-radius: 50%;
-            border: 1.5px solid #ff6b35;
-            animation: tacPing 2.5s cubic-bezier(0,0,0.2,1) infinite;
-            animation-delay: 1.25s;
-            pointer-events: none;
-        }
+        .tac-ping-2 { display: none; }
         @keyframes tacPing {
-            0% { transform: scale(0.6); opacity: 0.8; }
-            100% { transform: scale(2.4); opacity: 0; }
+            0% { transform: scale(0.8); opacity: 0.6; }
+            100% { transform: scale(2.0); opacity: 0; }
         }
 
         /* ========== HOVER TOOLTIPS ========== */
         .map-hover-tooltip {
-            background: rgba(15,18,30,0.92) !important;
+            background: rgba(15,18,30,0.95) !important;
             border: 1px solid var(--glass-border) !important;
             border-radius: 8px !important;
             padding: 5px 10px !important;
@@ -1596,7 +1585,6 @@
             font-size: 11px !important;
             font-weight: 500 !important;
             box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
-            backdrop-filter: blur(12px);
             white-space: nowrap;
         }
         .map-hover-tooltip::before { border-top-color: rgba(15,18,30,0.92) !important; }
@@ -3147,16 +3135,28 @@
                 await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
                 await loadScript('https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js');
 
+                const usBounds = L.latLngBounds(
+                    L.latLng(24.3, -100.0),  // SW corner (south Texas / Gulf)
+                    L.latLng(37.0, -75.0)    // NE corner (Virginia coast)
+                );
+
                 _map = L.map('dealerMap', {
                     zoomControl: true,
                     attributionControl: true,
-                }).setView([33.5, -86.8], 6); // Center on SE US
+                    minZoom: 5,
+                    maxZoom: 18,
+                    maxBounds: L.latLngBounds(
+                        L.latLng(20.0, -108.0),  // padded SW
+                        L.latLng(42.0, -68.0)    // padded NE
+                    ),
+                    maxBoundsViscosity: 0.8,
+                }).fitBounds(usBounds, { padding: [20, 20] });
 
                 // Dark map tiles (CartoDB Dark Matter)
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
                     subdomains: 'abcd',
-                    maxZoom: 19,
+                    maxZoom: 18,
                 }).addTo(_map);
 
                 // Load dealer data
@@ -3269,9 +3269,14 @@
 
         function addDealerMarkers(dealers) {
             _clusterLayer = L.markerClusterGroup({
-                maxClusterRadius: 40,
+                maxClusterRadius: 45,
                 spiderfyOnMaxZoom: true,
                 showCoverageOnHover: false,
+                animate: false,
+                chunkedLoading: true,
+                chunkInterval: 100,
+                chunkDelay: 10,
+                disableClusteringAtZoom: 14,
                 iconCreateFunction: function(cluster) {
                     const count = cluster.getChildCount();
                     let sc = 'gc-sm', sz = 34;
