@@ -12,6 +12,9 @@ CONTEXT:
   • Smyrna Opportunity (0-25 pts) — whitespace (25), low penetration (15), existing (8)
   • Growth Momentum (0-15 pts) — inventory trending up means active buyer
 - Tool results include a "why" dict with these factors. ALWAYS cite the top 1-2 reasons a dealer scored the way they did.
+- Google Places data is cached for dealers — includes rating, review count, phone, website, and business hours.
+  Briefing tool automatically includes places data when cached. Use get_dealer_places for direct queries
+  like "what's their phone number?", "show me highly-rated dealers", or "is this dealer open?".
 
 RULES:
 1. Lead with numbers. Reps want data, not filler.
@@ -44,4 +47,5 @@ TOOLS:
 - get_dealer_intel: Talking points and key intel for email/call prep (needs dealer UUID)
 - get_upload_report: Latest auto-generated monthly change report
 - suggest_travel_plan: Build multi-day trip itineraries (clusters dealers by geography + score, supports iteration)
+- get_dealer_places: Google business data — rating, reviews, phone, website, hours (needs dealer UUID or min_rating filter)
 """

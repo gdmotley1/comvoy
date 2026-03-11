@@ -98,6 +98,16 @@ def generate_route_briefing(plan: dict) -> dict:
         ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).execute()
         score_map = {r["dealer_id"]: r for r in scores.data}
 
+    # Get cached Google Places data (single query, no API calls)
+    places_map = {}
+    try:
+        places_data = db.table("dealer_places").select(
+            "dealer_id, rating, review_count, phone, website, google_maps_url"
+        ).in_("dealer_id", dealer_ids).execute()
+        places_map = {r["dealer_id"]: r for r in (places_data.data or [])}
+    except Exception:
+        pass  # Table may not exist yet
+
     # Get body type breakdown for all route dealers (current snapshot)
     bt_current = {}
     if snap_id:
@@ -154,6 +164,7 @@ def generate_route_briefing(plan: dict) -> dict:
             "factors": factors,
             "smyrna_overlap": smyrna_overlap,
             "bt_changes": bt_changes,
+            "places": places_map.get(did, {}),
         }
         dealers.append(dealer)
 
@@ -269,6 +280,35 @@ def _build_why_visit(d: dict) -> str:
         return f"{vehicles:,} vehicles on lot. Top brand: {top_brand}."
 
 
+def _render_places_line(places: dict) -> str:
+    """Render a compact Places info line for email (rating + phone + website)."""
+    if not places:
+        return ""
+    parts = []
+    if places.get("rating"):
+        stars = f"&#11088; {float(places['rating'])}"
+        if places.get("review_count"):
+            stars += f" ({places['review_count']} reviews)"
+        parts.append(stars)
+    if places.get("phone"):
+        parts.append(f"&#9742; {places['phone']}")
+    if places.get("website"):
+        # Truncate long URLs for display
+        url = places["website"]
+        display = url.replace("https://", "").replace("http://", "").rstrip("/")
+        if len(display) > 30:
+            display = display[:28] + "..."
+        parts.append(
+            f'<a href="{url}" style="color:#4f8fff;text-decoration:none;">{display}</a>'
+        )
+    if not parts:
+        return ""
+    return f"""
+        <tr><td style="padding:4px 20px 0 20px;font-size:12px;color:#8b95a5;line-height:1.5;">
+            {' &middot; '.join(parts)}
+        </td></tr>"""
+
+
 def _render_top_stop(d: dict, show_trends: bool) -> str:
     """Render a full-detail card for a top-stop dealer.
 
@@ -346,6 +386,7 @@ def _render_top_stop(d: dict, show_trends: bool) -> str:
             <span style="font-size:16px;font-weight:700;color:#e2e8f0;">{d['name']}</span><br>
             <span style="font-size:13px;color:#64748b;">{d['city']}, {d['state']}</span>
         </td></tr>
+        {_render_places_line(d.get('places', {}))}
         <!-- Why visit -->
         <tr><td style="padding:8px 20px 0 20px;font-size:14px;color:#b0bac7;line-height:1.55;">
             {why}

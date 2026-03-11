@@ -1,9 +1,10 @@
 """
 Agent tool definitions for Claude API tool-use.
 
-Phase 3 tools: 11 total
+Phase 4 tools: 12 total
   Original 7: search, nearby, briefing, territory, dealer_trend, territory_trend, alerts
-  New 4: get_lead_scores, get_route_dealers, get_dealer_intel, get_upload_report
+  Phase 3: get_lead_scores, get_route_dealers, get_dealer_intel, get_upload_report
+  Phase 4: get_dealer_places (Google Places business data)
 
 Token-efficiency notes:
 - Default search limit is 10 (not 200) to keep results small
@@ -357,6 +358,34 @@ TOOL_DEFINITIONS = [
             "required": ["target_states"],
         },
     },
+    # === PHASE 4: Google Places integration ===
+    {
+        "name": "get_dealer_places",
+        "description": (
+            "Get Google business info for a dealer — rating, reviews, phone, website, "
+            "business hours, and Google Maps link. Use for 'what's their rating?', "
+            "'are they open?', 'phone number for X dealer', 'show me dealers rated above 4 stars'. "
+            "Can also filter all dealers by minimum Google rating."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "dealer_id": {
+                    "type": "string",
+                    "description": "Dealer UUID to look up. Use search_dealers first to find it. Optional if using min_rating filter.",
+                },
+                "min_rating": {
+                    "type": "number",
+                    "description": "Filter all cached dealers by minimum Google rating (e.g. 4.0). Returns up to 20. Optional.",
+                },
+                "state": {
+                    "type": "string",
+                    "description": "Two-letter state code to combine with min_rating filter. Optional.",
+                },
+            },
+            "required": [],
+        },
+    },
 ]
 
 
@@ -549,6 +578,30 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                     briefing["smyrna_body_types"] = result.smyrna_details.get("top_smyrna_body_types")
             else:
                 briefing["smyrna"] = "NONE — whitespace opportunity"
+            # Enrich with cached Google Places data (sync DB read, no API call)
+            try:
+                db_p = get_service_client()
+                places_row = db_p.table("dealer_places").select(
+                    "rating, review_count, phone, website, hours_json, business_status"
+                ).eq("dealer_id", tool_input["dealer_id"]).execute()
+                if places_row.data:
+                    p = places_row.data[0]
+                    if p.get("rating"):
+                        briefing["google_rating"] = float(p["rating"])
+                        briefing["reviews"] = p.get("review_count")
+                    if p.get("phone"):
+                        briefing["phone"] = p["phone"]
+                    if p.get("website"):
+                        briefing["website"] = p["website"]
+                    if p.get("business_status") and p["business_status"] != "OPERATIONAL":
+                        briefing["business_status"] = p["business_status"]
+                    if p.get("hours_json"):
+                        from app.etl.places import format_hours_today
+                        hours_str = format_hours_today(p["hours_json"])
+                        if hours_str:
+                            briefing["hours_today"] = hours_str
+            except Exception:
+                pass  # Places table may not exist yet
             return json.dumps(briefing, default=str)
 
         elif tool_name == "get_territory_summary":
@@ -898,6 +951,83 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                 return json.dumps(output, default=str)
             except Exception:
                 return json.dumps({"error": "No upload reports found. Upload a monthly report first."})
+
+        elif tool_name == "get_dealer_places":
+            db = get_service_client()
+
+            if tool_input.get("dealer_id"):
+                # Single dealer lookup from cache
+                try:
+                    row = db.table("dealer_places").select("*").eq(
+                        "dealer_id", tool_input["dealer_id"]
+                    ).execute()
+                except Exception as e:
+                    if "PGRST205" in str(e) or "dealer_places" in str(e):
+                        return json.dumps({"status": "no_data", "hint": "dealer_places table not found — run migration 006."})
+                    raise
+                if not row.data:
+                    return json.dumps({
+                        "status": "no_data",
+                        "hint": "No Google Places data cached for this dealer yet. "
+                                "Places data is fetched on first briefing request or via bulk enrichment.",
+                    })
+                p = row.data[0]
+                from app.etl.places import format_hours_today
+                result = {
+                    "rating": float(p["rating"]) if p.get("rating") else None,
+                    "reviews": p.get("review_count"),
+                    "phone": p.get("phone"),
+                    "website": p.get("website"),
+                    "maps_url": p.get("google_maps_url"),
+                    "status": p.get("business_status"),
+                    "address": p.get("formatted_address"),
+                    "hours_today": format_hours_today(p.get("hours_json")),
+                }
+                return json.dumps(
+                    {k: v for k, v in result.items() if v is not None}, default=str
+                )
+
+            elif tool_input.get("min_rating"):
+                # Multi-dealer filter by rating
+                try:
+                    query = db.table("dealer_places").select(
+                        "dealer_id, rating, review_count"
+                    ).gte("rating", tool_input["min_rating"]).order(
+                        "rating", desc=True
+                    ).limit(20)
+                    places_rows = query.execute()
+                except Exception as e:
+                    if "PGRST205" in str(e) or "dealer_places" in str(e):
+                        return json.dumps({"dealers": [], "total": 0, "hint": "dealer_places table not found — run migration 006."})
+                    raise
+
+                if not places_rows.data:
+                    return json.dumps({"dealers": [], "total": 0})
+
+                # Fetch dealer names for matched IDs
+                matched_ids = [r["dealer_id"] for r in places_rows.data]
+                dealer_rows = db.table("dealers").select(
+                    "id, name, city, state"
+                ).in_("id", matched_ids).execute()
+                dealer_map = {r["id"]: r for r in (dealer_rows.data or [])}
+
+                dealers = []
+                for r in places_rows.data:
+                    d = dealer_map.get(r["dealer_id"], {})
+                    if tool_input.get("state") and d.get("state") != tool_input["state"].upper():
+                        continue
+                    dealers.append({
+                        "name": d.get("name"),
+                        "city": d.get("city"),
+                        "state": d.get("state"),
+                        "rating": float(r["rating"]) if r.get("rating") else None,
+                        "reviews": r.get("review_count"),
+                        "dealer_id": r["dealer_id"],
+                    })
+                return json.dumps({"dealers": dealers, "total": len(dealers)}, default=str)
+
+            else:
+                return json.dumps({"error": "Provide dealer_id or min_rating"})
 
         elif tool_name == "suggest_travel_plan":
             db = get_service_client()

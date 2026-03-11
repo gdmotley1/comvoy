@@ -1,11 +1,13 @@
-"""Google Directions API integration for real driving routes.
+"""Google Maps API integration — Directions, Distance Matrix, route optimization.
 
-Fetches the actual road polyline between two points and converts it
-to a WKT LINESTRING for PostGIS corridor searches.
+- Directions API: real driving polylines for PostGIS corridor searches
+- Distance Matrix API: drive times between multiple points
+- TSP optimizer: nearest-neighbor + 2-opt for stop ordering
 
 Falls back gracefully if API key is missing or request fails.
 """
 
+import asyncio
 import logging
 import httpx
 
@@ -179,4 +181,243 @@ def get_driving_route_sync(
 
     except Exception as e:
         logger.error(f"Google Directions sync error: {e}")
+        return None
+
+
+# ---------------------------------------------------------------------------
+# Distance Matrix API
+# ---------------------------------------------------------------------------
+
+async def get_distance_matrix(
+    origins: list[tuple[float, float]],
+    destinations: list[tuple[float, float]],
+) -> dict | None:
+    """Fetch driving time + distance matrix from Google Distance Matrix API.
+
+    Args:
+        origins: List of (lat, lng) tuples.
+        destinations: List of (lat, lng) tuples.
+
+    Returns:
+        {"rows": [{"elements": [{"duration_secs": int, "distance_meters": int, "status": str}]}]}
+        or None if unavailable.
+
+    Cost: $5 per 1000 elements. Max 25 origins x 25 destinations = 625 elements.
+    """
+    if not settings.google_maps_api_key:
+        logger.debug("No Google Maps API key — skipping distance matrix")
+        return None
+
+    num_elements = len(origins) * len(destinations)
+    if num_elements > 625:
+        logger.warning(f"Distance matrix too large: {len(origins)}x{len(destinations)} = {num_elements}")
+        return None
+
+    url = "https://maps.googleapis.com/maps/api/distancematrix/json"
+    params = {
+        "origins": "|".join(f"{lat},{lng}" for lat, lng in origins),
+        "destinations": "|".join(f"{lat},{lng}" for lat, lng in destinations),
+        "mode": "driving",
+        "key": settings.google_maps_api_key,
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.get(url, params=params)
+            data = resp.json()
+
+        if data.get("status") != "OK":
+            logger.warning(f"Distance Matrix API error: {data.get('status')}")
+            return None
+
+        rows = []
+        for row in data.get("rows", []):
+            elements = []
+            for elem in row.get("elements", []):
+                elements.append({
+                    "duration_secs": elem.get("duration", {}).get("value", 0),
+                    "distance_meters": elem.get("distance", {}).get("value", 0),
+                    "status": elem.get("status", "UNKNOWN"),
+                })
+            rows.append({"elements": elements})
+
+        return {"rows": rows}
+
+    except httpx.TimeoutException:
+        logger.warning("Distance Matrix API timeout")
+        return None
+    except Exception as e:
+        logger.error(f"Distance Matrix API error: {e}")
+        return None
+
+
+def get_distance_matrix_sync(
+    origins: list[tuple[float, float]],
+    destinations: list[tuple[float, float]],
+) -> dict | None:
+    """Synchronous wrapper for distance matrix."""
+    try:
+        loop = asyncio.new_event_loop()
+        result = loop.run_until_complete(get_distance_matrix(origins, destinations))
+        loop.close()
+        return result
+    except Exception as e:
+        logger.error(f"Distance matrix sync error: {e}")
+        return None
+
+
+# ---------------------------------------------------------------------------
+# TSP optimizer — nearest-neighbor + 2-opt
+# ---------------------------------------------------------------------------
+
+def _total_time(
+    time_matrix: list[list[int]],
+    start_idx: int,
+    end_idx: int,
+    order: list[int],
+) -> int:
+    """Compute total drive time for a given stop ordering."""
+    total = 0
+    prev = start_idx
+    for idx in order:
+        total += time_matrix[prev][idx]
+        prev = idx
+    total += time_matrix[prev][end_idx]
+    return total
+
+
+def _nearest_neighbor_tsp(
+    time_matrix: list[list[int]],
+    start_idx: int,
+    end_idx: int,
+    stop_indices: list[int],
+) -> list[int]:
+    """Greedy nearest-neighbor TSP. Returns ordered list of stop indices."""
+    remaining = set(stop_indices)
+    order = []
+    current = start_idx
+
+    while remaining:
+        nearest = min(remaining, key=lambda i: time_matrix[current][i])
+        order.append(nearest)
+        remaining.remove(nearest)
+        current = nearest
+
+    return order
+
+
+def _two_opt(
+    time_matrix: list[list[int]],
+    order: list[int],
+    start_idx: int,
+    end_idx: int,
+) -> list[int]:
+    """2-opt local search to improve stop ordering."""
+    improved = True
+    best = list(order)
+
+    while improved:
+        improved = False
+        for i in range(len(best) - 1):
+            for j in range(i + 1, len(best)):
+                candidate = best[:i] + list(reversed(best[i:j + 1])) + best[j + 1:]
+                if _total_time(time_matrix, start_idx, end_idx, candidate) < \
+                   _total_time(time_matrix, start_idx, end_idx, best):
+                    best = candidate
+                    improved = True
+
+    return best
+
+
+async def optimize_stop_order(
+    start: tuple[float, float],
+    end: tuple[float, float],
+    stops: list[dict],
+) -> list[dict] | None:
+    """Optimize visiting order using Distance Matrix + TSP heuristics.
+
+    Args:
+        start: (lat, lng) of trip start.
+        end: (lat, lng) of trip end.
+        stops: List of dicts with at minimum 'lat' and 'lng' keys.
+
+    Returns:
+        Reordered list of stops with added 'drive_time_min' and 'drive_dist_mi',
+        or None if optimization unavailable.
+    """
+    if not stops:
+        return []
+    if len(stops) == 1:
+        # Still fetch drive time for the single stop
+        matrix = await get_distance_matrix(
+            [start, (stops[0]["lat"], stops[0]["lng"])],
+            [start, (stops[0]["lat"], stops[0]["lng"])],
+        )
+        if matrix:
+            stops[0]["drive_time_min"] = round(
+                matrix["rows"][0]["elements"][1]["duration_secs"] / 60
+            )
+            stops[0]["drive_dist_mi"] = round(
+                matrix["rows"][0]["elements"][1]["distance_meters"] / 1609.34, 1
+            )
+        return stops
+
+    # Cap at 23 stops + start + end = 25 (API limit per dimension)
+    if len(stops) > 23:
+        stops = stops[:23]
+
+    # Build point list: [start, stop0, stop1, ..., stopN, end]
+    all_points = [start] + [(s["lat"], s["lng"]) for s in stops] + [end]
+
+    matrix = await get_distance_matrix(all_points, all_points)
+    if not matrix:
+        return None
+
+    # Build time matrix (seconds)
+    n = len(all_points)
+    time_matrix = []
+    for row in matrix["rows"]:
+        time_matrix.append([e["duration_secs"] for e in row["elements"]])
+
+    # TSP: nearest-neighbor → 2-opt improvement
+    stop_indices = list(range(1, n - 1))
+    order = _nearest_neighbor_tsp(time_matrix, 0, n - 1, stop_indices)
+    order = _two_opt(time_matrix, order, 0, n - 1)
+
+    # Build result with inter-stop drive times
+    result = []
+    prev_idx = 0  # start
+    for idx in order:
+        stop = stops[idx - 1].copy()
+        stop["drive_time_min"] = round(time_matrix[prev_idx][idx] / 60)
+        stop["drive_dist_mi"] = round(
+            matrix["rows"][prev_idx]["elements"][idx]["distance_meters"] / 1609.34, 1
+        )
+        result.append(stop)
+        prev_idx = idx
+
+    # Add final leg time (last stop → end)
+    if result:
+        last_to_end = time_matrix[prev_idx][n - 1]
+        result[-1]["drive_to_end_min"] = round(last_to_end / 60)
+
+    total_secs = _total_time(time_matrix, 0, n - 1, order)
+    logger.info(f"Optimized {len(result)} stops: {round(total_secs / 60)} min total drive time")
+
+    return result
+
+
+def optimize_stop_order_sync(
+    start: tuple[float, float],
+    end: tuple[float, float],
+    stops: list[dict],
+) -> list[dict] | None:
+    """Synchronous wrapper for stop optimization."""
+    try:
+        loop = asyncio.new_event_loop()
+        result = loop.run_until_complete(optimize_stop_order(start, end, stops))
+        loop.close()
+        return result
+    except Exception as e:
+        logger.error(f"Stop optimization sync error: {e}")
         return None

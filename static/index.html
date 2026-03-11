@@ -2801,6 +2801,37 @@
             return '#4f8fff'; // not scored
         }
 
+        function _formatHoursToday(hours) {
+            if (!hours) return '';
+            // Google numeric days: 0=Sunday, 1=Monday...6=Saturday (matches JS getDay())
+            const today = new Date().getDay();
+            const periods = hours.periods || [];
+            for (const p of periods) {
+                if (p.open && p.open.day === today && p.close) {
+                    const h = p.close.hour || 0;
+                    const m = p.close.minute || 0;
+                    const ampm = h < 12 ? 'AM' : 'PM';
+                    const dh = h % 12 || 12;
+                    return m ? `Open til ${dh}:${String(m).padStart(2,'0')} ${ampm}` : `Open til ${dh} ${ampm}`;
+                }
+            }
+            // Fallback to weekdayDescriptions (0=Monday in Google's descriptions array)
+            const descs = hours.weekdayDescriptions || [];
+            const jsDay = new Date().getDay(); // 0=Sun
+            const descIdx = jsDay === 0 ? 6 : jsDay - 1;
+            return descs[descIdx] || '';
+        }
+
+        function _formatPlacesLine(d) {
+            if (!d.rating) return '';
+            const parts = [];
+            parts.push(`&#11088; ${d.rating}`);
+            if (d.reviews) parts.push(`(${d.reviews})`);
+            const hrs = _formatHoursToday(d.hours);
+            if (hrs) parts.push(hrs);
+            return `<div style="font-size:11px;color:rgba(255,255,255,0.45);margin-bottom:6px;">${parts.join(' &middot; ')}</div>`;
+        }
+
         function createTacticalIcon(tier, color) {
             const isHot = tier === 'hot';
             const isWarm = tier === 'warm';
@@ -2867,9 +2898,11 @@
                 const tierClass = d.tier || 'cold';
                 const smyrnaPct = d.smyrna_pct ? d.smyrna_pct.toFixed(1) + '%' : '0%';
 
+                const ratingLine = _formatPlacesLine(d);
                 marker.bindPopup(`
                     <div class="map-popup-name">${d.name}</div>
                     <div class="map-popup-loc">${d.city}, ${d.state}</div>
+                    ${ratingLine}
                     <div class="map-popup-stats">
                         <div class="map-popup-stat">
                             <span class="map-popup-stat-label">Vehicles</span>
@@ -3194,6 +3227,7 @@
                     const tierClass = d.lead_tier || 'cold';
                     const distStr = d.dist_from_route_mi != null ? d.dist_from_route_mi.toFixed(1) : '?';
                     const posStr = d.route_position != null ? Math.round(d.route_position * 100) + '%' : '';
+                    const driveTimeStr = d.drive_time_min ? `${d.drive_time_min} min drive` : '';
                     const popup = `
                         <div class="map-popup-name">${esc(d.name)}</div>
                         <div class="map-popup-loc">${esc(d.city)}, ${esc(d.state)}</div>
@@ -3207,8 +3241,8 @@
                                 <span class="map-popup-stat-value">${d.lead_score ?? '—'}</span>
                             </div>
                             <div class="map-popup-stat">
-                                <span class="map-popup-stat-label">Off Route</span>
-                                <span class="map-popup-stat-value">${distStr} mi</span>
+                                <span class="map-popup-stat-label">${driveTimeStr ? 'Drive' : 'Off Route'}</span>
+                                <span class="map-popup-stat-value">${driveTimeStr || distStr + ' mi'}</span>
                             </div>
                         </div>
                         <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;">

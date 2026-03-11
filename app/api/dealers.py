@@ -227,12 +227,23 @@ def get_map_data():
         ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).execute()
         score_map = {r["dealer_id"]: r for r in scores.data}
 
+    # Fetch cached Places data (single query, no API calls)
+    places_map = {}
+    try:
+        places_data = db.table("dealer_places").select(
+            "dealer_id, rating, review_count, phone, hours_json, business_status"
+        ).execute()
+        places_map = {r["dealer_id"]: r for r in (places_data.data or [])}
+    except Exception:
+        pass  # Table may not exist yet
+
     markers = []
     for row in result.data:
         d = row["dealers"]
         if not d.get("latitude") or not d.get("longitude"):
             continue
         sc = score_map.get(d["id"], {})
+        pl = places_map.get(d["id"], {})
         markers.append({
             "id": d["id"],
             "name": d["name"],
@@ -248,6 +259,10 @@ def get_map_data():
             "score": sc.get("score"),
             "tier": sc.get("tier"),
             "opportunity": sc.get("opportunity_type"),
+            "rating": pl.get("rating"),
+            "reviews": pl.get("review_count"),
+            "hours": pl.get("hours_json"),
+            "biz_status": pl.get("business_status"),
         })
 
     return {"dealers": markers, "total": len(markers)}
@@ -294,3 +309,54 @@ def get_territory_summary(state: str):
         "smyrna_penetration_pct": round(dealers_with_smyrna / total_dealers * 100, 1) if total_dealers else 0,
         "top_10_dealers": top_dealers,
     }
+
+
+# ---------------------------------------------------------------------------
+# Google Places data endpoints
+# ---------------------------------------------------------------------------
+
+@router.get("/{dealer_id}/places")
+async def get_dealer_places_endpoint(
+    dealer_id: str,
+    refresh: bool = Query(False, description="Force refresh from Google"),
+):
+    """Get Google Places business data for a dealer (lazy-fetches if needed)."""
+    from app.etl.places import get_dealer_places, format_hours_today
+
+    places = await get_dealer_places(dealer_id, force_refresh=refresh)
+    if not places:
+        return {"status": "not_found", "dealer_id": dealer_id}
+
+    result = {
+        "status": "ok",
+        "dealer_id": dealer_id,
+        "places": {
+            "rating": places.get("rating"),
+            "review_count": places.get("review_count"),
+            "phone": places.get("phone"),
+            "website": places.get("website"),
+            "google_maps_url": places.get("google_maps_url"),
+            "formatted_address": places.get("formatted_address"),
+            "business_status": places.get("business_status"),
+            "hours_today": format_hours_today(places.get("hours_json")),
+            "hours_json": places.get("hours_json"),
+            "photos_json": places.get("photos_json"),
+            "fetched_at": places.get("fetched_at"),
+        },
+    }
+    return result
+
+
+@router.post("/places/enrich")
+async def enrich_all_places(
+    limit: int = Query(50, le=588, description="Max dealers to enrich"),
+):
+    """Bulk enrich dealers with Google Places data. Management endpoint."""
+    from app.etl.places import enrich_dealers_bulk
+
+    db = get_service_client()
+    all_dealers = db.table("dealers").select("id").limit(limit).execute()
+    dealer_ids = [r["id"] for r in (all_dealers.data or [])]
+
+    result = await enrich_dealers_bulk(dealer_ids=dealer_ids, batch_size=10)
+    return {"status": "ok", **result}

@@ -73,6 +73,7 @@ async def get_route_dealers(
     travel_date: date = Query(..., description="Travel date (YYYY-MM-DD)"),
     buffer_miles: float = Query(20, description="How far off-route to search (miles)"),
     limit: int = Query(25, le=50),
+    optimize: bool = Query(False, description="Use Distance Matrix API to optimize stop order with real drive times"),
 ):
     """Find dealers along a rep's route for a specific travel day.
 
@@ -192,6 +193,24 @@ async def get_route_dealers(
         dealers.sort(key=lambda x: x["route_position"])
     dealers = dealers[:limit]
 
+    # Optimize stop order with Distance Matrix API if requested
+    optimized = False
+    if optimize and not is_day_trip and len(dealers) >= 2:
+        try:
+            from app.etl.routing import optimize_stop_order
+
+            # Optimize top stops by score (cap at 10 to control API cost)
+            top_dealers = sorted(dealers, key=lambda x: -(x.get("lead_score") or 0))[:10]
+            start_point = (p["start_lat"], p["start_lng"])
+            end_point = (p["end_lat"], p["end_lng"])
+
+            opt_result = await optimize_stop_order(start_point, end_point, top_dealers)
+            if opt_result:
+                dealers = opt_result
+                optimized = True
+        except Exception as e:
+            logger.warning(f"Stop optimization failed: {e}")
+
     result = {
         "travel_date": travel_date.isoformat(),
         "rep_id": rep_id,
@@ -203,7 +222,9 @@ async def get_route_dealers(
         "total": len(dealers),
     }
     if is_day_trip:
-        result["mode"] = "radius"  # signals this is a proximity search, not a route
+        result["mode"] = "radius"
+    if optimized:
+        result["optimized"] = True
     return result
 
 

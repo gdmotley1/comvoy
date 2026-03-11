@@ -43,6 +43,7 @@ class DealerBriefing(BaseModel):
     brand_breakdown: list[dict]
     body_type_breakdown: list[dict]
     smyrna_details: dict | None = None
+    places: dict | None = None  # Google Places data (rating, phone, website, hours)
 
 
 class IngestResult(BaseModel):
