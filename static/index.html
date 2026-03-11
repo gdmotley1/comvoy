@@ -1437,27 +1437,20 @@
         /* Map stats bar — slim floating pill */
         .map-stats {
             position: fixed;
-            bottom: 48px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10;
-            background: rgba(12, 14, 28, 0.72);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 10px;
-            padding: 6px 16px;
-            backdrop-filter: blur(16px) saturate(180%);
-            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            top: 112px;
+            left: 64px;
+            z-index: 9;
             display: none;
-            gap: 14px;
-            font-size: 13px;
+            gap: 10px;
+            font-size: 12px;
             white-space: nowrap;
             animation: statsIn 300ms var(--ease-out-expo) forwards;
         }
-        @keyframes statsIn { from { opacity: 0; transform: translateX(-50%) translateY(6px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+        @keyframes statsIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
         body.map-view .map-stats { display: flex; }
-        .map-stat { display: flex; align-items: center; gap: 4px; color: rgba(255,255,255,0.4); font-variant-numeric: tabular-nums; font-size: 12px; white-space: nowrap; }
-        .map-stat-value { font-weight: 600; color: rgba(255,255,255,0.9); font-size: 13px; }
-        .map-stat-sep { color: rgba(255,255,255,0.12); font-size: 10px; }
+        .map-stat { display: flex; align-items: center; gap: 4px; color: rgba(255,255,255,0.4); font-variant-numeric: tabular-nums; font-size: 11px; white-space: nowrap; }
+        .map-stat-value { font-weight: 600; color: rgba(255,255,255,0.88); font-size: 12px; }
+        .map-stat-sep { color: rgba(255,255,255,0.12); font-size: 9px; }
 
         /* ========== MAP FILTER BAR ========== */
         .map-filters {
@@ -2572,7 +2565,6 @@
         <button class="filter-reset" id="filterResetBtn" onclick="resetFilters()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><path d="M18 6L6 18M6 6l12 12"/></svg>Reset
         </button>
-        <span class="filter-result-count" id="filterResultCount"></span>
     </div>
 
     <div class="map-search" id="mapSearch">
