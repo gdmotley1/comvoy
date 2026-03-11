@@ -1292,6 +1292,13 @@
             background: rgba(79,143,255,0.12) !important;
             color: #fff !important;
         }
+        .leaflet-control-zoom a.leaflet-disabled {
+            opacity: 0.35 !important;
+            cursor: default !important;
+        }
+        .leaflet-control-zoom a.leaflet-disabled:hover {
+            background: rgba(12, 14, 28, 0.85) !important;
+        }
         .leaflet-control-attribution {
             background: rgba(6,8,15,0.7) !important;
             color: var(--text-tertiary) !important;
@@ -3635,7 +3642,7 @@
                 _map = L.map('dealerMap', {
                     zoomControl: true,
                     attributionControl: true,
-                    minZoom: 5,
+                    minZoom: 4,
                     maxZoom: 18,
                     maxBounds: L.latLngBounds(
                         L.latLng(20.0, -108.0),  // padded SW
