@@ -1877,63 +1877,19 @@
             .otto-popup { width: calc(100vw - 32px); right: 16px; bottom: 76px; height: 420px; }
         }
 
-        /* ========== GLASS CLUSTER SYSTEM ========== */
-        .marker-cluster { background: none !important; border: none !important; }
-        .marker-cluster div { background: none !important; }
-        .glass-cluster {
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 9999px;
-            background: radial-gradient(ellipse at 35% 30%, rgba(40, 50, 90, 0.95), rgba(12, 16, 35, 0.92));
-            border: 1.5px solid rgba(120, 160, 255, 0.18);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5), 0 0 0 1px rgba(79,143,255,0.06), inset 0 1px 0 rgba(255,255,255,0.06);
-            color: rgba(255, 255, 255, 0.95);
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            font-variant-numeric: tabular-nums;
-            letter-spacing: 0.01em;
-            transition: transform 120ms var(--ease-spring), box-shadow 200ms var(--ease-out-expo);
+        /* ========== EMBER DOT SYSTEM ========== */
+        .ember {
+            position: relative; display: flex; align-items: center; justify-content: center;
+            transform: scale(var(--ember-scale, 1));
         }
-        .glass-cluster:hover {
-            transform: scale(1.12);
-            border-color: rgba(120, 160, 255, 0.35);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(79,143,255,0.15), 0 0 16px rgba(79,143,255,0.12), inset 0 1px 0 rgba(255,255,255,0.1);
-        }
-        .glass-cluster.gc-sm { width: 36px; height: 36px; font-size: 12px; }
-        .glass-cluster.gc-md { width: 44px; height: 44px; font-size: 13px; }
-        .glass-cluster.gc-lg { width: 52px; height: 52px; font-size: 14px; min-width: 52px; padding: 0 4px; }
-
-        /* ========== TACTICAL MARKER SYSTEM ========== */
-        .tac-marker { position: relative; display: flex; align-items: center; justify-content: center; }
-        .tac-marker svg { width: 100%; height: 100%; }
-        .tac-marker.tier-hot svg { filter: drop-shadow(0 0 8px #ef4444) drop-shadow(0 0 3px rgba(239,68,68,0.5)); }
-        .tac-marker.tier-warm svg { filter: drop-shadow(0 0 7px rgba(255,140,0,0.7)) drop-shadow(0 0 3px rgba(255,140,0,0.4)); }
-        .tac-marker.tier-cold svg { filter: drop-shadow(0 0 6px rgba(65,105,225,0.6)) drop-shadow(0 0 3px rgba(65,105,225,0.3)); }
-        .tac-marker.tier-unscored svg { filter: drop-shadow(0 0 5px rgba(139,149,165,0.5)) drop-shadow(0 0 2px rgba(139,149,165,0.3)); }
-
-        .tac-ping {
-            position: absolute;
-            inset: -5px;
-            border-radius: 50%;
-            border: 1.5px solid #ef4444;
-            animation: tacPing 3s ease-out infinite;
-            pointer-events: none;
-        }
-        .tac-ping-2 {
-            position: absolute;
-            inset: -3px;
-            border-radius: 50%;
-            border: 1px solid rgba(239,68,68,0.4);
-            animation: tacPing 3s ease-out 1.5s infinite;
-            pointer-events: none;
-        }
-
+        .ember svg { width: 100%; height: 100%; }
+        .ember.tier-hot svg { filter: drop-shadow(0 0 5px rgba(239,68,68,0.6)); }
+        .ember.tier-warm svg { filter: drop-shadow(0 0 4px rgba(255,140,0,0.5)); }
+        .ember.tier-cold svg { filter: drop-shadow(0 0 3px rgba(65,105,225,0.4)); }
+        .ember.tier-unscored svg { filter: drop-shadow(0 0 2px rgba(139,149,165,0.3)); }
         /* Route proximity highlighting */
-        .tac-marker.route-nearby { transform: scale(1.5); transition: transform 0.3s var(--ease-out-expo), filter 0.3s; z-index: 10 !important; }
-        .tac-marker.route-nearby svg { filter: drop-shadow(0 0 10px currentColor) !important; opacity: 1 !important; }
-        .tac-marker.route-nearby.tier-hot svg { filter: drop-shadow(0 0 14px #ef4444) drop-shadow(0 0 24px rgba(239,68,68,0.5)) !important; }
-        .tac-marker.route-nearby.tier-warm svg { filter: drop-shadow(0 0 12px #ff8c00) drop-shadow(0 0 20px rgba(255,140,0,0.5)) !important; }
-        .tac-marker.route-nearby.tier-cold svg { filter: drop-shadow(0 0 10px rgba(65,105,225,0.8)) drop-shadow(0 0 16px rgba(65,105,225,0.4)) !important; }
-        .tac-marker.route-nearby.tier-unscored svg { filter: drop-shadow(0 0 10px rgba(139,149,165,0.7)) drop-shadow(0 0 14px rgba(139,149,165,0.3)) !important; }
+        .ember.route-nearby { transform: scale(2) !important; z-index: 10 !important; }
+        .ember.route-nearby svg { filter: brightness(1.5) !important; }
         .route-dimmed { opacity: 0.15 !important; transition: opacity 0.4s var(--smooth); }
 
         /* Dim all base markers/clusters when route proximity is active */
@@ -1942,10 +1898,6 @@
         }
         body.map-view.route-preview .marker-cluster {
             opacity: 0.1 !important; transition: opacity 0.4s var(--smooth);
-        }
-        @keyframes tacPing {
-            0% { transform: scale(0.8); opacity: 0.6; }
-            100% { transform: scale(2.0); opacity: 0; }
         }
 
         /* ========== HOVER TOOLTIPS ========== */
@@ -4134,40 +4086,9 @@
             nearbyDealers.forEach(d => {
                 const color = Core.tierColor(d.tier);
                 const tier = d.tier || 'unscored';
-                const size = tier === 'hot' ? 32 : tier === 'warm' ? 28 : 24;
-                const half = size / 2;
-
-                let svg;
-                if (tier === 'hot') {
-                    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 26">
-                        <rect x="5" y="5" width="16" height="16" rx="2" transform="rotate(45 13 13)" fill="${color}" fill-opacity="0.35" stroke="${color}" stroke-width="2"/>
-                        <circle cx="13" cy="13" r="5" fill="${color}"/>
-                        <circle cx="13" cy="13" r="8" fill="${color}" opacity="0.2"><animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.2;0;0.2" dur="2s" repeatCount="indefinite"/></circle>
-                    </svg>`;
-                } else if (tier === 'warm') {
-                    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 22">
-                        <polygon points="11,1 21,6 21,16 11,21 1,16 1,6" fill="${color}" fill-opacity="0.25" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"/>
-                        <circle cx="11" cy="11" r="4.5" fill="${color}"/>
-                        <circle cx="11" cy="11" r="7" fill="${color}" opacity="0.15"><animate attributeName="r" values="7;10;7" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.15;0;0.15" dur="3s" repeatCount="indefinite"/></circle>
-                    </svg>`;
-                } else if (tier === 'cold') {
-                    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18">
-                        <circle cx="9" cy="9" r="7" fill="${color}" fill-opacity="0.2" stroke="${color}" stroke-width="1.5" stroke-opacity="0.7"/>
-                        <circle cx="9" cy="9" r="3.5" fill="${color}" fill-opacity="0.9"/>
-                    </svg>`;
-                } else {
-                    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-                        <circle cx="8" cy="8" r="6" fill="none" stroke="${color}" stroke-width="1.2" stroke-opacity="0.5"/>
-                        <circle cx="8" cy="8" r="3" fill="${color}" fill-opacity="0.8"/>
-                    </svg>`;
-                }
-
-                const icon = L.divIcon({
-                    html: `<div class="tac-marker route-nearby tier-${tier}" style="width:${size}px;height:${size}px;">${svg}</div>`,
-                    className: 'route-marker',
-                    iconSize: [size, size],
-                    iconAnchor: [half, half],
-                });
+                const icon = createTacticalIcon(tier, color);
+                // Override className for route markers
+                icon.options.className = 'route-marker';
 
                 const tierLabel = d.tier ? d.tier.charAt(0).toUpperCase() + d.tier.slice(1) : 'Unscored';
                 const smyrnaPct = d.smyrna_pct ? d.smyrna_pct.toFixed(1) + '%' : '0%';
@@ -4372,6 +4293,92 @@
                     } catch(e) {
                         console.error('Map data error:', e);
                     }
+                    // Zoom-responsive marker scaling — liquid smooth
+                    function updateEmberScale() {
+                        const z = _map.getZoom();
+                        // Scale curve: tiny at z4, comfortable at z8, full at z11+
+                        const scale = Math.min(Math.max(0.18 + (z - 4) * 0.117, 0.25), 1.15);
+                        document.documentElement.style.setProperty('--ember-scale', scale.toFixed(3));
+                    }
+                    _map.on('zoomend', updateEmberScale);
+                    updateEmberScale();
+
+                    // Declutter: nudge overlapping markers apart
+                    let _declutterTimer = null;
+                    function declutterMarkers() {
+                        if (!_clusterLayer) return;
+                        const zoom = _map.getZoom();
+                        const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ember-scale')) || 1;
+                        const minDist = 18 * scale; // pixel threshold for overlap
+                        const layers = [];
+                        _clusterLayer.eachLayer(m => { if (m._trueLat != null) layers.push(m); });
+                        // Reset all to true position first
+                        for (const m of layers) {
+                            const cur = m.getLatLng();
+                            if (cur.lat !== m._trueLat || cur.lng !== m._trueLng) {
+                                m.setLatLng([m._trueLat, m._trueLng]);
+                            }
+                        }
+                        // Only declutter at zoom >= 8 where overlaps are visible
+                        if (zoom < 8) return;
+                        // Build pixel position array
+                        const pts = layers.map(m => {
+                            const px = _map.latLngToContainerPoint([m._trueLat, m._trueLng]);
+                            return { m, x: px.x, y: px.y, nudgedX: px.x, nudgedY: px.y };
+                        });
+                        // Spatial grid for efficient collision checks
+                        const cellSize = minDist * 2;
+                        const grid = {};
+                        const key = (x, y) => Math.floor(x / cellSize) + ',' + Math.floor(y / cellSize);
+                        for (const p of pts) {
+                            const k = key(p.x, p.y);
+                            (grid[k] || (grid[k] = [])).push(p);
+                        }
+                        // Iterative nudge (3 passes)
+                        for (let pass = 0; pass < 3; pass++) {
+                            for (const k in grid) {
+                                const cell = grid[k];
+                                // Check neighbors too
+                                const [cx, cy] = k.split(',').map(Number);
+                                const neighbors = [];
+                                for (let dx = -1; dx <= 1; dx++) {
+                                    for (let dy = -1; dy <= 1; dy++) {
+                                        const nk = (cx + dx) + ',' + (cy + dy);
+                                        if (grid[nk]) neighbors.push(...grid[nk]);
+                                    }
+                                }
+                                for (const a of cell) {
+                                    for (const b of neighbors) {
+                                        if (a === b) continue;
+                                        const dx = a.nudgedX - b.nudgedX;
+                                        const dy = a.nudgedY - b.nudgedY;
+                                        const dist = Math.sqrt(dx * dx + dy * dy);
+                                        if (dist < minDist && dist > 0.01) {
+                                            const push = (minDist - dist) * 0.5;
+                                            const nx = (dx / dist) * push;
+                                            const ny = (dy / dist) * push;
+                                            a.nudgedX += nx; a.nudgedY += ny;
+                                            b.nudgedX -= nx; b.nudgedY -= ny;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        // Apply nudges only to markers that actually moved
+                        for (const p of pts) {
+                            const dx = p.nudgedX - p.x;
+                            const dy = p.nudgedY - p.y;
+                            if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+                                const newLL = _map.containerPointToLatLng(L.point(p.nudgedX, p.nudgedY));
+                                p.m.setLatLng(newLL);
+                            }
+                        }
+                    }
+                    _map.on('zoomend', function() {
+                        clearTimeout(_declutterTimer);
+                        _declutterTimer = setTimeout(declutterMarkers, 150);
+                    });
+
                     _mapLoaded = true;
                     RouteOverlay.loadReps();
                 } else {
@@ -4473,44 +4480,42 @@
             const isHot = tier === 'hot';
             const isWarm = tier === 'warm';
             const isCold = tier === 'cold';
-            const size = isHot ? 28 : isWarm ? 24 : isCold ? 22 : 20;
+            const size = isHot ? 28 : isWarm ? 26 : isCold ? 22 : 20;
             const half = size / 2;
+            const tc = tier ? 'tier-' + tier : 'tier-unscored';
             let svg;
             if (isHot) {
-                // Diamond — bold orange, animated pulse core
-                svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28">
-                    <rect x="6" y="6" width="16" height="16" rx="2.5" transform="rotate(45 14 14)" fill="${color}" fill-opacity="0.3" stroke="${color}" stroke-width="1.8"/>
-                    <circle cx="14" cy="14" r="5" fill="${color}"/>
-                    <circle cx="14" cy="14" r="5" fill="${color}" opacity="0.5"><animate attributeName="r" values="5;7;5" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.5;0.15;0.5" dur="2s" repeatCount="indefinite"/></circle>
-                    <circle cx="14" cy="14" r="2" fill="#fff" opacity="0.6"/>
+                // Diamond shape — matches legend
+                svg = `<svg viewBox="0 0 28 28" width="${size}" height="${size}">
+                    <rect x="6" y="6" width="16" height="16" rx="2.5" transform="rotate(45 14 14)" fill="#ef4444" fill-opacity="0.3" stroke="#ef4444" stroke-width="1.8"/>
+                    <circle cx="14" cy="14" r="4.5" fill="#ef4444"/>
+                    <circle cx="14" cy="14" r="1.8" fill="#fff" opacity="0.6"/>
                 </svg>`;
             } else if (isWarm) {
-                // Hexagon — green with bright core
-                svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <polygon points="12,1.5 22,6.5 22,17.5 12,22.5 2,17.5 2,6.5" fill="${color}" fill-opacity="0.2" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"/>
-                    <circle cx="12" cy="12" r="4.5" fill="${color}"/>
-                    <circle cx="12" cy="12" r="4.5" fill="${color}" opacity="0.4"><animate attributeName="r" values="4.5;6;4.5" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.4;0.1;0.4" dur="3s" repeatCount="indefinite"/></circle>
+                // Hexagon shape — matches legend
+                svg = `<svg viewBox="0 0 24 24" width="${size}" height="${size}">
+                    <polygon points="12,1.5 22,6.5 22,17.5 12,22.5 2,17.5 2,6.5" fill="#ff8c00" fill-opacity="0.2" stroke="#ff8c00" stroke-width="1.5"/>
+                    <circle cx="12" cy="12" r="4" fill="#ff8c00"/>
                     <circle cx="12" cy="12" r="1.5" fill="#fff" opacity="0.5"/>
                 </svg>`;
             } else if (isCold) {
-                // Square rotated slightly — purple with solid fill
-                svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 22">
-                    <rect x="4" y="4" width="14" height="14" rx="3" fill="${color}" fill-opacity="0.18" stroke="${color}" stroke-width="1.3"/>
-                    <circle cx="11" cy="11" r="4" fill="${color}" fill-opacity="0.85"/>
+                // Rounded square — matches legend
+                svg = `<svg viewBox="0 0 22 22" width="${size}" height="${size}">
+                    <rect x="4" y="4" width="14" height="14" rx="3" fill="#4169e1" fill-opacity="0.18" stroke="#4169e1" stroke-width="1.3"/>
+                    <circle cx="11" cy="11" r="4" fill="#4169e1"/>
                     <circle cx="11" cy="11" r="1.2" fill="#fff" opacity="0.35"/>
                 </svg>`;
             } else {
-                // Circle — cyan-blue, clean
-                svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                    <circle cx="10" cy="10" r="8" fill="${color}" fill-opacity="0.12" stroke="${color}" stroke-width="1.2"/>
-                    <circle cx="10" cy="10" r="3.5" fill="${color}" fill-opacity="0.8"/>
-                    <circle cx="10" cy="10" r="1" fill="#fff" opacity="0.35"/>
+                // Circle — unscored
+                svg = `<svg viewBox="0 0 20 20" width="${size}" height="${size}">
+                    <circle cx="10" cy="10" r="7" fill="#8b95a5" fill-opacity="0.12" stroke="#8b95a5" stroke-width="1.2"/>
+                    <circle cx="10" cy="10" r="3.5" fill="#8b95a5"/>
+                    <circle cx="10" cy="10" r="1.2" fill="#fff" opacity="0.35"/>
                 </svg>`;
             }
-            const pulse = isHot ? '<div class="tac-ping"></div><div class="tac-ping-2"></div>' : '';
-            const tc = tier ? 'tier-' + tier : 'tier-unscored';
+            const html = `<div class="ember ${tc}" style="width:${size}px;height:${size}px;">${svg}</div>`;
             return L.divIcon({
-                html: `<div class="tac-marker ${tc}" style="width:${size}px;height:${size}px;">${pulse}${svg}</div>`,
+                html: html,
                 className: '',
                 iconSize: [size, size],
                 iconAnchor: [half, half],
@@ -4518,33 +4523,15 @@
         }
 
             function addMarkers(dealers) {
-            _clusterLayer = L.markerClusterGroup({
-                maxClusterRadius: 45,
-                spiderfyOnMaxZoom: true,
-                showCoverageOnHover: false,
-                animate: false,
-                chunkedLoading: true,
-                chunkInterval: 100,
-                chunkDelay: 10,
-                disableClusteringAtZoom: 14,
-                iconCreateFunction: function(cluster) {
-                    const count = cluster.getChildCount();
-                    let sc = 'gc-sm', sz = 34;
-                    if (count > 50) { sc = 'gc-lg'; sz = count > 99 ? 54 : 50; }
-                    else if (count > 20) { sc = 'gc-md'; sz = 42; }
-                    return L.divIcon({
-                        html: '<div class="glass-cluster ' + sc + '">' + count + '</div>',
-                        className: 'marker-cluster',
-                        iconSize: L.point(sz, sz),
-                    });
-                },
-            });
+            _clusterLayer = L.layerGroup();
 
             _markerMap = new Map();
             dealers.forEach(d => {
                 if (!d.lat || !d.lng) return;
                 const color = tierColor(d.tier);
                 const marker = L.marker([d.lat, d.lng], { icon: createTacticalIcon(d.tier, color) });
+                marker._trueLat = d.lat;
+                marker._trueLng = d.lng;
                 if (d.id) _markerMap.set(d.id, marker);
 
                 const tierLabel = d.tier ? d.tier.charAt(0).toUpperCase() + d.tier.slice(1) : 'Unscored';
