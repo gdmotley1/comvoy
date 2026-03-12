@@ -236,8 +236,8 @@ def get_map_data(response: Response):
             "dealer_id, rating, review_count, phone, hours_json, business_status"
         ).execute()
         places_map = {r["dealer_id"]: r for r in (places_data.data or [])}
-    except Exception:
-        pass  # Table may not exist yet
+    except Exception as e:
+        logger.debug(f"dealer_places fetch skipped: {e}")
 
     # Fetch body type inventory for all dealers (for map filtering)
     body_type_map: dict[int, list[str]] = {}
@@ -252,8 +252,8 @@ def get_map_data(response: Response):
                 if did not in body_type_map:
                     body_type_map[did] = []
                 body_type_map[did].append(bt_name)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Body type inventory fetch failed: {e}")
 
     # Fetch brand inventory for all dealers (for map filtering)
     brand_map: dict[int, list[str]] = {}

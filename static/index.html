@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://*.tile.openstreetmap.org https://maps.googleapis.com; connect-src 'self' https://comvoy-api.vercel.app https://raw.githubusercontent.com http://localhost:*;">
     <title>Otto — Comvoy Sales Intelligence</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -3035,7 +3036,7 @@
             function esc(s) {
                 const d = document.createElement('div');
                 d.textContent = s;
-                return d.innerHTML;
+                return d.innerHTML.replace(/'/g, '&#39;').replace(/"/g, '&quot;');
             }
 
             function fmt(text) {
@@ -3137,13 +3138,19 @@
                 });
             }
 
+            let _eyeTrackingCleanup = null;
             function initEyeTracking() {
+                // Clean up previous instance to prevent stacking
+                if (_eyeTrackingCleanup) _eyeTrackingCleanup();
+
                 const orb = document.querySelector('.orb-hero');
                 if (!orb) return;
                 const eye = orb.querySelector('.otto-eye');
                 if (!eye) return;
                 let _magX = 0, _magY = 0, _curMagX = 0, _curMagY = 0;
-                document.addEventListener('mousemove', e => {
+                let _rafId = null;
+                const onMouseMove = e => {
+                    if (!document.contains(orb)) return;
                     const rect = orb.getBoundingClientRect();
                     const cx = rect.left + rect.width / 2;
                     const cy = rect.top + rect.height / 2;
@@ -3172,8 +3179,10 @@
                         _magX = 0;
                         _magY = 0;
                     }
-                });
+                };
+                document.addEventListener('mousemove', onMouseMove);
                 function magnetLoop() {
+                    if (!document.contains(orb)) { _rafId = null; return; }
                     _curMagX += (_magX - _curMagX) * 0.08;
                     _curMagY += (_magY - _curMagY) * 0.08;
                     if (Math.abs(_curMagX) > 0.1 || Math.abs(_curMagY) > 0.1) {
@@ -3181,9 +3190,15 @@
                     } else {
                         orb.style.translate = '';
                     }
-                    requestAnimationFrame(magnetLoop);
+                    _rafId = requestAnimationFrame(magnetLoop);
                 }
-                magnetLoop();
+                _rafId = requestAnimationFrame(magnetLoop);
+                _eyeTrackingCleanup = () => {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    if (_rafId) cancelAnimationFrame(_rafId);
+                    _rafId = null;
+                    _eyeTrackingCleanup = null;
+                };
             }
 
             // Spotlight glow on cards
@@ -4538,8 +4553,8 @@
 
                 const ratingLine = _formatPlacesLine(d);
                 marker.bindPopup(`
-                    <div class="map-popup-name">${d.name}</div>
-                    <div class="map-popup-loc">${d.city}, ${d.state}</div>
+                    <div class="map-popup-name">${esc(d.name)}</div>
+                    <div class="map-popup-loc">${esc(d.city)}, ${esc(d.state)}</div>
                     ${ratingLine}
                     <div class="map-popup-row">
                         <span class="map-popup-kv"><b>${d.vehicles || 0}</b> vehicles</span>
@@ -4548,10 +4563,10 @@
                         <span class="map-popup-sep">·</span>
                         <span class="map-popup-kv">Score <b>${d.score ?? '—'}</b> <span style="color:${tierColor(d.tier)};font-size:10px;font-weight:600;opacity:0.8">${d.score != null ? tierLabel : ''}</span></span>
                     </div>
-                    ${d.top_brand ? `<div class="map-popup-meta">#1 brand: ${d.top_brand}${d.opportunity ? ' · ' + Core.friendlyOpp(d.opportunity) : ''}</div>` : ''}
+                    ${d.top_brand ? `<div class="map-popup-meta">#1 brand: ${esc(d.top_brand)}${d.opportunity ? ' · ' + Core.friendlyOpp(d.opportunity) : ''}</div>` : ''}
                 `, { maxWidth: 260 });
 
-                marker.bindTooltip(`${d.name} — ${d.vehicles || 0} vehicles`, {
+                marker.bindTooltip(`${esc(d.name)} — ${d.vehicles || 0} vehicles`, {
                     direction: 'top', offset: [0, -10], className: 'map-hover-tooltip'
                 });
 
@@ -4900,8 +4915,8 @@
             const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
             el.innerHTML = results.map((d, i) => {
                 const color = tierColor(d.tier);
-                const name = highlightTerms(d.name, terms);
-                const meta = `${d.city}, ${d.state} · ${d.vehicles || 0} vehicles`;
+                const name = highlightTerms(esc(d.name), terms);
+                const meta = `${esc(d.city)}, ${esc(d.state)} · ${d.vehicles || 0} vehicles`;
                 const scoreStr = d.score != null ? d.score : '—';
                 return `<div class="map-search-result" data-idx="${i}" onmouseenter="_searchActiveIdx=${i};highlightSearchResult()" onclick="flyToDealer(_searchResults[${i}])">
                     <span class="map-search-result-dot" style="color:${color};background:${color}"></span>

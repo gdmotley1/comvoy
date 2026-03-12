@@ -105,8 +105,8 @@ def generate_route_briefing(plan: dict) -> dict:
             "dealer_id, rating, review_count, phone, website, google_maps_url"
         ).in_("dealer_id", dealer_ids).execute()
         places_map = {r["dealer_id"]: r for r in (places_data.data or [])}
-    except Exception:
-        pass  # Table may not exist yet
+    except Exception as e:
+        logger.debug(f"dealer_places fetch skipped: {e}")
 
     # Get body type breakdown for all route dealers (current snapshot)
     bt_current = {}

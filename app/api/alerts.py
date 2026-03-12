@@ -164,9 +164,8 @@ def get_alerts(
     # Sort by priority then alert type
     alerts.sort(key=lambda a: (_PRIORITY_ORDER.get(a.priority, 9), a.alert_type, a.dealer_name))
     total = len(alerts)
-    alerts = alerts[:limit]
 
-    # Build summary
+    # Build summary from full list before truncation
     type_counts = {}
     for al in alerts:
         type_counts[al.alert_type] = type_counts.get(al.alert_type, 0) + 1
@@ -192,6 +191,9 @@ def get_alerts(
         parts.append(f"{inv_changes} inventory swing(s)")
 
     summary = f"Between {snap_a['report_date']} and {snap_b['report_date']}: " + (", ".join(parts) if parts else "no notable changes detected")
+
+    # Truncate after summary is built so counts reflect full dataset
+    alerts = alerts[:limit]
 
     return AlertsResponse(
         snapshot_a_date=snap_a["report_date"],

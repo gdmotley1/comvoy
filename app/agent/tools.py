@@ -1,10 +1,12 @@
 """
 Agent tool definitions for Claude API tool-use.
 
-Phase 4 tools: 12 total
+Phase 6 tools: 17 total
   Original 7: search, nearby, briefing, territory, dealer_trend, territory_trend, alerts
   Phase 3: get_lead_scores, get_route_dealers, get_dealer_intel, get_upload_report
   Phase 4: get_dealer_places (Google Places business data)
+  Phase 5: search_vehicles, get_dealer_inventory, get_inventory_changes (VIN-level data)
+  Phase 6: get_price_analytics, get_market_intel (pricing & competitive intelligence)
 
 Token-efficiency notes:
 - Default search limit is 10 (not 200) to keep results small
@@ -386,6 +388,188 @@ TOOL_DEFINITIONS = [
             "required": [],
         },
     },
+    # === PHASE 5: VIN-level vehicle tools ===
+    {
+        "name": "search_vehicles",
+        "description": (
+            "Search individual vehicles in dealer inventory by brand, body type, price range, "
+            "state, or Smyrna products. Returns specific trucks with VIN, price, dealer, and specs. "
+            "Use for 'show me Freightliner service trucks under $80K in Texas', "
+            "'find all Smyrna products', 'cheapest flatbeds in Georgia', "
+            "'what Ford F-550s are available?'."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "brand": {
+                    "type": "string",
+                    "description": "Chassis brand (e.g. 'Ford', 'Freightliner', 'Chevrolet'). Optional.",
+                },
+                "body_type": {
+                    "type": "string",
+                    "description": "Body type (e.g. 'Service Trucks', 'Flatbed Trucks', 'Box Vans'). Partial match. Optional.",
+                },
+                "min_price": {
+                    "type": "integer",
+                    "description": "Minimum price in dollars. Optional.",
+                },
+                "max_price": {
+                    "type": "integer",
+                    "description": "Maximum price in dollars. Optional.",
+                },
+                "state": {
+                    "type": "string",
+                    "description": "Two-letter state code. Optional.",
+                },
+                "dealer_id": {
+                    "type": "string",
+                    "description": "Dealer UUID to search within. Optional.",
+                },
+                "is_smyrna": {
+                    "type": "boolean",
+                    "description": "If true, only Smyrna-distributed vehicles. Optional.",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Max results (default 15, max 30).",
+                    "default": 15,
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "get_dealer_inventory",
+        "description": (
+            "Get the full vehicle inventory for a specific dealer — every truck with VIN, "
+            "price, brand, model, body type, and specs. Use for 'what does Akins Ford have?', "
+            "'show me all trucks at Rush Truck Centers in Atlanta', "
+            "'list inventory for this dealer'. Requires dealer UUID — use search_dealers first."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "dealer_id": {
+                    "type": "string",
+                    "description": "The dealer's UUID.",
+                },
+                "brand": {
+                    "type": "string",
+                    "description": "Filter by brand within this dealer. Optional.",
+                },
+                "body_type": {
+                    "type": "string",
+                    "description": "Filter by body type within this dealer. Optional.",
+                },
+            },
+            "required": ["dealer_id"],
+        },
+    },
+    {
+        "name": "get_inventory_changes",
+        "description": (
+            "Get month-over-month inventory changes: new vehicles added, vehicles sold, "
+            "and price changes. Use for 'what sold last month?', 'new inventory this month', "
+            "'any price drops?', 'what changed at this dealer?'. "
+            "Can filter by state, brand, or dealer."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "change_type": {
+                    "type": "string",
+                    "description": "Type of change: 'new', 'sold', or 'price_change'. Optional (all if omitted).",
+                    "enum": ["new", "sold", "price_change"],
+                },
+                "state": {
+                    "type": "string",
+                    "description": "Two-letter state filter. Optional.",
+                },
+                "brand": {
+                    "type": "string",
+                    "description": "Brand filter. Optional.",
+                },
+                "dealer_id": {
+                    "type": "string",
+                    "description": "Dealer UUID filter. Optional.",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Max results (default 20).",
+                    "default": 20,
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "get_price_analytics",
+        "description": (
+            "Get pricing analytics: average, min, max, and median prices by brand, body type, "
+            "state, or dealer. Use for 'what's the market rate for Ford service trucks?', "
+            "'cheapest flatbeds in Texas?', 'how does dealer X's pricing compare to market?'. "
+            "Can compare a specific dealer's avg price vs the overall market average."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "brand": {
+                    "type": "string",
+                    "description": "Filter by chassis brand (e.g. 'Ford', 'Freightliner'). Optional.",
+                },
+                "body_type": {
+                    "type": "string",
+                    "description": "Filter by body type (e.g. 'Service Trucks', 'Flatbed Trucks'). Partial match. Optional.",
+                },
+                "state": {
+                    "type": "string",
+                    "description": "Two-letter state code filter. Optional.",
+                },
+                "dealer_id": {
+                    "type": "string",
+                    "description": "Compare this dealer's pricing vs the market. Optional — returns both dealer and market stats.",
+                },
+                "condition": {
+                    "type": "string",
+                    "description": "Filter by condition ('New' or 'Used'). Optional.",
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "get_market_intel",
+        "description": (
+            "Get competitive market intelligence: body builder market share, brand concentration "
+            "by state, and body type distribution. Use for 'who are the top body builders in Georgia?', "
+            "'what brands dominate Texas?', 'market share for Reading vs Morgan?', "
+            "'which body builders compete with Smyrna?'."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "report_type": {
+                    "type": "string",
+                    "description": "Type of report: 'body_builders' (market share by body builder), 'brands' (chassis brand concentration), 'body_types' (body type distribution).",
+                    "enum": ["body_builders", "brands", "body_types"],
+                },
+                "state": {
+                    "type": "string",
+                    "description": "Two-letter state code to focus on. Optional — if omitted, shows all-market data.",
+                },
+                "body_type": {
+                    "type": "string",
+                    "description": "Filter to a specific body type segment (e.g. 'Service Trucks'). Optional.",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Max entries to return (default 15).",
+                    "default": 15,
+                },
+            },
+            "required": ["report_type"],
+        },
+    },
 ]
 
 
@@ -600,8 +784,8 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                         hours_str = format_hours_today(p["hours_json"])
                         if hours_str:
                             briefing["hours_today"] = hours_str
-            except Exception:
-                pass  # Places table may not exist yet
+            except Exception as e:
+                logger.debug(f"Places enrichment skipped for briefing: {e}")
             return json.dumps(briefing, default=str)
 
         elif tool_name == "get_territory_summary":
@@ -732,12 +916,17 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
 
             travel_dt = date.fromisoformat(tool_input["travel_date"])
             try:
-                result = _get_route_dealers(
-                    rep_id=rep_id,
-                    travel_date=travel_dt,
-                    buffer_miles=tool_input.get("buffer_miles", 20),
-                    limit=30,
-                )
+                # _get_route_dealers is async — run it in an event loop
+                loop = asyncio.new_event_loop()
+                try:
+                    result = loop.run_until_complete(_get_route_dealers(
+                        rep_id=rep_id,
+                        travel_date=travel_dt,
+                        buffer_miles=tool_input.get("buffer_miles", 20),
+                        limit=30,
+                    ))
+                finally:
+                    loop.close()
             except Exception as e:
                 if "No travel plan" in str(e) or "404" in str(e):
                     # Fetch available dates so Otto can suggest alternatives
@@ -921,6 +1110,78 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                     intel["talking_point"] += " Smyrna units are trending up — they're expanding the relationship."
                 elif trend_intel["smyrna_trend"] == "down":
                     intel["talking_point"] += " Smyrna units are declining — worth asking why and if there's a retention issue."
+
+            # Pricing context: dealer avg vs state market avg
+            try:
+                if snap.data:
+                    snap_id = snap.data[0]["id"]
+                    price_rows = db.table("vehicles").select("price").eq(
+                        "snapshot_id", snap_id
+                    ).eq("dealer_id", dealer_id).not_.is_("price", "null").execute()
+                    if price_rows.data:
+                        dealer_prices = [r["price"] for r in price_rows.data]
+                        dealer_avg = round(sum(dealer_prices) / len(dealer_prices))
+                        market_rows = db.table("vehicles").select(
+                            "price, dealers!inner(state)"
+                        ).eq("snapshot_id", snap_id).eq(
+                            "dealers.state", d.state
+                        ).not_.is_("price", "null").limit(3000).execute()
+                        if market_rows.data:
+                            market_prices = [r["price"] for r in market_rows.data]
+                            market_avg = round(sum(market_prices) / len(market_prices))
+                            diff_pct = round((dealer_avg - market_avg) / market_avg * 100)
+                            intel["pricing"] = {
+                                "dealer_avg": dealer_avg,
+                                "market_avg": market_avg,
+                                "vs_market": f"{'+' if diff_pct > 0 else ''}{diff_pct}%",
+                                "priced_units": len(dealer_prices),
+                            }
+                            if diff_pct > 5:
+                                intel["talking_point"] += f" They price {diff_pct}% above {d.state} market — premium positioning."
+                            elif diff_pct < -5:
+                                intel["talking_point"] += f" They price {abs(diff_pct)}% below {d.state} market — value buyer, lead with price."
+            except Exception:
+                pass
+
+            # Body builder mix
+            try:
+                if snap.data:
+                    builder_rows = db.table("vehicles").select("body_builder").eq(
+                        "snapshot_id", snap.data[0]["id"]
+                    ).eq("dealer_id", dealer_id).not_.is_("body_builder", "null").execute()
+                    if builder_rows.data:
+                        builder_counts = {}
+                        for r in builder_rows.data:
+                            b = r["body_builder"]
+                            builder_counts[b] = builder_counts.get(b, 0) + 1
+                        sorted_builders = sorted(builder_counts.items(), key=lambda x: -x[1])[:5]
+                        intel["body_builders"] = [
+                            {"name": name, "count": ct} for name, ct in sorted_builders
+                        ]
+            except Exception:
+                pass
+
+            # Inventory velocity from diffs (needs 2+ snapshots)
+            try:
+                snaps_all = db.table("report_snapshots").select("id").order(
+                    "report_date", desc=True
+                ).limit(2).execute()
+                if snaps_all.data and len(snaps_all.data) >= 2:
+                    diff_rows = db.table("vehicle_diffs").select("diff_type").eq(
+                        "snapshot_id", snaps_all.data[0]["id"]
+                    ).eq("dealer_id", dealer_id).execute()
+                    if diff_rows.data:
+                        velocity = {"new": 0, "sold": 0, "price_changes": 0}
+                        for r in diff_rows.data:
+                            if r["diff_type"] == "new":
+                                velocity["new"] += 1
+                            elif r["diff_type"] == "sold":
+                                velocity["sold"] += 1
+                            else:
+                                velocity["price_changes"] += 1
+                        intel["velocity"] = velocity
+            except Exception:
+                pass
 
             return json.dumps(intel, default=str)
 
@@ -1191,6 +1452,400 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                 "summary": summary,
                 "tip": "Reply to adjust: 'skip dealer X', 'add South Carolina', 'make it 4 days', 'only hot leads', 'what if we start from Nashville?'",
             }, default=str)
+
+        elif tool_name == "search_vehicles":
+            db = get_service_client()
+            # Get latest snapshot
+            snap = db.table("report_snapshots").select("id").order("report_date", desc=True).limit(1).execute()
+            if not snap.data:
+                return json.dumps({"error": "No data snapshots found."})
+            snap_id = snap.data[0]["id"]
+
+            limit = min(tool_input.get("limit", 15), 30)
+
+            # Use the search_vehicles PostgreSQL function
+            params = {"p_snapshot_id": snap_id, "p_limit": limit}
+            if tool_input.get("brand"):
+                params["p_brand"] = tool_input["brand"]
+            if tool_input.get("body_type"):
+                params["p_body_type"] = tool_input["body_type"]
+            if tool_input.get("min_price"):
+                params["p_min_price"] = tool_input["min_price"]
+            if tool_input.get("max_price"):
+                params["p_max_price"] = tool_input["max_price"]
+            if tool_input.get("state"):
+                params["p_state"] = tool_input["state"]
+            if tool_input.get("dealer_id"):
+                params["p_dealer_id"] = tool_input["dealer_id"]
+            if tool_input.get("is_smyrna") is not None:
+                params["p_is_smyrna"] = tool_input["is_smyrna"]
+
+            result = db.rpc("search_vehicles", params).execute()
+            vehicles = []
+            for v in (result.data or []):
+                entry = {
+                    "vin": v["vin"],
+                    "brand": v["brand"],
+                    "body_type": v["body_type"],
+                    "dealer": v["dealer_name"],
+                    "city": v["city"],
+                    "state": v["state"],
+                }
+                if v.get("model"):
+                    entry["model"] = v["model"]
+                if v.get("body_builder"):
+                    entry["builder"] = v["body_builder"]
+                if v.get("price"):
+                    entry["price"] = v["price"]
+                if v.get("condition"):
+                    entry["cond"] = v["condition"]
+                if v.get("is_smyrna"):
+                    entry["smyrna"] = True
+                if v.get("listing_url"):
+                    entry["url"] = v["listing_url"]
+                vehicles.append(entry)
+
+            return json.dumps({"vehicles": vehicles, "count": len(vehicles)}, default=str)
+
+        elif tool_name == "get_dealer_inventory":
+            db = get_service_client()
+            dealer_id = tool_input["dealer_id"]
+
+            # Get latest snapshot
+            snap = db.table("report_snapshots").select("id").order("report_date", desc=True).limit(1).execute()
+            if not snap.data:
+                return json.dumps({"error": "No data snapshots found."})
+            snap_id = snap.data[0]["id"]
+
+            query = db.table("vehicles").select(
+                "vin, brand, model, body_type, body_builder, price, condition, "
+                "transmission, fuel_type, color, is_smyrna, listing_url"
+            ).eq("snapshot_id", snap_id).eq("dealer_id", dealer_id).order("price", desc=False, nulls_last=True)
+
+            if tool_input.get("brand"):
+                query = query.ilike("brand", tool_input["brand"])
+            if tool_input.get("body_type"):
+                query = query.ilike("body_type", f"%{tool_input['body_type']}%")
+
+            result = query.limit(50).execute()
+
+            vehicles = []
+            for v in (result.data or []):
+                entry = {"vin": v["vin"], "brand": v["brand"], "body_type": v["body_type"]}
+                if v.get("model"):
+                    entry["model"] = v["model"]
+                if v.get("body_builder"):
+                    entry["builder"] = v["body_builder"]
+                if v.get("price"):
+                    entry["price"] = v["price"]
+                if v.get("condition"):
+                    entry["cond"] = v["condition"]
+                if v.get("transmission"):
+                    entry["trans"] = v["transmission"]
+                if v.get("fuel_type"):
+                    entry["fuel"] = v["fuel_type"]
+                if v.get("color"):
+                    entry["color"] = v["color"]
+                if v.get("is_smyrna"):
+                    entry["smyrna"] = True
+                if v.get("listing_url"):
+                    entry["url"] = v["listing_url"]
+                vehicles.append(entry)
+
+            # Get dealer name for context
+            dealer_row = db.table("dealers").select("name, city, state").eq("id", dealer_id).limit(1).execute()
+            dealer_info = dealer_row.data[0] if dealer_row.data else {}
+
+            return json.dumps({
+                "dealer": f"{dealer_info.get('name', '?')} ({dealer_info.get('city', '')}, {dealer_info.get('state', '')})",
+                "vehicles": vehicles,
+                "count": len(vehicles),
+            }, default=str)
+
+        elif tool_name == "get_inventory_changes":
+            db = get_service_client()
+
+            # Get latest two snapshots
+            snaps = db.table("report_snapshots").select("id, report_date").order("report_date", desc=True).limit(2).execute()
+            if not snaps.data or len(snaps.data) < 2:
+                return json.dumps({"error": "Need at least 2 monthly snapshots to show changes. Only one snapshot exists."})
+
+            current_snap = snaps.data[0]
+            prev_snap = snaps.data[1]
+
+            limit = min(tool_input.get("limit", 20), 50)
+
+            query = db.table("vehicle_diffs").select(
+                "diff_type, vin, brand, body_type, old_price, new_price, "
+                "dealer_id, dealers!inner(name, city, state)"
+            ).eq("snapshot_id", current_snap["id"])
+
+            if tool_input.get("change_type"):
+                query = query.eq("diff_type", tool_input["change_type"])
+            if tool_input.get("brand"):
+                query = query.ilike("brand", tool_input["brand"])
+            if tool_input.get("state"):
+                query = query.eq("dealers.state", tool_input["state"].upper())
+            if tool_input.get("dealer_id"):
+                query = query.eq("dealer_id", tool_input["dealer_id"])
+
+            result = query.limit(limit).execute()
+
+            changes = []
+            for r in (result.data or []):
+                d = r.get("dealers", {})
+                entry = {
+                    "type": r["diff_type"],
+                    "vin": r["vin"],
+                    "brand": r.get("brand"),
+                    "body_type": r.get("body_type"),
+                    "dealer": d.get("name"),
+                    "location": f"{d.get('city', '')}, {d.get('state', '')}",
+                }
+                if r["diff_type"] == "price_change":
+                    entry["old_price"] = r.get("old_price")
+                    entry["new_price"] = r.get("new_price")
+                elif r["diff_type"] == "new" and r.get("new_price"):
+                    entry["price"] = r["new_price"]
+                elif r["diff_type"] == "sold" and r.get("old_price"):
+                    entry["was_price"] = r["old_price"]
+                changes.append(entry)
+
+            # Summarize counts by type
+            type_counts = {}
+            for c in changes:
+                type_counts[c["type"]] = type_counts.get(c["type"], 0) + 1
+
+            return json.dumps({
+                "period": f"{prev_snap['report_date']} → {current_snap['report_date']}",
+                "summary": type_counts,
+                "changes": changes,
+                "count": len(changes),
+            }, default=str)
+
+        elif tool_name == "get_price_analytics":
+            db = get_service_client()
+            snap = db.table("report_snapshots").select("id").order("report_date", desc=True).limit(1).execute()
+            if not snap.data:
+                return json.dumps({"error": "No data snapshots found."})
+            snap_id = snap.data[0]["id"]
+
+            def _price_stats(prices):
+                if not prices:
+                    return None
+                prices.sort()
+                n = len(prices)
+                return {
+                    "avg": round(sum(prices) / n),
+                    "min": prices[0],
+                    "max": prices[-1],
+                    "median": prices[n // 2] if n % 2 else round((prices[n // 2 - 1] + prices[n // 2]) / 2),
+                    "count": n,
+                }
+
+            def _brackets(prices):
+                b = {"<30k": 0, "30-50k": 0, "50-75k": 0, "75-100k": 0, "100k+": 0}
+                for p in prices:
+                    if p < 30000: b["<30k"] += 1
+                    elif p < 50000: b["30-50k"] += 1
+                    elif p < 75000: b["50-75k"] += 1
+                    elif p < 100000: b["75-100k"] += 1
+                    else: b["100k+"] += 1
+                return {k: v for k, v in b.items() if v > 0}
+
+            # Paginate market query (Supabase default limit is 1000)
+            def _build_price_query(db, snap_id, tool_input, offset, page_size):
+                if tool_input.get("state"):
+                    q = db.table("vehicles").select(
+                        "price, dealers!inner(state)"
+                    ).eq("snapshot_id", snap_id).not_.is_("price", "null").eq(
+                        "dealers.state", tool_input["state"].upper()
+                    )
+                else:
+                    q = db.table("vehicles").select("price").eq(
+                        "snapshot_id", snap_id
+                    ).not_.is_("price", "null")
+                if tool_input.get("brand"):
+                    q = q.ilike("brand", tool_input["brand"])
+                if tool_input.get("body_type"):
+                    q = q.ilike("body_type", f"%{tool_input['body_type']}%")
+                if tool_input.get("condition"):
+                    q = q.ilike("condition", tool_input["condition"])
+                return q.range(offset, offset + page_size - 1)
+
+            market_prices = []
+            offset = 0
+            page_size = 1000
+            while True:
+                q = _build_price_query(db, snap_id, tool_input, offset, page_size)
+                page = q.execute()
+                if not page.data:
+                    break
+                market_prices.extend(r["price"] for r in page.data)
+                if len(page.data) < page_size:
+                    break
+                offset += page_size
+
+            if not market_prices:
+                return json.dumps({"note": "No priced vehicles match these filters."})
+
+            output = {
+                "filters": {k: v for k, v in {
+                    "brand": tool_input.get("brand"),
+                    "body_type": tool_input.get("body_type"),
+                    "state": tool_input.get("state"),
+                    "condition": tool_input.get("condition"),
+                }.items() if v},
+                "market": _price_stats(market_prices),
+                "brackets": _brackets(market_prices),
+            }
+
+            if len(market_prices) < 20:
+                output["note"] = f"Small sample size ({len(market_prices)} vehicles)"
+
+            # Dealer comparison if requested
+            if tool_input.get("dealer_id"):
+                dealer_q = db.table("vehicles").select("price").eq(
+                    "snapshot_id", snap_id
+                ).eq("dealer_id", tool_input["dealer_id"]).not_.is_("price", "null")
+                if tool_input.get("brand"):
+                    dealer_q = dealer_q.ilike("brand", tool_input["brand"])
+                if tool_input.get("body_type"):
+                    dealer_q = dealer_q.ilike("body_type", f"%{tool_input['body_type']}%")
+                if tool_input.get("condition"):
+                    dealer_q = dealer_q.ilike("condition", tool_input["condition"])
+
+                dealer_result = dealer_q.limit(500).execute()
+                dealer_prices = [r["price"] for r in (dealer_result.data or [])]
+
+                if dealer_prices:
+                    dealer_stats = _price_stats(dealer_prices)
+                    market_avg = output["market"]["avg"]
+                    diff_pct = round((dealer_stats["avg"] - market_avg) / market_avg * 100)
+                    dealer_stats["vs_market"] = f"{'+' if diff_pct > 0 else ''}{diff_pct}%"
+                    # Get dealer name
+                    d_row = db.table("dealers").select("name, city, state").eq(
+                        "id", tool_input["dealer_id"]
+                    ).limit(1).execute()
+                    if d_row.data:
+                        dealer_stats["name"] = f"{d_row.data[0]['name']} ({d_row.data[0]['city']}, {d_row.data[0]['state']})"
+                    output["dealer"] = dealer_stats
+
+            return json.dumps(output, default=str)
+
+        elif tool_name == "get_market_intel":
+            db = get_service_client()
+            snap = db.table("report_snapshots").select("id").order("report_date", desc=True).limit(1).execute()
+            if not snap.data:
+                return json.dumps({"error": "No data snapshots found."})
+            snap_id = snap.data[0]["id"]
+
+            report_type = tool_input["report_type"]
+            limit = min(tool_input.get("limit", 15), 30)
+
+            # Paginate to get all vehicles (Supabase default limit is 1000)
+            data = []
+            page_size = 1000
+            offset = 0
+            while True:
+                if tool_input.get("state"):
+                    q = db.table("vehicles").select(
+                        "brand, body_type, body_builder, price, is_smyrna, dealers!inner(state)"
+                    ).eq("snapshot_id", snap_id).eq("dealers.state", tool_input["state"].upper())
+                else:
+                    q = db.table("vehicles").select(
+                        "brand, body_type, body_builder, price, is_smyrna"
+                    ).eq("snapshot_id", snap_id)
+                if tool_input.get("body_type"):
+                    q = q.ilike("body_type", f"%{tool_input['body_type']}%")
+                q = q.range(offset, offset + page_size - 1)
+                page = q.execute()
+                if not page.data:
+                    break
+                data.extend(page.data)
+                if len(page.data) < page_size:
+                    break
+                offset += page_size
+            total = len(data)
+
+            if not data:
+                return json.dumps({"note": "No vehicles match these filters."})
+
+            from app.api.scoring import SMYRNA_BODY_TYPES
+
+            output = {
+                "report": report_type,
+                "scope": tool_input.get("state", "all states"),
+                "total_vehicles": total,
+            }
+
+            if report_type == "body_builders":
+                counts = {}
+                for r in data:
+                    bb = r.get("body_builder")
+                    if bb:
+                        counts[bb] = counts.get(bb, 0) + 1
+                sorted_bb = sorted(counts.items(), key=lambda x: -x[1])[:limit]
+                with_builder = sum(counts.values())
+                output["with_builder"] = with_builder
+                output["top"] = [
+                    {"builder": name, "count": ct, "share": f"{round(ct / with_builder * 100, 1)}%"}
+                    for name, ct in sorted_bb
+                ]
+                # Find Smyrna position
+                smyrna_names = {"Smyrna Truck", "Smyrna", "Fouts Bros", "Fouts Brothers"}
+                smyrna_count = sum(ct for name, ct in counts.items() if name in smyrna_names)
+                if smyrna_count:
+                    smyrna_rank = sum(1 for _, ct in counts.items() if ct > smyrna_count) + 1
+                    output["smyrna_position"] = {
+                        "count": smyrna_count, "share": f"{round(smyrna_count / with_builder * 100, 1)}%",
+                        "rank": smyrna_rank,
+                    }
+
+            elif report_type == "brands":
+                brand_data = {}
+                for r in data:
+                    b = r["brand"]
+                    if b not in brand_data:
+                        brand_data[b] = {"count": 0, "prices": []}
+                    brand_data[b]["count"] += 1
+                    if r.get("price"):
+                        brand_data[b]["prices"].append(r["price"])
+                sorted_brands = sorted(brand_data.items(), key=lambda x: -x[1]["count"])[:limit]
+                output["top"] = []
+                for name, info in sorted_brands:
+                    entry = {
+                        "brand": name,
+                        "count": info["count"],
+                        "share": f"{round(info['count'] / total * 100, 1)}%",
+                    }
+                    if info["prices"]:
+                        entry["avg_price"] = round(sum(info["prices"]) / len(info["prices"]))
+                    output["top"].append(entry)
+
+            elif report_type == "body_types":
+                bt_data = {}
+                for r in data:
+                    bt = r["body_type"]
+                    if bt not in bt_data:
+                        bt_data[bt] = {"count": 0, "smyrna": 0}
+                    bt_data[bt]["count"] += 1
+                    if r.get("is_smyrna"):
+                        bt_data[bt]["smyrna"] += 1
+                sorted_bt = sorted(bt_data.items(), key=lambda x: -x[1]["count"])[:limit]
+                output["top"] = []
+                for name, info in sorted_bt:
+                    entry = {
+                        "type": name,
+                        "count": info["count"],
+                        "share": f"{round(info['count'] / total * 100, 1)}%",
+                        "smyrna_compatible": name in SMYRNA_BODY_TYPES,
+                    }
+                    if info["smyrna"]:
+                        entry["smyrna_units"] = info["smyrna"]
+                    output["top"].append(entry)
+
+            return json.dumps(output, default=str)
 
         else:
             return json.dumps({"error": f"Unknown tool: {tool_name}"})

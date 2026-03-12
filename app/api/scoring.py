@@ -164,13 +164,10 @@ def _score_dealer(
         # Has some Smyrna but low penetration — upsell
         opp_type = "upsell"
         smyrna_pts = 15
-    elif smyrna > 0:
+    else:
         # Decent Smyrna penetration — monitor/grow
         opp_type = "upsell"
         smyrna_pts = 8
-    else:
-        opp_type = "whitespace"
-        smyrna_pts = 25
     factors["smyrna_opportunity"] = smyrna_pts
 
     # --- 4. Growth momentum (0-15 points) ---
