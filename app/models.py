@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import date, datetime
 
 
@@ -9,14 +9,14 @@ class IngestRequest(BaseModel):
 
 
 class ChatMessage(BaseModel):
-    message: str
-    history: list[dict] | None = None  # client-side history for serverless recovery
+    message: str = Field(..., min_length=1, max_length=50000)
+    history: list[dict] | None = Field(None, max_length=30)
 
 
 class NearbyQuery(BaseModel):
     latitude: float
     longitude: float
-    radius_miles: float = 30
+    radius_miles: float = Field(30, gt=0, le=500)
 
 
 # --- Response models ---
@@ -145,14 +145,14 @@ class TravelPlanCreate(BaseModel):
     """Create a new travel plan day."""
     rep_id: str
     travel_date: date
-    start_location: str  # freeform: "Smyrna, GA" or "Hampton Inn, Macon GA"
-    end_location: str
-    notes: str | None = None
+    start_location: str = Field(..., max_length=200)
+    end_location: str = Field(..., max_length=200)
+    notes: str | None = Field(None, max_length=500)
 
 
 class TravelPlanUpdate(BaseModel):
     """Update an existing travel plan. All fields optional."""
     travel_date: date | None = None
-    start_location: str | None = None
-    end_location: str | None = None
-    notes: str | None = None
+    start_location: str | None = Field(None, max_length=200)
+    end_location: str | None = Field(None, max_length=200)
+    notes: str | None = Field(None, max_length=500)
