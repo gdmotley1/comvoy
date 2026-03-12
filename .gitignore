@@ -9,3 +9,15 @@ node_modules/
 .netlify/
 
 .vercel
+
+# Scrape output data
+scrape_output/
+
+# One-off audit/investigation scripts
+forensic_audit.py
+investigate_smyrna.py
+penske_audit.py
+validate_scrape.py
+
+# Docs
+comvoy-cost-summary.html
