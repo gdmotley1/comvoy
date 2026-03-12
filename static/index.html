@@ -4571,7 +4571,11 @@
         let _allStateVals = [];
 
         function buildStateRows(dealers) {
-            const states = [...new Set(dealers.map(d => d.state))].filter(Boolean).sort();
+            const stCounts = {};
+            dealers.forEach(d => {
+                if (d.state) stCounts[d.state] = (stCounts[d.state] || 0) + (d.vehicles || 0);
+            });
+            const states = Object.keys(stCounts).sort();
             _allStateVals = states;
             const dd = document.getElementById('stateDd');
             if (!dd) return;
@@ -4582,7 +4586,8 @@
                 row.dataset.filter = 'state';
                 row.dataset.val = st;
                 row.onclick = function() { toggleFilterRow(this); };
-                row.innerHTML = `<span class="filter-check"><svg class="filter-check-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></span><span class="filter-label">${st}</span>`;
+                const count = stCounts[st] ? stCounts[st].toLocaleString() : '0';
+                row.innerHTML = `<span class="filter-check"><svg class="filter-check-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></span><span class="filter-label">${st}</span><span class="filter-sublabel">${count}</span>`;
                 dd.appendChild(row);
             });
             _activeStates = new Set(states);
