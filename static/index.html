@@ -6544,7 +6544,7 @@
                 wrap.addEventListener('mouseover', (e) => {
                     const arc = e.target.closest('.dash-arc-hover');
                     if (!arc || !tip) return;
-                    arc.setAttribute('stroke-width', '24');
+                    arc.setAttribute('stroke-width', '32');
                     arc.setAttribute('opacity', '1');
                     const type = arc.dataset.type;
                     const count = Number(arc.dataset.count).toLocaleString();
@@ -6561,7 +6561,7 @@
                 wrap.addEventListener('mouseout', (e) => {
                     const arc = e.target.closest('.dash-arc-hover');
                     if (!arc) return;
-                    arc.setAttribute('stroke-width', '20');
+                    arc.setAttribute('stroke-width', '28');
                     arc.setAttribute('opacity', '0.75');
                     if (tip) tip.style.opacity = '0';
                 });
