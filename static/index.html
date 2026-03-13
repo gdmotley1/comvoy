@@ -131,7 +131,8 @@
         body.chatting .topbar-center,
         body.chatting .topbar .btn-ghost,
         body.chatting .topbar .btn-trips,
-        body.chatting .usage-badge {
+        body.chatting .usage-badge,
+        body.dashboard .topbar .btn-trips {
             opacity: 1;
             transform: translateY(0);
             pointer-events: auto;
@@ -349,9 +350,9 @@
         /* ---- HERO CARDS (3 primary CTAs) ---- */
         .hero-cards {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 14px;
-            max-width: 720px;
+            max-width: 820px;
             width: 100%;
             margin-bottom: 24px;
         }
@@ -1242,7 +1243,8 @@
         }
         body.chatting .topbar .btn-map,
         body.trip-manager .topbar .btn-map,
-        body.map-view .topbar .btn-map {
+        body.map-view .topbar .btn-map,
+        body.dashboard .topbar .btn-map {
             opacity: 1;
             transform: translateY(0);
             pointer-events: auto;
@@ -2641,7 +2643,468 @@
             outline: none;
         }
 
+        /* ========== DASHBOARD VIEW ========== */
+        .btn-dash {
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: rgba(255,255,255,0.45);
+            font-size: 12px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s var(--smooth);
+        }
+        .btn-dash:hover {
+            background: rgba(255,255,255,0.06);
+            color: var(--text-primary);
+        }
+        body.dashboard .topbar .btn-dash {
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.08);
+        }
+        body.chatting .topbar .btn-dash,
+        body.map-view .topbar .btn-dash,
+        body.trip-manager .topbar .btn-dash,
+        body.dashboard .topbar .btn-dash {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        body.dashboard .topbar-center,
+        body.dashboard .topbar .btn-ghost,
+        body.dashboard .usage-badge,
+        body.dashboard .topbar .btn-dash,
+        body.dashboard .topbar .btn-map,
+        body.dashboard .topbar .btn-trips {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        body.dashboard .main { display: none; }
+        body.dashboard .input-area { display: none; }
+        body.dashboard #dealerMap { display: none; }
+        body.dashboard #dashboardWrap { display: block; }
+
+        .dashboard-wrap {
+            display: none;
+            position: fixed;
+            top: 56px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 24px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
+            background:
+                linear-gradient(rgba(79,143,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(79,143,255,0.02) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        .dash-filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto 20px;
+        }
+        .dash-filter-select {
+            padding: 6px 28px 6px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.03);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s var(--smooth);
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+        .dash-filter-select:focus {
+            border-color: rgba(79,143,255,0.3);
+            background-color: rgba(79,143,255,0.06);
+            color: var(--text-primary);
+            outline: none;
+        }
+        .dash-filter-pill {
+            padding: 5px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.03);
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s var(--smooth);
+        }
+        .dash-filter-pill:hover {
+            background: rgba(79,143,255,0.06);
+            border-color: rgba(79,143,255,0.2);
+            color: var(--text-primary);
+        }
+        .dash-filter-pill.active {
+            background: rgba(79,143,255,0.12);
+            border-color: rgba(79,143,255,0.3);
+            color: var(--accent-blue);
+        }
+        .dash-filter-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-tertiary);
+            font-weight: 600;
+            margin-right: 4px;
+        }
+        .dash-filter-sep {
+            width: 1px;
+            height: 20px;
+            background: rgba(255,255,255,0.06);
+            margin: 0 8px;
+        }
+
+        .dash-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .dash-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s var(--smooth), box-shadow 0.3s var(--smooth);
+            animation: dashCardIn 0.5s var(--ease-out-expo) backwards;
+        }
+        .dash-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(79,143,255,0.012) 2px,
+                rgba(79,143,255,0.012) 4px
+            );
+            pointer-events: none;
+            border-radius: 16px;
+        }
+        .dash-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            background: radial-gradient(400px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+                rgba(79,143,255,0.06), transparent 60%);
+            pointer-events: none;
+        }
+        .dash-card:hover::after { opacity: 1; }
+        .dash-card:hover {
+            border-color: rgba(79,143,255,0.2);
+            box-shadow: 0 8px 32px rgba(79,143,255,0.06);
+        }
+        .dash-card.span-2 { grid-column: span 2; }
+        .dash-card.span-3 { grid-column: span 3; }
+        .dash-card.span-4 { grid-column: span 4; }
+
+        .dash-card-title {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-tertiary);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .dash-card-title::before {
+            content: '';
+            width: 3px;
+            height: 10px;
+            border-radius: 2px;
+            background: var(--accent-blue);
+        }
+
+        @keyframes dashCardIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .dash-kpi-row {
+            display: flex;
+            gap: 16px;
+        }
+        .dash-kpi-item {
+            flex: 1;
+            text-align: center;
+        }
+        .dash-kpi {
+            font-size: 32px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            color: var(--text-primary);
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+        .dash-kpi-label {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 6px;
+        }
+        .dash-kpi-sub {
+            font-size: 11px;
+            color: var(--accent-cyan);
+            margin-top: 3px;
+            font-variant-numeric: tabular-nums;
+        }
+        @keyframes kpiGlow {
+            0%, 100% { text-shadow: 0 0 0 transparent; }
+            50% { text-shadow: 0 0 20px rgba(0,212,255,0.3); }
+        }
+        .dash-kpi.glow { animation: kpiGlow 3s ease-in-out infinite; }
+
+        /* SVG chart transitions */
+        .dash-bar { transition: width 0.7s var(--ease-out-expo); }
+        .dash-bar-v { transition: height 0.7s var(--ease-out-expo), y 0.7s var(--ease-out-expo); }
+        .dash-arc { transition: stroke-dashoffset 0.9s var(--ease-out-expo); }
+
+        /* Horizontal bar chart rows */
+        .dash-hbar-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            font-size: 11px;
+        }
+        .dash-hbar-label {
+            width: 80px;
+            color: var(--text-secondary);
+            text-align: right;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-shrink: 0;
+        }
+        .dash-hbar-track {
+            flex: 1;
+            height: 18px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        .dash-hbar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.7s var(--ease-out-expo);
+            position: relative;
+        }
+        .dash-hbar-fill.smyrna {
+            background: linear-gradient(90deg, #8B4513, #D2691E) !important;
+            box-shadow: 0 0 8px rgba(210,105,30,0.3);
+        }
+        .dash-hbar-val {
+            width: 50px;
+            color: var(--text-tertiary);
+            font-variant-numeric: tabular-nums;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+
+        /* Top dealers table */
+        .dash-dealer-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            transition: background 0.15s;
+            font-size: 12px;
+        }
+        .dash-dealer-row:hover {
+            background: rgba(255,255,255,0.03);
+        }
+        .dash-dealer-rank {
+            width: 22px;
+            font-weight: 700;
+            color: var(--text-tertiary);
+            font-variant-numeric: tabular-nums;
+            text-align: center;
+            font-size: 11px;
+        }
+        .dash-dealer-name {
+            flex: 1;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 500;
+        }
+        .dash-dealer-loc {
+            color: var(--text-tertiary);
+            font-size: 10px;
+            white-space: nowrap;
+        }
+        .dash-dealer-count {
+            font-variant-numeric: tabular-nums;
+            color: var(--text-secondary);
+            font-weight: 600;
+            min-width: 36px;
+            text-align: right;
+        }
+        .dash-tier-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* Smyrna gauge */
+        .dash-gauge-wrap {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .dash-smyrna-list {
+            flex: 1;
+        }
+        .dash-smyrna-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 11px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .dash-smyrna-item:last-child { border-bottom: none; }
+
+        /* Donut center text */
+        .dash-donut-center {
+            font-size: 22px;
+            font-weight: 700;
+            fill: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+        }
+        .dash-donut-sub {
+            font-size: 9px;
+            fill: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Lead pipeline */
+        .dash-lead-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .dash-lead-label {
+            width: 50px;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: right;
+        }
+        .dash-lead-track {
+            flex: 1;
+            height: 28px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .dash-lead-fill {
+            height: 100%;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+            transition: width 0.7s var(--ease-out-expo);
+        }
+
+        /* New vs Used split */
+        .dash-condition-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 12px;
+        }
+        .dash-condition-item {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.04);
+            text-align: center;
+        }
+        .dash-condition-count {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+        }
+        .dash-condition-label {
+            font-size: 10px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+        .dash-condition-price {
+            font-size: 13px;
+            color: var(--accent-cyan);
+            margin-top: 4px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Loading skeleton */
+        .dash-skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s ease-in-out infinite;
+            border-radius: 8px;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
         /* ========== RESPONSIVE ========== */
+        @media (max-width: 900px) {
+            .dash-grid { grid-template-columns: repeat(2, 1fr); }
+            .dash-card.span-3, .dash-card.span-4 { grid-column: span 2; }
+            .dash-kpi-row { flex-wrap: wrap; }
+            .dash-kpi-item { min-width: calc(50% - 8px); }
+            .hero-cards { grid-template-columns: repeat(2, 1fr); }
+        }
         @media (max-width: 600px) {
             .action-cards { grid-template-columns: 1fr; }
             .action-card:last-child:nth-child(odd) { max-width: none; }
@@ -2652,6 +3115,11 @@
             .tm-header { flex-direction: column; gap: 12px; align-items: flex-start; }
             .tm-card-actions { flex-wrap: wrap; }
             .tm-modal { padding: 20px; margin: 10px; }
+            .dash-grid { grid-template-columns: 1fr; }
+            .dash-card.span-2, .dash-card.span-3, .dash-card.span-4 { grid-column: span 1; }
+            .dash-kpi { font-size: 24px; }
+            .hero-cards { grid-template-columns: 1fr; }
+            .dashboard-wrap { padding: 12px; }
         }
     </style>
 </head>
@@ -2677,6 +3145,7 @@
         <div class="topbar-right">
             <div class="usage-badge" id="usageBadge" title="Token usage this session"></div>
             <button class="btn-map" onclick="openDealerMap()">Map</button>
+            <button class="btn-dash" onclick="openDashboard()">Dashboard</button>
             <button class="btn-trips" onclick="openTripManager()">Trips</button>
             <button class="btn-ghost" onclick="clearChat()">New Chat</button>
         </div>
@@ -2829,6 +3298,9 @@
         </div>
     </div>
 
+    <!-- Dashboard View -->
+    <div class="dashboard-wrap" id="dashboardWrap"></div>
+
     <div class="route-panel" id="routePanel">
         <div class="route-panel-toggle" onclick="toggleRoutePanel()">
             <svg class="route-panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
@@ -2934,6 +3406,11 @@
                         <div class="hero-card-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
                         <div class="hero-card-title">Ask Otto</div>
                         <div class="hero-card-desc">Dealer intel, territory trends, hot leads — just ask</div>
+                    </div>
+                    <div class="hero-card" onclick="openDashboard()">
+                        <div class="hero-card-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" fill="currentColor" opacity="0.6"/><rect x="14" y="3" width="7" height="7" rx="1" fill="currentColor" opacity="0.8"/><rect x="3" y="14" width="7" height="7" rx="1" fill="currentColor" opacity="0.8"/><rect x="14" y="14" width="7" height="7" rx="1" fill="currentColor" opacity="0.6"/></svg></div>
+                        <div class="hero-card-title">Dashboard</div>
+                        <div class="hero-card-desc">Pricing intel, brand share, lead pipeline — visual analytics</div>
                     </div>
                 </div>
                 <div class="action-cards" id="actionCards" style="display:none"></div>
@@ -3400,6 +3877,11 @@
 <div class="hero-card-title">Ask Otto</div>
 <div class="hero-card-desc">Dealer intel, territory trends, hot leads — just ask</div>
 </div>
+<div class="hero-card" onclick="openDashboard()">
+<div class="hero-card-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" fill="currentColor" opacity="0.6"/><rect x="14" y="3" width="7" height="7" rx="1" fill="currentColor" opacity="0.8"/><rect x="3" y="14" width="7" height="7" rx="1" fill="currentColor" opacity="0.8"/><rect x="14" y="14" width="7" height="7" rx="1" fill="currentColor" opacity="0.6"/></svg></div>
+<div class="hero-card-title">Dashboard</div>
+<div class="hero-card-desc">Pricing intel, brand share, lead pipeline — visual analytics</div>
+</div>
 </div>
 <div class="action-cards" id="actionCards" style="display:none"></div>
 <div class="api-notice" id="apiNotice"><div class="api-notice-icon"><svg viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg></div><div class="api-notice-text"><strong>API key required.</strong> Add <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">ANTHROPIC_API_KEY</code> to your <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">.env</code> file and restart the server.</div></div>
@@ -3413,7 +3895,7 @@
                 sessionTokens = 0; sessionCost = 0;
                 const ub = $('usageBadge'); if (ub) { ub.textContent = ''; ub.classList.remove('warn'); }
                 document.body.classList.remove('chatting');
-                document.body.classList.remove('trip-manager', 'map-view');
+                document.body.classList.remove('trip-manager', 'map-view', 'dashboard');
                 scroll.innerHTML = buildWelcomeHTML();
                 const wtEl = $('welcomeTitle');
                 if (wtEl) Effects.splitTextReveal(wtEl, 'Otto — Comvoy Sales Intelligence', 0.3);
@@ -3688,7 +4170,7 @@
             let _tmEditId = null;
 
             async function open() {
-                document.body.classList.remove('chatting', 'map-view');
+                document.body.classList.remove('chatting', 'map-view', 'dashboard');
                 document.body.classList.add('trip-manager');
                 const w = document.getElementById('welcome');
                 if (w) w.remove();
@@ -4262,7 +4744,7 @@
             let _allDealers = [];
 
             async function open() {
-                document.body.classList.remove('chatting', 'trip-manager');
+                document.body.classList.remove('chatting', 'trip-manager', 'dashboard');
                 document.body.classList.add('map-view');
                 OttoPopup.init();
                 if (!_mapLoaded) {
@@ -5371,9 +5853,365 @@
         })();
 
         // =====================================================================
+        // MODULE 11: Dashboard — visual analytics command center
+        // =====================================================================
+        const Dashboard = (function() {
+            const { API_BASE, $, fetchT, tierColor } = Core;
+            let _data = null;
+            let _loaded = false;
+            let _activeState = '';
+            const COLORS = ['#4f8fff','#00d4ff','#a855f7','#ec4899','#34d399','#fbbf24','#f97316','#8b95a5','#06b6d4','#84cc16'];
+
+            function fmtK(n) {
+                if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+                if (n >= 1000) return (n/1000).toFixed(1) + 'k';
+                return n.toLocaleString();
+            }
+            function fmtPrice(n) { return '$' + n.toLocaleString(); }
+
+            async function open() {
+                document.body.classList.remove('chatting', 'map-view', 'trip-manager');
+                document.body.classList.add('dashboard');
+                const w = document.getElementById('welcome'); if (w) w.remove();
+                const wrap = $('dashboardWrap');
+                if (!_loaded) {
+                    wrap.innerHTML = buildLoadingHTML();
+                    await loadData();
+                }
+                render();
+            }
+
+            async function loadData(state) {
+                try {
+                    const url = state
+                        ? `${API_BASE}/api/dashboard?state=${state}`
+                        : `${API_BASE}/api/dashboard`;
+                    const res = await fetchT(url, {}, 30000);
+                    if (!res.ok) throw new Error('Dashboard load failed');
+                    _data = await res.json();
+                    _loaded = true;
+                } catch(e) {
+                    console.error('Dashboard load error:', e);
+                    $('dashboardWrap').innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-secondary)">Failed to load dashboard data. Check your connection.</div>';
+                }
+            }
+
+            function buildLoadingHTML() {
+                let cards = '';
+                for (let i = 0; i < 10; i++) {
+                    const h = [60, 200, 200, 200, 200, 180, 180, 200, 200, 160][i];
+                    const span = i === 0 ? 'span-4' : 'span-2';
+                    cards += `<div class="dash-card ${span}" style="animation-delay:${i*0.06}s"><div class="dash-skeleton" style="height:${h}px"></div></div>`;
+                }
+                return `<div class="dash-grid">${cards}</div>`;
+            }
+
+            function render() {
+                if (!_data) return;
+                const d = _data;
+                const wrap = $('dashboardWrap');
+
+                // Build filters
+                const states = (d.by_state || []).map(s => s.state).sort();
+                let filtersHTML = `<div class="dash-filters">
+                    <span class="dash-filter-label">Territory</span>
+                    <select class="dash-filter-select" id="dashStateSelect" onchange="dashFilterState(this.value)">
+                        <option value="">All States</option>
+                        ${states.map(s => `<option value="${s}" ${s === _activeState ? 'selected' : ''}>${s}</option>`).join('')}
+                    </select>
+                    <div class="dash-filter-sep"></div>
+                    <span class="dash-filter-label">Snapshot</span>
+                    <span style="font-size:11px;color:var(--text-secondary)">${d.snapshot_date}</span>
+                </div>`;
+
+                // KPI row
+                const t = d.totals;
+                const l = d.leads;
+                let idx = 0;
+                let kpiHTML = `<div class="dash-card span-4" style="animation-delay:${idx++ * 0.06}s">
+                    <div class="dash-kpi-row">
+                        <div class="dash-kpi-item">
+                            <div class="dash-kpi countup" data-target="${t.vehicles}">${t.vehicles.toLocaleString()}</div>
+                            <div class="dash-kpi-label">Vehicles</div>
+                            <div class="dash-kpi-sub">${fmtK(t.vehicles)} tracked by VIN</div>
+                        </div>
+                        <div class="dash-kpi-item">
+                            <div class="dash-kpi countup" data-target="${t.dealers}">${t.dealers.toLocaleString()}</div>
+                            <div class="dash-kpi-label">Dealers</div>
+                            <div class="dash-kpi-sub">${states.length} state${states.length !== 1 ? 's' : ''}</div>
+                        </div>
+                        <div class="dash-kpi-item">
+                            <div class="dash-kpi">${fmtPrice(t.median_price)}</div>
+                            <div class="dash-kpi-label">Median Price</div>
+                            <div class="dash-kpi-sub">avg ${fmtPrice(t.avg_price)}</div>
+                        </div>
+                        <div class="dash-kpi-item">
+                            <div class="dash-kpi glow" style="color:#ef4444">${l.hot}</div>
+                            <div class="dash-kpi-label">Hot Leads</div>
+                            <div class="dash-kpi-sub" style="color:var(--text-tertiary)">${l.warm}W · ${l.cold}C</div>
+                        </div>
+                        <div class="dash-kpi-item">
+                            <div class="dash-kpi" style="color:var(--accent-cyan)">${t.smyrna_units}</div>
+                            <div class="dash-kpi-label">Smyrna Units</div>
+                            <div class="dash-kpi-sub">${d.smyrna_intel.penetration_pct}% penetration</div>
+                        </div>
+                    </div>
+                </div>`;
+
+                // Brand market share
+                const brands = d.by_brand.slice(0, 10);
+                const maxBrand = brands[0]?.count || 1;
+                let brandHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
+                    <div class="dash-card-title">Brand Market Share</div>
+                    ${brands.map((b, i) => `<div class="dash-hbar-row">
+                        <div class="dash-hbar-label">${b.brand}</div>
+                        <div class="dash-hbar-track">
+                            <div class="dash-hbar-fill dash-bar" style="width:0%;background:${COLORS[i % COLORS.length]};opacity:0.7" data-w="${(b.count/maxBrand*100).toFixed(1)}%"></div>
+                        </div>
+                        <div class="dash-hbar-val">${b.share}%</div>
+                    </div>`).join('')}
+                </div>`;
+
+                // Price distribution histogram
+                const br = d.price_brackets;
+                const brKeys = ['<30k','30-50k','50-75k','75-100k','100k+'];
+                const brVals = brKeys.map(k => br[k] || 0);
+                const maxBr = Math.max(...brVals, 1);
+                const barW = 48, barGap = 14, histW = brKeys.length * (barW + barGap) + 40, histH = 160;
+                let histBars = '';
+                const histColors = ['#34d399','#4f8fff','#00d4ff','#a855f7','#ec4899'];
+                brVals.forEach((v, i) => {
+                    const h = (v / maxBr * 110);
+                    const x = 25 + i * (barW + barGap);
+                    const y = histH - 25;
+                    histBars += `<rect class="dash-bar-v" x="${x}" y="${y}" width="${barW}" height="0" rx="3" fill="${histColors[i]}" opacity="0.7" data-h="${h}" data-y="${y - h}"/>`;
+                    histBars += `<text x="${x + barW/2}" y="${histH - 8}" text-anchor="middle" fill="var(--text-tertiary)" font-size="9" font-family="inherit">${brKeys[i]}</text>`;
+                    histBars += `<text x="${x + barW/2}" y="${y - h - 6}" text-anchor="middle" fill="var(--text-secondary)" font-size="10" font-family="inherit" font-weight="600" opacity="0">${fmtK(v)}</text>`;
+                });
+                let priceHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
+                    <div class="dash-card-title">Price Distribution</div>
+                    <svg viewBox="0 0 ${histW} ${histH}" style="width:100%;height:auto">${histBars}</svg>
+                </div>`;
+
+                // Body type donut
+                const btypes = d.by_body_type.slice(0, 8);
+                const btOther = d.by_body_type.slice(8).reduce((s, b) => s + b.count, 0);
+                const donutData = [...btypes];
+                if (btOther > 0) donutData.push({ body_type: 'Other', count: btOther, share: +(btOther / d.totals.vehicles * 100).toFixed(1) });
+                const R = 70, CX = 100, CY = 100, C = 2 * Math.PI * R;
+                let donutArcs = '', donutOffset = 0;
+                const donutLegend = [];
+                donutData.forEach((b, i) => {
+                    const pct = b.count / d.totals.vehicles;
+                    const arcLen = pct * C;
+                    const color = COLORS[i % COLORS.length];
+                    donutArcs += `<circle class="dash-arc" cx="${CX}" cy="${CY}" r="${R}" fill="none"
+                        stroke="${color}" stroke-width="20" opacity="0.75"
+                        stroke-dasharray="${arcLen} ${C - arcLen}"
+                        stroke-dashoffset="${C}" data-offset="${-donutOffset}"
+                        transform="rotate(-90 ${CX} ${CY})"/>`;
+                    donutLegend.push(`<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 8px 2px 0;font-size:10px;color:var(--text-secondary)"><span style="width:8px;height:8px;border-radius:2px;background:${color};display:inline-block"></span>${b.body_type} ${b.share}%</span>`);
+                    donutOffset += arcLen;
+                });
+                let bodyHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
+                    <div class="dash-card-title">Body Type Breakdown</div>
+                    <div style="display:flex;align-items:center;gap:20px">
+                        <svg viewBox="0 0 200 200" style="width:160px;height:160px;flex-shrink:0">
+                            ${donutArcs}
+                            <text class="dash-donut-center" x="${CX}" y="${CY + 4}" text-anchor="middle">${d.by_body_type.length}</text>
+                            <text class="dash-donut-sub" x="${CX}" y="${CY + 18}" text-anchor="middle">TYPES</text>
+                        </svg>
+                        <div style="line-height:1.6">${donutLegend.join('')}</div>
+                    </div>
+                </div>`;
+
+                // Builder market share
+                const builders = d.by_builder.slice(0, 10);
+                const maxBuilder = builders[0]?.count || 1;
+                let builderHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
+                    <div class="dash-card-title">Builder Market Share</div>
+                    ${builders.map((b, i) => {
+                        const isSmyrna = b.builder.toLowerCase().includes('smyrna');
+                        return `<div class="dash-hbar-row">
+                            <div class="dash-hbar-label" ${isSmyrna ? 'style="color:#D2691E;font-weight:600"' : ''}>${b.builder}</div>
+                            <div class="dash-hbar-track">
+                                <div class="dash-hbar-fill dash-bar ${isSmyrna ? 'smyrna' : ''}" style="width:0%;${isSmyrna ? '' : 'background:' + COLORS[(i+3) % COLORS.length] + ';opacity:0.7'}" data-w="${(b.count/maxBuilder*100).toFixed(1)}%"></div>
+                            </div>
+                            <div class="dash-hbar-val">${fmtK(b.count)}</div>
+                        </div>`;
+                    }).join('')}
+                </div>`;
+
+                // Lead score pipeline
+                const totalLeads = l.hot + l.warm + l.cold || 1;
+                let leadHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
+                    <div class="dash-card-title">Lead Score Pipeline</div>
+                    <div class="dash-lead-bar">
+                        <div class="dash-lead-label" style="color:#ef4444">Hot</div>
+                        <div class="dash-lead-track">
+                            <div class="dash-lead-fill dash-bar" style="width:0%;background:linear-gradient(90deg,#ef4444,#f97316);box-shadow:0 0 12px rgba(239,68,68,0.3)" data-w="${(l.hot/totalLeads*100).toFixed(1)}%">${l.hot}</div>
+                        </div>
+                    </div>
+                    <div class="dash-lead-bar">
+                        <div class="dash-lead-label" style="color:#ff8c00">Warm</div>
+                        <div class="dash-lead-track">
+                            <div class="dash-lead-fill dash-bar" style="width:0%;background:linear-gradient(90deg,#ff8c00,#fbbf24);box-shadow:0 0 8px rgba(255,140,0,0.2)" data-w="${(l.warm/totalLeads*100).toFixed(1)}%">${l.warm}</div>
+                        </div>
+                    </div>
+                    <div class="dash-lead-bar">
+                        <div class="dash-lead-label" style="color:#4169e1">Cold</div>
+                        <div class="dash-lead-track">
+                            <div class="dash-lead-fill dash-bar" style="width:0%;background:linear-gradient(90deg,#4169e1,#6366f1)" data-w="${(l.cold/totalLeads*100).toFixed(1)}%">${l.cold}</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:12px;font-size:11px;color:var(--text-tertiary);text-align:center">${totalLeads} scored dealers · ${((l.hot/totalLeads)*100).toFixed(0)}% conversion-ready</div>
+                </div>`;
+
+                // New vs Used
+                const cond = d.by_condition;
+                const totalCond = (cond.New?.count || 0) + (cond.Used?.count || 0) || 1;
+                let condHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
+                    <div class="dash-card-title">New vs Used Inventory</div>
+                    <svg viewBox="0 0 200 200" style="width:120px;height:120px;display:block;margin:0 auto">
+                        <circle class="dash-arc" cx="100" cy="100" r="70" fill="none" stroke="#4f8fff" stroke-width="22" opacity="0.75"
+                            stroke-dasharray="${(cond.New?.count||0)/totalCond*439.8} ${439.8}" stroke-dashoffset="439.8" data-offset="0"
+                            transform="rotate(-90 100 100)"/>
+                        <circle class="dash-arc" cx="100" cy="100" r="70" fill="none" stroke="#a855f7" stroke-width="22" opacity="0.75"
+                            stroke-dasharray="${(cond.Used?.count||0)/totalCond*439.8} ${439.8}" stroke-dashoffset="439.8" data-offset="${-(cond.New?.count||0)/totalCond*439.8}"
+                            transform="rotate(-90 100 100)"/>
+                        <text x="100" y="97" text-anchor="middle" fill="var(--text-primary)" font-size="18" font-weight="700" font-family="inherit">${((cond.New?.count||0)/totalCond*100).toFixed(0)}%</text>
+                        <text x="100" y="114" text-anchor="middle" fill="var(--text-tertiary)" font-size="9" font-family="inherit">NEW</text>
+                    </svg>
+                    <div class="dash-condition-row">
+                        <div class="dash-condition-item" style="border-color:rgba(79,143,255,0.15)">
+                            <div class="dash-condition-count" style="color:#4f8fff">${fmtK(cond.New?.count||0)}</div>
+                            <div class="dash-condition-label">New</div>
+                            <div class="dash-condition-price">${fmtPrice(cond.New?.avg_price||0)} avg</div>
+                        </div>
+                        <div class="dash-condition-item" style="border-color:rgba(168,85,247,0.15)">
+                            <div class="dash-condition-count" style="color:#a855f7">${fmtK(cond.Used?.count||0)}</div>
+                            <div class="dash-condition-label">Used</div>
+                            <div class="dash-condition-price">${fmtPrice(cond.Used?.avg_price||0)} avg</div>
+                        </div>
+                    </div>
+                </div>`;
+
+                // Top dealers
+                const dealers = d.top_dealers.slice(0, 10);
+                let dealersHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
+                    <div class="dash-card-title">Top Dealers by Inventory</div>
+                    <div style="max-height:280px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.08) transparent">
+                        ${dealers.map((dlr, i) => `<div class="dash-dealer-row">
+                            <div class="dash-dealer-rank">${i+1}</div>
+                            <div class="dash-tier-dot" style="background:${tierColor(dlr.tier)};box-shadow:0 0 6px ${tierColor(dlr.tier)}"></div>
+                            <div class="dash-dealer-name">${dlr.name}</div>
+                            <div class="dash-dealer-loc">${dlr.city}, ${dlr.state}</div>
+                            <div class="dash-dealer-count">${dlr.vehicles}</div>
+                        </div>`).join('')}
+                    </div>
+                </div>`;
+
+                // Smyrna intel
+                const sm = d.smyrna_intel;
+                const gaugeR = 50, gaugeCX = 60, gaugeCY = 60, gaugeC = Math.PI * gaugeR;
+                const gaugeFill = (sm.penetration_pct / 100) * gaugeC;
+                let smyrnaHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
+                    <div class="dash-card-title" style="color:#D2691E">Smyrna Intelligence</div>
+                    <div class="dash-gauge-wrap">
+                        <svg viewBox="0 0 120 75" style="width:120px;flex-shrink:0">
+                            <path d="M 10 65 A 50 50 0 0 1 110 65" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10" stroke-linecap="round"/>
+                            <path class="dash-arc" d="M 10 65 A 50 50 0 0 1 110 65" fill="none" stroke="#D2691E" stroke-width="10" stroke-linecap="round"
+                                stroke-dasharray="${gaugeC}" stroke-dashoffset="${gaugeC}" data-offset="${gaugeC - gaugeFill}" style="filter:drop-shadow(0 0 6px rgba(210,105,30,0.4))"/>
+                            <text x="60" y="58" text-anchor="middle" fill="var(--text-primary)" font-size="18" font-weight="700" font-family="inherit">${sm.penetration_pct}%</text>
+                            <text x="60" y="72" text-anchor="middle" fill="var(--text-tertiary)" font-size="8" font-family="inherit">PENETRATION</text>
+                        </svg>
+                        <div class="dash-smyrna-list">
+                            <div style="font-size:10px;color:var(--text-tertiary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">${sm.total_units} units at ${sm.dealer_count} dealers</div>
+                            ${(sm.top_dealers || []).map(td => `<div class="dash-smyrna-item">
+                                <span>${td.name}</span>
+                                <span style="color:#D2691E;font-weight:600">${td.units}</span>
+                            </div>`).join('')}
+                        </div>
+                    </div>
+                    ${sm.body_type_mix?.length ? `<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:4px">
+                        ${sm.body_type_mix.slice(0,6).map(bt => `<span style="font-size:10px;padding:3px 8px;border-radius:10px;background:rgba(210,105,30,0.1);border:1px solid rgba(210,105,30,0.2);color:#D2691E">${bt.type} (${bt.count})</span>`).join('')}
+                    </div>` : ''}
+                </div>`;
+
+                wrap.innerHTML = filtersHTML + '<div class="dash-grid">' +
+                    kpiHTML + brandHTML + priceHTML + bodyHTML + builderHTML +
+                    leadHTML + condHTML + dealersHTML + smyrnaHTML +
+                '</div>';
+
+                // Animate bars and arcs after paint
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        // Animate horizontal bars
+                        wrap.querySelectorAll('.dash-bar[data-w]').forEach(el => {
+                            el.style.width = el.dataset.w;
+                        });
+                        // Animate vertical bars (histogram)
+                        wrap.querySelectorAll('.dash-bar-v[data-h]').forEach(el => {
+                            el.setAttribute('height', el.dataset.h);
+                            el.setAttribute('y', el.dataset.y);
+                            // Show value label
+                            const next = el.nextElementSibling?.nextElementSibling;
+                            if (next && next.tagName === 'text') {
+                                setTimeout(() => next.setAttribute('opacity', '1'), 400);
+                            }
+                        });
+                        // Animate donut arcs
+                        wrap.querySelectorAll('.dash-arc[data-offset]').forEach(el => {
+                            el.style.strokeDashoffset = el.dataset.offset;
+                        });
+                    }, 80);
+                });
+
+                // 3D hover on cards
+                setup3DHover(wrap);
+            }
+
+            function setup3DHover(container) {
+                container.addEventListener('mousemove', e => {
+                    container.querySelectorAll('.dash-card').forEach(card => {
+                        const r = card.getBoundingClientRect();
+                        const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+                        if (inside) {
+                            const x = e.clientX - r.left, y = e.clientY - r.top;
+                            card.style.setProperty('--spot-x', x + 'px');
+                            card.style.setProperty('--spot-y', y + 'px');
+                            const nx = (x / r.width - 0.5), ny = (y / r.height - 0.5);
+                            card.style.transform = `perspective(800px) rotateX(${-ny * 3}deg) rotateY(${nx * 3}deg)`;
+                        } else {
+                            card.style.transform = '';
+                        }
+                    });
+                });
+                container.addEventListener('mouseleave', () => {
+                    container.querySelectorAll('.dash-card').forEach(card => {
+                        card.style.transform = '';
+                    });
+                });
+            }
+
+            async function filterState(state) {
+                _activeState = state;
+                _loaded = false;
+                const wrap = $('dashboardWrap');
+                wrap.innerHTML = buildLoadingHTML();
+                await loadData(state || undefined);
+                render();
+            }
+
+            return { open, filterState };
+        })();
+
+        // =====================================================================
         // GLOBAL BRIDGES — wire HTML onclick attributes to module methods
         // =====================================================================
         window.openDealerMap = () => DealerMap.open();
+        window.openDashboard = () => Dashboard.open();
+        window.dashFilterState = (s) => Dashboard.filterState(s);
         window.openTripManager = () => TripManager.open();
         window.clearChat = () => Chat.clearChat();
         window.ask = (t) => Chat.ask(t);

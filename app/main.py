@@ -15,6 +15,7 @@ from app.api.alerts import router as alerts_router
 from app.api.scoring import router as scoring_router
 from app.api.reports import router as reports_router
 from app.api.travel import router as travel_router
+from app.api.dashboard import router as dashboard_router
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 
@@ -63,6 +64,7 @@ app.include_router(alerts_router)
 app.include_router(scoring_router)
 app.include_router(reports_router)
 app.include_router(travel_router)
+app.include_router(dashboard_router)
 
 # Static files (web chat UI) — skip in serverless environments
 if os.path.isdir("static"):
