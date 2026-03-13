@@ -2974,6 +2974,51 @@
             width: 7px; height: 7px; border-radius: 2px; flex-shrink: 0;
         }
 
+        /* Pricing Intelligence panel */
+        .dash-price-stats {
+            display: flex; justify-content: space-between; gap: 8px; margin-bottom: 14px;
+        }
+        .dash-price-stat { text-align: center; flex: 1; }
+        .dash-price-stat-val {
+            font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums;
+        }
+        .dash-price-stat-label {
+            font-size: 9px; color: var(--text-tertiary); text-transform: uppercase;
+            letter-spacing: 0.5px; margin-top: 2px;
+        }
+        .dash-price-brackets {
+            display: flex; justify-content: space-between; gap: 6px; margin-bottom: 14px;
+            height: 100px; align-items: flex-end;
+        }
+        .dash-price-bracket {
+            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+        }
+        .dash-price-bracket-bar-wrap {
+            width: 100%; height: 70px; display: flex; align-items: flex-end;
+            background: rgba(255,255,255,0.02); border-radius: 4px 4px 0 0;
+        }
+        .dash-price-bracket-bar {
+            width: 100%; border-radius: 3px 3px 0 0; opacity: 0.75;
+            transition: height 0.7s var(--ease-out-expo);
+        }
+        .dash-price-bracket-count {
+            font-size: 10px; font-weight: 600; color: var(--text-secondary);
+            font-variant-numeric: tabular-nums;
+        }
+        .dash-price-bracket-label {
+            font-size: 9px; color: var(--text-tertiary);
+        }
+        .dash-price-newused {
+            display: flex; flex-direction: column; gap: 6px;
+            padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.04);
+        }
+        .dash-price-nu-item {
+            display: flex; align-items: center; gap: 6px; font-size: 11px;
+        }
+        .dash-price-nu-dot {
+            width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+        }
+
         /* Top dealers table */
         .dash-dealer-row {
             display: flex;
@@ -6010,25 +6055,59 @@
                     </div>`).join('')}
                 </div>`;
 
-                // Price distribution histogram
+                // Pricing Intelligence
                 const br = d.price_brackets;
                 const brKeys = ['<30k','30-50k','50-75k','75-100k','100k+'];
                 const brVals = brKeys.map(k => br[k] || 0);
-                const maxBr = Math.max(...brVals, 1);
-                const barW = 48, barGap = 14, histW = brKeys.length * (barW + barGap) + 40, histH = 160;
-                let histBars = '';
+                const totalPriced = brVals.reduce((a, b) => a + b, 0) || 1;
                 const histColors = ['#34d399','#4f8fff','#00d4ff','#a855f7','#ec4899'];
-                brVals.forEach((v, i) => {
-                    const h = (v / maxBr * 110);
-                    const x = 25 + i * (barW + barGap);
-                    const y = histH - 25;
-                    histBars += `<rect class="dash-bar-v" x="${x}" y="${y}" width="${barW}" height="0" rx="3" fill="${histColors[i]}" opacity="0.7" data-h="${h}" data-y="${y - h}"/>`;
-                    histBars += `<text x="${x + barW/2}" y="${histH - 8}" text-anchor="middle" fill="var(--text-tertiary)" font-size="9" font-family="inherit">${brKeys[i]}</text>`;
-                    histBars += `<text x="${x + barW/2}" y="${y - h - 6}" text-anchor="middle" fill="var(--text-secondary)" font-size="10" font-family="inherit" font-weight="600" opacity="0">${fmtK(v)}</text>`;
-                });
+                const cond = d.by_condition;
+                const newAvg = cond.New?.avg_price || 0;
+                const usedAvg = cond.Used?.avg_price || 0;
+                const spread = newAvg - usedAvg;
+
                 let priceHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
-                    <div class="dash-card-title">Price Distribution</div>
-                    <svg viewBox="0 0 ${histW} ${histH}" style="width:100%;height:auto">${histBars}</svg>
+                    <div class="dash-card-title">Pricing Intelligence</div>
+                    <div class="dash-price-stats">
+                        <div class="dash-price-stat">
+                            <div class="dash-price-stat-val" style="color:#4f8fff">${fmtPrice(d.totals.median_price)}</div>
+                            <div class="dash-price-stat-label">Median</div>
+                        </div>
+                        <div class="dash-price-stat">
+                            <div class="dash-price-stat-val" style="color:var(--text-primary)">${fmtPrice(d.totals.avg_price)}</div>
+                            <div class="dash-price-stat-label">Average</div>
+                        </div>
+                        <div class="dash-price-stat">
+                            <div class="dash-price-stat-val" style="color:#34d399">${fmtPrice(spread)}</div>
+                            <div class="dash-price-stat-label">New↔Used Spread</div>
+                        </div>
+                    </div>
+                    <div class="dash-price-brackets">
+                        ${brKeys.map((k, i) => {
+                            const pct = (brVals[i] / totalPriced * 100).toFixed(1);
+                            return `<div class="dash-price-bracket">
+                                <div class="dash-price-bracket-bar-wrap">
+                                    <div class="dash-price-bracket-bar" style="height:0%;background:${histColors[i]}" data-bh="${pct}%"></div>
+                                </div>
+                                <div class="dash-price-bracket-count">${fmtK(brVals[i])}</div>
+                                <div class="dash-price-bracket-label">${k}</div>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                    <div class="dash-price-newused">
+                        <div class="dash-price-nu-item">
+                            <span class="dash-price-nu-dot" style="background:#4f8fff"></span>
+                            <span style="color:var(--text-secondary);font-size:10px">New</span>
+                            <span style="color:#4f8fff;font-weight:600;font-size:11px;margin-left:auto">${fmtPrice(newAvg)} avg</span>
+                            <span style="color:var(--text-tertiary);font-size:10px">(${fmtK(cond.New?.count||0)})</span>
+                        </div>
+                        <div class="dash-price-nu-item">
+                            <span class="dash-price-nu-dot" style="background:#a855f7"></span>
+                            <span style="color:var(--text-secondary);font-size:10px">Used</span>
+                            <span style="color:#a855f7;font-weight:600;font-size:11px;margin-left:auto">${fmtPrice(usedAvg)} avg</span>
+                            <span style="color:var(--text-tertiary);font-size:10px">(${fmtK(cond.Used?.count||0)})</span>
+                        </div>
+                    </div>
                 </div>`;
 
                 // Body type donut
@@ -6038,7 +6117,6 @@
                 if (btOther > 0) donutData.push({ body_type: 'Other', count: btOther, share: +(btOther / d.totals.vehicles * 100).toFixed(1) });
                 const R = 70, CX = 100, CY = 100, C = 2 * Math.PI * R;
                 let donutArcs = '', donutOffset = 0;
-                const donutLegend = [];
                 donutData.forEach((b, i) => {
                     const pct = b.count / d.totals.vehicles;
                     const arcLen = pct * C;
@@ -6050,20 +6128,19 @@
                         data-type="${b.body_type}" data-count="${b.count}" data-share="${b.share}"
                         transform="rotate(-90 ${CX} ${CY})"
                         style="cursor:pointer"/>`;
-                    donutLegend.push(`<span class="dash-donut-legend-item"><span class="dot" style="background:${color}"></span>${b.body_type} ${b.share}%</span>`);
                     donutOffset += arcLen;
                 });
                 let bodyHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
                     <div class="dash-card-title">Body Type Breakdown</div>
-                    <div class="dash-donut-wrap" style="display:flex;flex-direction:column;align-items:center">
-                        <svg viewBox="0 0 200 200" style="width:140px;height:140px">
+                    <div class="dash-donut-wrap" style="display:flex;justify-content:center;align-items:center;padding:10px 0">
+                        <svg viewBox="0 0 200 200" style="width:170px;height:170px">
                             ${donutArcs}
                             <text class="dash-donut-center" x="${CX}" y="${CY + 4}" text-anchor="middle">${d.by_body_type.length}</text>
                             <text class="dash-donut-sub" x="${CX}" y="${CY + 18}" text-anchor="middle">TYPES</text>
                         </svg>
                         <div class="dash-donut-tooltip" id="donutTip"></div>
-                        <div class="dash-donut-legend">${donutLegend.join('')}</div>
                     </div>
+                    <div style="text-align:center;font-size:10px;color:var(--text-tertiary);margin-top:4px">Hover segments for details</div>
                 </div>`;
 
                 // Builder market share
@@ -6109,48 +6186,30 @@
                     <div style="margin-top:12px;font-size:11px;color:var(--text-tertiary);text-align:center">${totalLeads} scored dealers · ${((l.hot/totalLeads)*100).toFixed(0)}% conversion-ready</div>
                 </div>`;
 
-                // New vs Used
-                const cond = d.by_condition;
-                const totalCond = (cond.New?.count || 0) + (cond.Used?.count || 0) || 1;
-                let condHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
-                    <div class="dash-card-title">New vs Used Inventory</div>
-                    <svg viewBox="0 0 200 200" style="width:120px;height:120px;display:block;margin:0 auto">
-                        <circle class="dash-arc" cx="100" cy="100" r="70" fill="none" stroke="#4f8fff" stroke-width="22" opacity="0.75"
-                            stroke-dasharray="${(cond.New?.count||0)/totalCond*439.8} ${439.8}" stroke-dashoffset="439.8" data-offset="0"
-                            transform="rotate(-90 100 100)"/>
-                        <circle class="dash-arc" cx="100" cy="100" r="70" fill="none" stroke="#a855f7" stroke-width="22" opacity="0.75"
-                            stroke-dasharray="${(cond.Used?.count||0)/totalCond*439.8} ${439.8}" stroke-dashoffset="439.8" data-offset="${-(cond.New?.count||0)/totalCond*439.8}"
-                            transform="rotate(-90 100 100)"/>
-                        <text x="100" y="97" text-anchor="middle" fill="var(--text-primary)" font-size="18" font-weight="700" font-family="inherit">${((cond.New?.count||0)/totalCond*100).toFixed(0)}%</text>
-                        <text x="100" y="114" text-anchor="middle" fill="var(--text-tertiary)" font-size="9" font-family="inherit">NEW</text>
-                    </svg>
-                    <div class="dash-condition-row">
-                        <div class="dash-condition-item" style="border-color:rgba(79,143,255,0.15)">
-                            <div class="dash-condition-count" style="color:#4f8fff">${fmtK(cond.New?.count||0)}</div>
-                            <div class="dash-condition-label">New</div>
-                            <div class="dash-condition-price">${fmtPrice(cond.New?.avg_price||0)} avg</div>
-                        </div>
-                        <div class="dash-condition-item" style="border-color:rgba(168,85,247,0.15)">
-                            <div class="dash-condition-count" style="color:#a855f7">${fmtK(cond.Used?.count||0)}</div>
-                            <div class="dash-condition-label">Used</div>
-                            <div class="dash-condition-price">${fmtPrice(cond.Used?.avg_price||0)} avg</div>
-                        </div>
-                    </div>
-                </div>`;
+                // (New vs Used data merged into Pricing Intelligence panel above)
 
-                // Top dealers
+                // Top 10 Movers (inventory changes — needs 2+ snapshots)
                 const dealers = d.top_dealers.slice(0, 10);
                 let dealersHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
-                    <div class="dash-card-title">Top Dealers by Inventory</div>
+                    <div class="dash-card-title">Top 10 Movers</div>
                     <div style="max-height:280px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.08) transparent">
-                        ${dealers.map((dlr, i) => `<div class="dash-dealer-row">
-                            <div class="dash-dealer-rank">${i+1}</div>
-                            <div class="dash-tier-dot" style="background:${tierColor(dlr.tier)};box-shadow:0 0 6px ${tierColor(dlr.tier)}"></div>
-                            <div class="dash-dealer-name">${dlr.name}</div>
-                            <div class="dash-dealer-loc">${dlr.city}, ${dlr.state}</div>
-                            <div class="dash-dealer-count">${dlr.vehicles}</div>
-                        </div>`).join('')}
+                        ${dealers.map((dlr, i) => {
+                            const delta = dlr.delta || 0;
+                            const arrow = delta > 0 ? '▲' : delta < 0 ? '▼' : '—';
+                            const deltaColor = delta > 0 ? '#34d399' : delta < 0 ? '#ef4444' : 'var(--text-tertiary)';
+                            return `<div class="dash-dealer-row">
+                                <div class="dash-dealer-rank">${i+1}</div>
+                                <div class="dash-tier-dot" style="background:${tierColor(dlr.tier)};box-shadow:0 0 6px ${tierColor(dlr.tier)}"></div>
+                                <div class="dash-dealer-name">${dlr.name}</div>
+                                <div class="dash-dealer-loc">${dlr.city}, ${dlr.state}</div>
+                                <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+                                    <span style="color:${deltaColor};font-size:9px">${arrow}</span>
+                                    <span class="dash-dealer-count">${dlr.vehicles}</span>
+                                </div>
+                            </div>`;
+                        }).join('')}
                     </div>
+                    <div style="margin-top:8px;text-align:center;font-size:10px;color:var(--text-tertiary)">Trend data activates with April scrape</div>
                 </div>`;
 
                 // Smyrna intel
@@ -6182,7 +6241,7 @@
 
                 wrap.innerHTML = filtersHTML + '<div class="dash-grid">' +
                     kpiHTML + brandHTML + priceHTML + bodyHTML + builderHTML +
-                    leadHTML + condHTML + dealersHTML + smyrnaHTML +
+                    leadHTML + dealersHTML + smyrnaHTML +
                 '</div>';
 
                 // Animate bars and arcs after paint
@@ -6201,6 +6260,10 @@
                             if (next && next.tagName === 'text') {
                                 setTimeout(() => next.setAttribute('opacity', '1'), 400);
                             }
+                        });
+                        // Animate price bracket bars (height)
+                        wrap.querySelectorAll('[data-bh]').forEach(el => {
+                            el.style.height = el.dataset.bh;
                         });
                         // Animate donut arcs
                         wrap.querySelectorAll('.dash-arc[data-offset]').forEach(el => {
