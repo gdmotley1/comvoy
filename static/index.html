@@ -31,6 +31,11 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        select, option, input[type="date"] {
+            color-scheme: dark;
+            background: #1a1d27;
+            color: var(--text-primary);
+        }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -2385,6 +2390,7 @@
             border: 1px solid var(--glass-border);
             border-radius: 12px;
             color: var(--text-primary);
+            color-scheme: dark;
             font-family: inherit;
             font-size: 14px;
             padding: 10px 16px;
@@ -2721,6 +2727,7 @@
             border: 1px solid var(--glass-border);
             background: rgba(255,255,255,0.03);
             color: var(--text-secondary);
+            color-scheme: dark;
             font-size: 12px;
             font-family: inherit;
             font-weight: 500;
