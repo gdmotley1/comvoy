@@ -6191,18 +6191,16 @@
                 });
                 let bodyHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
                     <div class="dash-card-title">Body Type Breakdown</div>
-                    <div class="dash-donut-wrap" style="display:flex;align-items:center;padding:10px 0;gap:0">
+                    <div class="dash-donut-wrap" style="display:flex;align-items:center;justify-content:center;padding:10px 0;gap:16px">
                         <svg viewBox="0 0 200 200" style="width:280px;height:280px;flex-shrink:0">
                             ${donutArcs}
                         </svg>
-                        <div style="flex:1;min-width:0;display:flex;justify-content:flex-end">
-                            <div>
+                        <div>
                             ${donutData.slice(0, 5).map((b, i) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
                                 <div style="width:10px;height:10px;border-radius:3px;background:${COLORS[i % COLORS.length]};flex-shrink:0"></div>
                                 <div style="font-size:12px;color:var(--text-secondary);white-space:nowrap;width:130px">${b.body_type}</div>
                                 <div style="font-size:12px;font-weight:600;color:var(--text-primary);width:42px;text-align:right">${b.share}%</div>
                             </div>`).join('')}
-                            </div>
                         </div>
                         <div class="dash-donut-tooltip" id="donutTip"></div>
                     </div>
