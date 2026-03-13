@@ -165,6 +165,37 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
     new_prices = [v["price"] for v in vehicles if v["price"] and v.get("condition") == "New"]
     used_prices = [v["price"] for v in vehicles if v["price"] and v.get("condition") == "Used"]
 
+    # Smyrna price position vs market by body type
+    bt_prices_all = defaultdict(list)
+    bt_prices_smyrna = defaultdict(list)
+    for v in vehicles:
+        if v["price"] and v["body_type"]:
+            bt_prices_all[v["body_type"]].append(v["price"])
+            if v["is_smyrna"]:
+                bt_prices_smyrna[v["body_type"]].append(v["price"])
+
+    smyrna_price_position = []
+    for bt, s_prices in bt_prices_smyrna.items():
+        if len(s_prices) >= 2:  # need at least 2 Smyrna units for meaningful avg
+            m_prices = bt_prices_all[bt]
+            s_avg = round(sum(s_prices) / len(s_prices))
+            m_avg = round(sum(m_prices) / len(m_prices))
+            delta_pct = round((s_avg - m_avg) / m_avg * 100, 1) if m_avg else 0
+            smyrna_price_position.append({
+                "body_type": bt, "smyrna_avg": s_avg, "market_avg": m_avg,
+                "delta_pct": delta_pct, "smyrna_count": len(s_prices), "market_count": len(m_prices),
+            })
+    smyrna_price_position.sort(key=lambda x: x["smyrna_count"], reverse=True)
+
+    # City breakdown (when state filter is active)
+    by_city = []
+    if state:
+        city_counter = Counter()
+        for v in vehicles:
+            if v.get("dealers"):
+                city_counter[v["dealers"]["city"]] += 1
+        by_city = [{"city": c, "vehicles": n} for c, n in city_counter.most_common(12)]
+
     return {
         "snapshot_date": snap_date,
         "totals": {
@@ -206,6 +237,8 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
             for t, c in trans_counter.most_common()
         ],
         "top_dealers": top_dealer_list,
+        "smyrna_price_position": smyrna_price_position,
+        "by_city": by_city,
         "smyrna_intel": {
             "total_units": smyrna_count,
             "dealer_count": len(smyrna_by_dealer),

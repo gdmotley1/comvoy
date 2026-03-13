@@ -3193,6 +3193,60 @@
             100% { background-position: -200% 0; }
         }
 
+        /* Smyrna Price Position */
+        .dash-price-pos-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+        .dash-price-pos-label {
+            width: 100px;
+            flex-shrink: 0;
+            color: var(--text-secondary);
+            text-align: right;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .dash-price-pos-track {
+            flex: 1;
+            height: 22px;
+            position: relative;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.03);
+        }
+        .dash-price-pos-center {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: rgba(255,255,255,0.15);
+        }
+        .dash-price-pos-bar {
+            position: absolute;
+            top: 2px;
+            bottom: 2px;
+            border-radius: 3px;
+            transition: width 0.7s var(--smooth);
+        }
+        .dash-price-pos-delta {
+            width: 52px;
+            flex-shrink: 0;
+            text-align: right;
+            font-weight: 600;
+            font-size: 11px;
+        }
+        .dash-price-pos-count {
+            width: 30px;
+            flex-shrink: 0;
+            text-align: right;
+            font-size: 10px;
+            color: var(--text-tertiary);
+        }
+
         /* ========== RESPONSIVE ========== */
         @media (max-width: 900px) {
             .dash-grid { grid-template-columns: repeat(2, 1fr); }
@@ -6029,7 +6083,7 @@
                         <div class="dash-kpi-item">
                             <div class="dash-kpi countup" data-target="${t.vehicles}">${t.vehicles.toLocaleString()}</div>
                             <div class="dash-kpi-label">Vehicles</div>
-                            <div class="dash-kpi-sub">${fmtK(t.vehicles)} tracked by VIN</div>
+                            <div class="dash-kpi-sub">across ${states.length} state${states.length !== 1 ? 's' : ''}</div>
                         </div>
                         <div class="dash-kpi-item">
                             <div class="dash-kpi countup" data-target="${t.dealers}">${t.dealers.toLocaleString()}</div>
@@ -6039,12 +6093,12 @@
                         <div class="dash-kpi-item">
                             <div class="dash-kpi">${fmtPrice(t.median_price)}</div>
                             <div class="dash-kpi-label">Median Price</div>
-                            <div class="dash-kpi-sub">avg ${fmtPrice(t.avg_price)}</div>
+                            <div class="dash-kpi-sub">market average</div>
                         </div>
                         <div class="dash-kpi-item">
                             <div class="dash-kpi glow" style="color:#ef4444">${l.hot}</div>
                             <div class="dash-kpi-label">Hot Leads</div>
-                            <div class="dash-kpi-sub" style="color:var(--text-tertiary)">${l.warm}W · ${l.cold}C</div>
+                            <div class="dash-kpi-sub" style="color:var(--text-tertiary)">${t.dealers} dealers scored</div>
                         </div>
                         <div class="dash-kpi-item">
                             <div class="dash-kpi" style="color:var(--accent-cyan)">${t.smyrna_units}</div>
@@ -6081,20 +6135,11 @@
                 const spread = newAvg - usedAvg;
 
                 let priceHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
-                    <div class="dash-card-title">Pricing Intelligence</div>
-                    <div class="dash-price-stats">
-                        <div class="dash-price-stat">
-                            <div class="dash-price-stat-val" style="color:#4f8fff">${fmtPrice(d.totals.median_price)}</div>
-                            <div class="dash-price-stat-label">Median</div>
-                        </div>
-                        <div class="dash-price-stat">
-                            <div class="dash-price-stat-val" style="color:var(--text-primary)">${fmtPrice(d.totals.avg_price)}</div>
-                            <div class="dash-price-stat-label">Average</div>
-                        </div>
-                        <div class="dash-price-stat">
-                            <div class="dash-price-stat-val" style="color:#34d399">${fmtPrice(spread)}</div>
-                            <div class="dash-price-stat-label">New↔Used Spread</div>
-                        </div>
+                    <div class="dash-card-title">Price Distribution</div>
+                    <div style="display:flex;gap:16px;margin-bottom:16px;font-size:11px;color:var(--text-secondary)">
+                        <span>New <b style="color:#4f8fff">${fmtPrice(newAvg)}</b> avg</span>
+                        <span>Used <b style="color:#a855f7">${fmtPrice(usedAvg)}</b> avg</span>
+                        <span>Spread <b style="color:#34d399">${fmtPrice(spread)}</b></span>
                     </div>
                     <div class="dash-price-brackets">
                         ${brKeys.map((k, i) => {
@@ -6146,12 +6191,19 @@
                 });
                 let bodyHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
                     <div class="dash-card-title">Body Type Breakdown</div>
-                    <div class="dash-donut-wrap" style="display:flex;justify-content:center;align-items:center;padding:20px 0">
-                        <svg viewBox="0 0 200 200" style="width:280px;height:280px">
+                    <div class="dash-donut-wrap" style="display:flex;align-items:center;padding:10px 0;gap:0">
+                        <svg viewBox="0 0 200 200" style="width:280px;height:280px;flex-shrink:0">
                             ${donutArcs}
-                            <text class="dash-donut-center" x="${CX}" y="${CY + 4}" text-anchor="middle">${d.by_body_type.length}</text>
-                            <text class="dash-donut-sub" x="${CX}" y="${CY + 18}" text-anchor="middle">TYPES</text>
                         </svg>
+                        <div style="flex:1;min-width:0;display:flex;justify-content:flex-end">
+                            <div>
+                            ${donutData.slice(0, 5).map((b, i) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                                <div style="width:10px;height:10px;border-radius:3px;background:${COLORS[i % COLORS.length]};flex-shrink:0"></div>
+                                <div style="font-size:12px;color:var(--text-secondary);white-space:nowrap;width:130px">${b.body_type}</div>
+                                <div style="font-size:12px;font-weight:600;color:var(--text-primary);width:42px;text-align:right">${b.share}%</div>
+                            </div>`).join('')}
+                            </div>
+                        </div>
                         <div class="dash-donut-tooltip" id="donutTip"></div>
                     </div>
                 </div>`;
@@ -6174,10 +6226,40 @@
                     }).join('')}
                 </div>`;
 
+                // Smyrna price position vs market
+                const spp = d.smyrna_price_position || [];
+                const maxDelta = Math.max(...spp.map(p => Math.abs(p.delta_pct)), 1);
+                let smyrnaPriceHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
+                    <div class="dash-card-title" style="color:#D2691E">Smyrna vs Market Pricing</div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:9px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px">
+                        <span>← Cheaper than market</span>
+                        <span>More expensive →</span>
+                    </div>
+                    ${spp.length ? spp.map(p => {
+                        const isNeg = p.delta_pct <= 0;
+                        const color = isNeg ? '#34d399' : '#ef4444';
+                        const barW = Math.min(Math.abs(p.delta_pct) / maxDelta * 48, 48);
+                        const barStyle = isNeg
+                            ? `right:50%;width:${barW}%;background:${color}`
+                            : `left:50%;width:${barW}%;background:${color}`;
+                        return `<div class="dash-price-pos-row">
+                            <div class="dash-price-pos-label" title="${p.body_type}">${p.body_type}</div>
+                            <div class="dash-price-pos-track">
+                                <div class="dash-price-pos-center"></div>
+                                <div class="dash-price-pos-bar" style="${barStyle};opacity:0.8"></div>
+                            </div>
+                            <div class="dash-price-pos-delta" style="color:${color}">${isNeg ? '' : '+'}${p.delta_pct}%</div>
+                            <div class="dash-price-pos-count">${p.smyrna_count}</div>
+                        </div>`;
+                    }).join('') : '<div style="text-align:center;color:var(--text-tertiary);font-size:12px;padding:20px">No Smyrna pricing data</div>'}
+                    <div style="margin-top:8px;font-size:9px;color:var(--text-tertiary);text-align:right">count = Smyrna units</div>
+                </div>`;
+
                 // Lead score pipeline
                 const totalLeads = l.hot + l.warm + l.cold || 1;
                 let leadHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
                     <div class="dash-card-title">Lead Score Pipeline</div>
+                    <div style="font-size:10px;color:var(--text-tertiary);margin:-8px 0 12px 12px">${t.dealers} dealers scored</div>
                     <div class="dash-lead-bar">
                         <div class="dash-lead-label" style="color:#ef4444">Hot</div>
                         <div class="dash-lead-track">
@@ -6196,21 +6278,7 @@
                             <div class="dash-lead-fill dash-bar" style="width:0%;background:linear-gradient(90deg,#4169e1,#6366f1)" data-w="${(l.cold/totalLeads*100).toFixed(1)}%">${l.cold}</div>
                         </div>
                     </div>
-                    <div style="margin-top:16px;display:flex;justify-content:space-around;text-align:center">
-                        <div>
-                            <div style="font-size:22px;font-weight:700;color:#ef4444">${l.hot}</div>
-                            <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase;margin-top:2px">Hot</div>
-                        </div>
-                        <div>
-                            <div style="font-size:22px;font-weight:700;color:#ff8c00">${l.warm}</div>
-                            <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase;margin-top:2px">Warm</div>
-                        </div>
-                        <div>
-                            <div style="font-size:22px;font-weight:700;color:#4169e1">${l.cold}</div>
-                            <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase;margin-top:2px">Cold</div>
-                        </div>
-                    </div>
-                    <div style="margin-top:12px;font-size:11px;color:var(--text-tertiary);text-align:center">${((l.hot/totalLeads)*100).toFixed(0)}% conversion-ready</div>
+                    <div style="margin-top:16px;font-size:11px;color:var(--text-tertiary);text-align:center">${((l.hot/totalLeads)*100).toFixed(0)}% conversion-ready</div>
                 </div>`;
 
                 // (New vs Used data merged into Pricing Intelligence panel above)
@@ -6218,7 +6286,7 @@
                 // Top 10 Movers (inventory changes — needs 2+ snapshots)
                 const dealers = d.top_dealers.slice(0, 10);
                 let dealersHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
-                    <div class="dash-card-title">Top 10 Movers</div>
+                    <div class="dash-card-title">Top Dealers</div>
                     <div style="max-height:280px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.08) transparent">
                         ${dealers.map((dlr, i) => {
                             const delta = dlr.delta || 0;
@@ -6236,7 +6304,6 @@
                             </div>`;
                         }).join('')}
                     </div>
-                    <div style="margin-top:8px;text-align:center;font-size:10px;color:var(--text-tertiary)">Trend data activates with April scrape</div>
                 </div>`;
 
                 // Smyrna intel
@@ -6266,25 +6333,28 @@
                     </div>` : ''}
                 </div>`;
 
-                // Territory breakdown by state
+                // Territory breakdown by state (or by city when single state filtered)
                 const stList = d.by_state || [];
-                const maxState = stList[0]?.vehicles || 1;
-                const stateColors = ['#4f8fff','#00d4ff','#34d399','#a855f7','#ec4899','#f97316','#fbbf24','#ef4444','#6366f1','#14b8a6','#8b5cf6','#f43f5e'];
+                const cityList = d.by_city || [];
+                const geoColors = ['#4f8fff','#00d4ff','#34d399','#a855f7','#ec4899','#f97316','#fbbf24','#ef4444','#6366f1','#14b8a6','#8b5cf6','#f43f5e'];
+                const useCity = _activeState && cityList.length > 1;
+                const geoData = useCity ? cityList.slice(0, 12) : stList.slice(0, 12);
+                const maxGeo = geoData[0]?.vehicles || 1;
                 let stateHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
-                    <div class="dash-card-title">Territory Breakdown</div>
-                    ${stList.slice(0, 12).map((s, i) => `<div class="dash-hbar-row">
-                        <div class="dash-hbar-label">${s.state}</div>
+                    <div class="dash-card-title">${useCity ? _activeState + ' City Breakdown' : 'Territory Breakdown'}</div>
+                    ${geoData.map((g, i) => `<div class="dash-hbar-row">
+                        <div class="dash-hbar-label">${useCity ? g.city : g.state}</div>
                         <div class="dash-hbar-track">
-                            <div class="dash-hbar-fill dash-bar" style="width:0%;background:${stateColors[i % stateColors.length]};opacity:0.7" data-w="${(s.vehicles/maxState*100).toFixed(1)}%"></div>
-                            <span class="dash-hbar-tooltip">${s.vehicles.toLocaleString()} vehicles</span>
+                            <div class="dash-hbar-fill dash-bar" style="width:0%;background:${geoColors[i % geoColors.length]};opacity:0.7" data-w="${(g.vehicles/maxGeo*100).toFixed(1)}%"></div>
+                            <span class="dash-hbar-tooltip">${g.vehicles.toLocaleString()} vehicles</span>
                         </div>
-                        <div class="dash-hbar-val">${fmtK(s.vehicles)}</div>
+                        <div class="dash-hbar-val">${fmtK(g.vehicles)}</div>
                     </div>`).join('')}
                 </div>`;
 
                 wrap.innerHTML = filtersHTML + '<div class="dash-grid">' +
-                    kpiHTML + brandHTML + priceHTML + bodyHTML + builderHTML +
-                    stateHTML + dealersHTML + smyrnaHTML + leadHTML +
+                    kpiHTML + brandHTML + priceHTML + bodyHTML + smyrnaPriceHTML +
+                    builderHTML + stateHTML + dealersHTML + smyrnaHTML + leadHTML +
                 '</div>';
 
                 // Animate bars and arcs after paint
