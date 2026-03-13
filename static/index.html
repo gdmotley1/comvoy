@@ -2916,7 +2916,7 @@
             height: 18px;
             background: rgba(255,255,255,0.03);
             border-radius: 4px;
-            overflow: hidden;
+            overflow: visible;
             position: relative;
         }
         .dash-hbar-fill {
@@ -2924,10 +2924,23 @@
             border-radius: 4px;
             transition: width 0.7s var(--ease-out-expo);
             position: relative;
+            overflow: hidden;
         }
         .dash-hbar-fill.smyrna {
             background: linear-gradient(90deg, #8B4513, #D2691E) !important;
             box-shadow: 0 0 8px rgba(210,105,30,0.3);
+        }
+        .dash-hbar-row:hover .dash-hbar-fill { opacity: 1 !important; filter: brightness(1.3); }
+        .dash-hbar-row:hover .dash-hbar-tooltip {
+            opacity: 1; transform: translateY(-100%) scale(1);
+        }
+        .dash-hbar-tooltip {
+            position: absolute; right: 4px; top: -2px;
+            background: rgba(0,0,0,0.85); color: #fff; font-size: 10px;
+            padding: 2px 6px; border-radius: 4px; white-space: nowrap;
+            pointer-events: none; opacity: 0; transform: translateY(-100%) scale(0.8);
+            transition: opacity 0.2s, transform 0.2s; z-index: 2;
+            border: 1px solid rgba(79,143,255,0.3);
         }
         .dash-hbar-val {
             width: 50px;
@@ -2935,6 +2948,30 @@
             font-variant-numeric: tabular-nums;
             font-size: 11px;
             flex-shrink: 0;
+        }
+
+        /* Donut hover tooltip */
+        .dash-donut-tooltip {
+            position: absolute; pointer-events: none; opacity: 0;
+            background: rgba(0,0,0,0.9); color: #fff; font-size: 11px;
+            padding: 4px 10px; border-radius: 6px; white-space: nowrap;
+            border: 1px solid rgba(79,143,255,0.3);
+            transform: translate(-50%, -120%); transition: opacity 0.15s;
+            z-index: 10;
+        }
+        .dash-donut-wrap { position: relative; }
+        .dash-donut-legend {
+            display: flex; flex-wrap: wrap; gap: 2px 0; margin-top: 6px;
+        }
+        .dash-donut-legend-item {
+            display: inline-flex; align-items: center; gap: 4px;
+            margin-right: 10px; font-size: 10px; color: var(--text-secondary);
+            cursor: default; padding: 1px 4px; border-radius: 3px;
+            transition: background 0.15s;
+        }
+        .dash-donut-legend-item:hover { background: rgba(255,255,255,0.06); }
+        .dash-donut-legend-item .dot {
+            width: 7px; height: 7px; border-radius: 2px; flex-shrink: 0;
         }
 
         /* Top dealers table */
@@ -5967,6 +6004,7 @@
                         <div class="dash-hbar-label">${b.brand}</div>
                         <div class="dash-hbar-track">
                             <div class="dash-hbar-fill dash-bar" style="width:0%;background:${COLORS[i % COLORS.length]};opacity:0.7" data-w="${(b.count/maxBrand*100).toFixed(1)}%"></div>
+                            <span class="dash-hbar-tooltip">${b.count.toLocaleString()} vehicles</span>
                         </div>
                         <div class="dash-hbar-val">${b.share}%</div>
                     </div>`).join('')}
@@ -6005,23 +6043,26 @@
                     const pct = b.count / d.totals.vehicles;
                     const arcLen = pct * C;
                     const color = COLORS[i % COLORS.length];
-                    donutArcs += `<circle class="dash-arc" cx="${CX}" cy="${CY}" r="${R}" fill="none"
+                    donutArcs += `<circle class="dash-arc dash-arc-hover" cx="${CX}" cy="${CY}" r="${R}" fill="none"
                         stroke="${color}" stroke-width="20" opacity="0.75"
                         stroke-dasharray="${arcLen} ${C - arcLen}"
                         stroke-dashoffset="${C}" data-offset="${-donutOffset}"
-                        transform="rotate(-90 ${CX} ${CY})"/>`;
-                    donutLegend.push(`<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 8px 2px 0;font-size:10px;color:var(--text-secondary)"><span style="width:8px;height:8px;border-radius:2px;background:${color};display:inline-block"></span>${b.body_type} ${b.share}%</span>`);
+                        data-type="${b.body_type}" data-count="${b.count}" data-share="${b.share}"
+                        transform="rotate(-90 ${CX} ${CY})"
+                        style="cursor:pointer"/>`;
+                    donutLegend.push(`<span class="dash-donut-legend-item"><span class="dot" style="background:${color}"></span>${b.body_type} ${b.share}%</span>`);
                     donutOffset += arcLen;
                 });
                 let bodyHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
                     <div class="dash-card-title">Body Type Breakdown</div>
-                    <div style="display:flex;align-items:center;gap:20px">
-                        <svg viewBox="0 0 200 200" style="width:160px;height:160px;flex-shrink:0">
+                    <div class="dash-donut-wrap" style="display:flex;flex-direction:column;align-items:center">
+                        <svg viewBox="0 0 200 200" style="width:140px;height:140px">
                             ${donutArcs}
                             <text class="dash-donut-center" x="${CX}" y="${CY + 4}" text-anchor="middle">${d.by_body_type.length}</text>
                             <text class="dash-donut-sub" x="${CX}" y="${CY + 18}" text-anchor="middle">TYPES</text>
                         </svg>
-                        <div style="line-height:1.6">${donutLegend.join('')}</div>
+                        <div class="dash-donut-tooltip" id="donutTip"></div>
+                        <div class="dash-donut-legend">${donutLegend.join('')}</div>
                     </div>
                 </div>`;
 
@@ -6036,6 +6077,7 @@
                             <div class="dash-hbar-label" ${isSmyrna ? 'style="color:#D2691E;font-weight:600"' : ''}>${b.builder}</div>
                             <div class="dash-hbar-track">
                                 <div class="dash-hbar-fill dash-bar ${isSmyrna ? 'smyrna' : ''}" style="width:0%;${isSmyrna ? '' : 'background:' + COLORS[(i+3) % COLORS.length] + ';opacity:0.7'}" data-w="${(b.count/maxBuilder*100).toFixed(1)}%"></div>
+                                <span class="dash-hbar-tooltip">${b.count.toLocaleString()} vehicles · ${b.share}%</span>
                             </div>
                             <div class="dash-hbar-val">${fmtK(b.count)}</div>
                         </div>`;
@@ -6169,6 +6211,8 @@
 
                 // 3D hover on cards
                 setup3DHover(wrap);
+                // Donut arc hover tooltips
+                setupDonutHover();
             }
 
             function setup3DHover(container) {
@@ -6201,6 +6245,36 @@
                 wrap.innerHTML = buildLoadingHTML();
                 await loadData(state || undefined);
                 render();
+            }
+
+            function setupDonutHover() {
+                const wrap = document.querySelector('.dash-donut-wrap');
+                if (!wrap) return;
+                const tip = document.getElementById('donutTip');
+                wrap.addEventListener('mouseover', (e) => {
+                    const arc = e.target.closest('.dash-arc-hover');
+                    if (!arc || !tip) return;
+                    arc.setAttribute('stroke-width', '24');
+                    arc.setAttribute('opacity', '1');
+                    const type = arc.dataset.type;
+                    const count = Number(arc.dataset.count).toLocaleString();
+                    const share = arc.dataset.share;
+                    tip.textContent = `${type}: ${count} vehicles (${share}%)`;
+                    tip.style.opacity = '1';
+                });
+                wrap.addEventListener('mousemove', (e) => {
+                    if (!tip || tip.style.opacity === '0') return;
+                    const rect = wrap.getBoundingClientRect();
+                    tip.style.left = (e.clientX - rect.left) + 'px';
+                    tip.style.top = (e.clientY - rect.top) + 'px';
+                });
+                wrap.addEventListener('mouseout', (e) => {
+                    const arc = e.target.closest('.dash-arc-hover');
+                    if (!arc) return;
+                    arc.setAttribute('stroke-width', '20');
+                    arc.setAttribute('opacity', '0.75');
+                    if (tip) tip.style.opacity = '0';
+                });
             }
 
             return { open, filterState };
