@@ -6129,7 +6129,7 @@
                     const arcLen = pct * C;
                     const color = COLORS[i % COLORS.length];
                     donutArcs += `<circle class="dash-arc dash-arc-hover" cx="${CX}" cy="${CY}" r="${R}" fill="none"
-                        stroke="${color}" stroke-width="20" opacity="0.75"
+                        stroke="${color}" stroke-width="28" opacity="0.75"
                         stroke-dasharray="${arcLen} ${C - arcLen}"
                         stroke-dashoffset="${C}" data-offset="${-donutOffset}"
                         data-type="${b.body_type}" data-count="${b.count}" data-share="${b.share}"
@@ -6139,15 +6139,14 @@
                 });
                 let bodyHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
                     <div class="dash-card-title">Body Type Breakdown</div>
-                    <div class="dash-donut-wrap" style="display:flex;justify-content:center;align-items:center;padding:16px 0">
-                        <svg viewBox="0 0 200 200" style="width:220px;height:220px">
+                    <div class="dash-donut-wrap" style="display:flex;justify-content:center;align-items:center;padding:20px 0">
+                        <svg viewBox="0 0 200 200" style="width:280px;height:280px">
                             ${donutArcs}
                             <text class="dash-donut-center" x="${CX}" y="${CY + 4}" text-anchor="middle">${d.by_body_type.length}</text>
                             <text class="dash-donut-sub" x="${CX}" y="${CY + 18}" text-anchor="middle">TYPES</text>
                         </svg>
                         <div class="dash-donut-tooltip" id="donutTip"></div>
                     </div>
-                    <div style="text-align:center;font-size:10px;color:var(--text-tertiary);margin-top:4px">Hover segments for details</div>
                 </div>`;
 
                 // Builder market share
