@@ -3086,15 +3086,19 @@
             display: flex;
             align-items: center;
             gap: 20px;
+            flex: 1;
         }
         .dash-smyrna-list {
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
         .dash-smyrna-item {
             display: flex;
             justify-content: space-between;
-            padding: 4px 0;
-            font-size: 11px;
+            padding: 7px 0;
+            font-size: 13px;
             color: var(--text-secondary);
             border-bottom: 1px solid rgba(255,255,255,0.03);
         }
@@ -6316,7 +6320,7 @@
                 const sm = d.smyrna_intel;
                 const gaugeR = 50, gaugeCX = 60, gaugeCY = 60, gaugeC = Math.PI * gaugeR;
                 const gaugeFill = (sm.penetration_pct / 100) * gaugeC;
-                let smyrnaHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
+                let smyrnaHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s;display:flex;flex-direction:column">
                     <div class="dash-card-title" style="color:#D2691E">Smyrna Intelligence</div>
                     <div class="dash-gauge-wrap">
                         <svg viewBox="0 0 120 75" style="width:150px;flex-shrink:0">
@@ -6334,8 +6338,8 @@
                             </div>`).join('')}
                         </div>
                     </div>
-                    ${sm.body_type_mix?.length ? `<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:4px">
-                        ${sm.body_type_mix.slice(0,6).map(bt => `<span style="font-size:10px;padding:3px 8px;border-radius:10px;background:rgba(210,105,30,0.1);border:1px solid rgba(210,105,30,0.2);color:#D2691E">${bt.type} (${bt.count})</span>`).join('')}
+                    ${sm.body_type_mix?.length ? `<div style="margin-top:auto;padding-top:12px;display:flex;flex-wrap:wrap;gap:6px">
+                        ${sm.body_type_mix.slice(0,6).map(bt => `<span style="font-size:11px;padding:4px 10px;border-radius:10px;background:rgba(210,105,30,0.1);border:1px solid rgba(210,105,30,0.2);color:#D2691E">${bt.type} (${bt.count})</span>`).join('')}
                     </div>` : ''}
                 </div>`;
 
