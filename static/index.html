@@ -309,7 +309,7 @@
 
         .welcome-title {
             font-size: 36px;
-            font-weight: 500;
+            font-weight: 600;
             letter-spacing: -0.5px;
             color: var(--text-primary);
             margin-bottom: 10px;
@@ -317,8 +317,8 @@
         }
 
         .welcome-sub {
-            font-size: 15px;
-            color: rgba(255,255,255,0.35);
+            font-size: 16px;
+            color: rgba(255,255,255,0.45);
             margin-bottom: 32px;
             text-align: center;
             font-weight: 400;
@@ -412,8 +412,8 @@
             stroke-linejoin: round;
         }
         .hero-card-title {
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 17px;
+            font-weight: 700;
             color: var(--text-primary);
             letter-spacing: -0.3px;
         }
@@ -517,8 +517,8 @@
         }
 
         .action-card-title {
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 15px;
+            font-weight: 700;
             color: var(--text-primary);
             line-height: 1.3;
         }
@@ -679,8 +679,44 @@
         .chat-greeting-eye {
             position: relative;
             width: 120px; height: 120px;
-            animation: heroFloat 5s ease-in-out infinite;
+            animation: greetEyeEntrance 0.8s cubic-bezier(0.16,1,0.3,1) forwards, heroFloat 5s ease-in-out 0.8s infinite;
             overflow: visible;
+            cursor: pointer;
+        }
+        @keyframes greetEyeEntrance {
+            from { opacity: 0; transform: translateY(30px) scale(0.85); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        /* Click shake — Otto gets "shaken up" */
+        .chat-greeting-eye.otto-shaken {
+            animation: ottoShake 0.6s ease-out forwards;
+        }
+        .chat-greeting-eye.otto-shaken .otto-eye {
+            filter:
+                drop-shadow(0 0 20px rgba(255,100,50,0.6))
+                drop-shadow(0 0 50px rgba(255,60,120,0.4))
+                drop-shadow(0 0 90px rgba(168,85,247,0.3));
+        }
+        .chat-greeting-eye.otto-shaken .orb-ring {
+            border-color: rgba(255,100,50,0.35) !important;
+            box-shadow: 0 0 20px rgba(255,100,50,0.15) !important;
+        }
+        @keyframes ottoShake {
+            0%   { transform: translateX(0); }
+            10%  { transform: translateX(-6px) rotate(-3deg); }
+            20%  { transform: translateX(5px) rotate(2deg); }
+            30%  { transform: translateX(-4px) rotate(-2deg); }
+            40%  { transform: translateX(3px) rotate(1deg); }
+            50%  { transform: translateX(-2px) rotate(-0.5deg); }
+            60%  { transform: translateX(1px); }
+            100% { transform: translateX(0); }
+        }
+        /* Color recovery transition */
+        .chat-greeting-eye.otto-recovering .otto-eye {
+            transition: filter 0.8s ease;
+        }
+        .chat-greeting-eye.otto-recovering .orb-ring {
+            transition: border-color 0.8s ease, box-shadow 0.8s ease;
         }
         .chat-greeting-eye::before {
             content: '';
@@ -710,7 +746,7 @@
         .chat-greeting-eye .orb-ring:nth-child(3) { inset: -50px; border-color: rgba(0,212,255,0.08); animation-delay: -2.6s; }
         .chat-greeting-text {
             font-size: 26px;
-            font-weight: 300;
+            font-weight: 400;
             color: rgba(255,255,255,0.8);
             line-height: 1.3;
             letter-spacing: -0.3px;
@@ -736,7 +772,7 @@
             color: rgba(255,255,255,0.55);
             padding: 8px 14px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 13px;
             cursor: pointer;
             transition: all 0.2s;
             white-space: nowrap;
@@ -1474,7 +1510,7 @@
             align-items: center;
         }
         body.map-view .map-legend { display: flex; }
-        .map-legend-title { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.06em; flex-shrink: 0; }
+        .map-legend-title { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.06em; flex-shrink: 0; }
         .map-legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: rgba(255,255,255,0.6); white-space: nowrap; }
         .map-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
@@ -1498,7 +1534,7 @@
         }
         .map-legend:hover .scoring-key { opacity: 1; pointer-events: auto; transform: translateY(0); }
         .scoring-key-title {
-            font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.6);
+            font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.7);
             text-transform: uppercase; letter-spacing: 0.08em;
             margin-bottom: 6px; padding-bottom: 6px;
             border-bottom: 1px solid rgba(255,255,255,0.06);
@@ -1519,7 +1555,7 @@
             border-top: 1px solid rgba(255,255,255,0.06);
         }
         .scoring-key-section-title {
-            font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.45);
+            font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.55);
             text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px;
         }
         .sk-factor {
@@ -1903,7 +1939,7 @@
         }
         .otto-popup-header-eye { width: 28px; height: 28px; flex-shrink: 0; }
         .otto-popup-header-eye svg { width: 100%; height: 100%; filter: drop-shadow(0 0 6px rgba(79,143,255,0.4)); }
-        .otto-popup-header-title { font-size: 14px; font-weight: 600; color: var(--text-primary); flex: 1; }
+        .otto-popup-header-title { font-size: 15px; font-weight: 700; color: var(--text-primary); flex: 1; }
         .otto-popup-close {
             width: 28px; height: 28px;
             border-radius: 8px;
@@ -2054,7 +2090,7 @@
         }
         .route-panel-icon { width: 14px; height: 14px; color: var(--accent-blue); flex-shrink: 0; opacity: 0.7; }
         .route-panel-title {
-            font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.6);
+            font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.7);
         }
         .route-panel-chevron {
             width: 10px; height: 10px; color: rgba(255,255,255,0.45); flex-shrink: 0;
@@ -2306,9 +2342,9 @@
         }
         .tc-nearby-summary.visible { display: block; }
         .tc-nearby-title {
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text-tertiary);
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 10px;
@@ -2476,8 +2512,8 @@
         }
 
         .tm-title {
-            font-size: 24px;
-            font-weight: 600;
+            font-size: 26px;
+            font-weight: 700;
             color: var(--text-primary);
         }
 
@@ -2942,11 +2978,11 @@
         .dash-card.span-4 { grid-column: span 4; }
 
         .dash-card-title {
-            font-size: 11px;
-            font-weight: 600;
+            font-size: 13px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-tertiary);
+            letter-spacing: 0.8px;
+            color: var(--text-secondary);
             margin-bottom: 18px;
             display: flex;
             align-items: center;
@@ -2982,9 +3018,9 @@
             line-height: 1;
         }
         .dash-kpi-label {
-            font-size: 11px;
-            font-weight: 500;
-            color: var(--text-tertiary);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-top: 8px;
@@ -3406,7 +3442,7 @@
             .action-cards { grid-template-columns: 1fr; }
             .action-card:last-child:nth-child(odd) { max-width: none; }
             .orb-hero { width: 100px; height: 100px; }
-            .welcome-title { font-size: 22px; }
+            .welcome-title { font-size: 26px; font-weight: 600; }
             .msg-bubble { max-width: 90%; }
             .topbar-center { display: none; }
             .tm-header { flex-direction: column; gap: 12px; align-items: flex-start; }
@@ -3416,7 +3452,7 @@
             .hero-cards { grid-template-columns: 1fr; }
             .dashboard-wrap { padding: 12px; }
             /* Mobile topbar */
-            .wordmark-text { font-size: 22px; }
+            .wordmark-text { font-size: 24px; }
             .wordmark-sub { display: none; }
             .usage-badge { display: none !important; }
             .topbar { padding: 10px 12px; gap: 6px; }
@@ -3429,16 +3465,16 @@
             /* Mobile dashboard KPIs */
             .dash-kpi-row { gap: 8px; }
             .dash-kpi-item { min-width: calc(50% - 4px); }
-            .dash-kpi { font-size: 20px; letter-spacing: -0.5px; }
-            .dash-kpi-label { font-size: 9px; }
+            .dash-kpi { font-size: 26px; letter-spacing: -0.5px; }
+            .dash-kpi-label { font-size: 11px; font-weight: 600; }
             /* Mobile chat padding */
             .chat-scroll { padding: 0 12px 60px; }
             body.chatting .chat-scroll { padding-top: 60px; }
             /* Mobile greeting */
             .chat-greeting { padding: 0 16px; gap: 14px; }
-            .chat-greeting-text { font-size: 22px; }
+            .chat-greeting-text { font-size: 24px; font-weight: 400; }
             .chat-greeting-eye { width: 90px; height: 90px; }
-            .chat-suggestion { font-size: 11px; padding: 7px 10px; }
+            .chat-suggestion { font-size: 13px; padding: 8px 12px; }
             .chat-suggestions { flex-wrap: wrap; }
         }
         @media (max-width: 380px) {
@@ -3821,6 +3857,12 @@
                 return `<svg class="otto-eye" viewBox="0 0 60 60"><defs><radialGradient id="ig${id}" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"><animate attributeName="stop-color" values="#4f8fff;#00d4ff;#a855f7;#4f8fff" dur="6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#1a1a3e"/></radialGradient><radialGradient id="pg${id}" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient></defs><circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="url(#ig${id})" stroke-width="1.5" opacity="0.8"/><circle cx="30" cy="30" r="20" fill="url(#ig${id})" opacity="0.15"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="360 30 30" dur="12s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="14" fill="none" stroke="url(#ig${id})" stroke-width="2" opacity="0.4"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="-360 30 30" dur="8s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="8" fill="url(#ig${id})" opacity="0.6"><animate attributeName="r" values="8;9;8" dur="3s" repeatCount="indefinite"/></circle><circle class="otto-pupil" cx="30" cy="30" r="5" fill="#0a0e1a"/><circle cx="30" cy="30" r="3" fill="url(#pg${id})" opacity="0.8"><animate attributeName="opacity" values="0.8;0.4;0.8" dur="2.5s" repeatCount="indefinite"/></circle><circle cx="24" cy="25" r="2" fill="white" opacity="0.3"/></svg>`;
             }
 
+            /* Full-detail Otto eye matching the home page orb — with specular highlights for tracking */
+            function ottoEyeSvgFull() {
+                const id = _uid();
+                return `<svg class="otto-eye" viewBox="0 0 60 60"><defs><radialGradient id="ig${id}" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"><animate attributeName="stop-color" values="#4f8fff;#00d4ff;#a855f7;#4f8fff" dur="6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#1a1a3e"/></radialGradient><radialGradient id="pg${id}" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient></defs><circle cx="30" cy="30" r="29" fill="none" stroke="url(#ig${id})" stroke-width="0.5" opacity="0.3"><animate attributeName="opacity" values="0.3;0.5;0.3" dur="3s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="url(#ig${id})" stroke-width="2" opacity="0.9"/><circle cx="30" cy="30" r="27" fill="url(#ig${id})" opacity="0.06"/><circle cx="30" cy="30" r="22" fill="url(#ig${id})" opacity="0.18"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="360 30 30" dur="12s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="16" fill="none" stroke="url(#ig${id})" stroke-width="2.5" opacity="0.45"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="-360 30 30" dur="8s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="10" fill="url(#ig${id})" opacity="0.6"><animate attributeName="r" values="10;12.5;10" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0.85;0.6" dur="3s" repeatCount="indefinite"/></circle><circle class="otto-pupil" cx="30" cy="30" r="6" fill="#060810"/><circle class="pupil-glow" cx="30" cy="30" r="4" fill="url(#pg${id})" opacity="0.8"><animate attributeName="opacity" values="0.8;0.35;0.8" dur="2.5s" repeatCount="indefinite"/><animate attributeName="r" values="4;5;4" dur="2.5s" repeatCount="indefinite"/></circle><circle class="specular-1" cx="23" cy="23" r="3" fill="white" opacity="0.25"/><circle class="specular-2" cx="25" cy="25" r="1.5" fill="white" opacity="0.45"/></svg>`;
+            }
+
             function loadScript(src) {
                 return new Promise((resolve, reject) => {
                     if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
@@ -3885,7 +3927,7 @@
                 }
             }
 
-            return { API_BASE, $, fetchT, streamChat, esc, fmt, tierColor, ottoEyeSvg, loadScript, friendlyOpp };
+            return { API_BASE, $, fetchT, streamChat, esc, fmt, tierColor, ottoEyeSvg, ottoEyeSvgFull, loadScript, friendlyOpp };
         })();
 
         // =====================================================================
@@ -4028,7 +4070,7 @@
         // MODULE 2: Chat — main chat interface
         // =====================================================================
         const Chat = (function() {
-            const { API_BASE, $, fetchT, esc, fmt, ottoEyeSvg } = Core;
+            const { API_BASE, $, fetchT, esc, fmt, ottoEyeSvg, ottoEyeSvgFull } = Core;
             const scroll = $('chatScroll');
             const input = $('input');
             const sendBtn = $('sendBtn');
@@ -4332,7 +4374,7 @@
                 const chips = picks.map(s =>
                     `<button class="chat-suggestion" onclick="window._askSuggestion(this.textContent)">${esc(s)}</button>`
                 ).join('');
-                const eye = ottoEyeSvg();
+                const eye = ottoEyeSvgFull();
                 return `<div class="chat-greeting">
                     <div class="chat-greeting-eye">
                         <div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
@@ -4344,6 +4386,83 @@
                 </div>`;
             }
 
+            let _greetEyeCleanup = null;
+            function _initGreetingEye() {
+                if (_greetEyeCleanup) _greetEyeCleanup();
+                const container = document.querySelector('.chat-greeting-eye');
+                if (!container) return;
+                const eye = container.querySelector('.otto-eye');
+                if (!eye) return;
+
+                /* ---- Mouse/touch tracking (matches home page) ---- */
+                let _magX = 0, _magY = 0, _curMagX = 0, _curMagY = 0, _rafId = null;
+                const onMove = e => {
+                    if (!document.contains(container)) return;
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    const rect = container.getBoundingClientRect();
+                    const cx = rect.left + rect.width / 2;
+                    const cy = rect.top + rect.height / 2;
+                    const dx = clientX - cx, dy = clientY - cy;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx);
+                    const pupilR = Math.min(dist / 8, 4);
+                    const px = 30 + Math.cos(angle) * pupilR;
+                    const py = 30 + Math.sin(angle) * pupilR;
+                    const pupil = eye.querySelector('.otto-pupil');
+                    const glow = eye.querySelector('.pupil-glow');
+                    const spec1 = eye.querySelector('.specular-1');
+                    const spec2 = eye.querySelector('.specular-2');
+                    if (pupil) { pupil.setAttribute('cx', px); pupil.setAttribute('cy', py); }
+                    if (glow) { glow.setAttribute('cx', px); glow.setAttribute('cy', py); }
+                    if (spec1) { spec1.setAttribute('cx', px - 5); spec1.setAttribute('cy', py - 5); }
+                    if (spec2) { spec2.setAttribute('cx', px - 3.5); spec2.setAttribute('cy', py - 3.5); }
+                    const magnetRange = 300;
+                    if (dist < magnetRange) {
+                        const strength = (1 - dist / magnetRange) * 8;
+                        _magX = Math.cos(angle) * strength;
+                        _magY = Math.sin(angle) * strength;
+                    } else { _magX = 0; _magY = 0; }
+                };
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('touchmove', onMove, { passive: true });
+
+                function magLoop() {
+                    if (!document.contains(container)) { _rafId = null; return; }
+                    _curMagX += (_magX - _curMagX) * 0.08;
+                    _curMagY += (_magY - _curMagY) * 0.08;
+                    if (Math.abs(_curMagX) > 0.1 || Math.abs(_curMagY) > 0.1) {
+                        container.style.translate = `${_curMagX}px ${_curMagY}px`;
+                    } else { container.style.translate = ''; }
+                    _rafId = requestAnimationFrame(magLoop);
+                }
+                _rafId = requestAnimationFrame(magLoop);
+
+                /* ---- Click shake interaction ---- */
+                const onClick = () => {
+                    container.classList.remove('otto-recovering');
+                    container.classList.add('otto-shaken');
+                    container.addEventListener('animationend', function onEnd() {
+                        container.removeEventListener('animationend', onEnd);
+                        container.classList.remove('otto-shaken');
+                        container.classList.add('otto-recovering');
+                        // Re-apply floating after shake
+                        container.style.animation = '';
+                        setTimeout(() => container.classList.remove('otto-recovering'), 800);
+                    });
+                };
+                container.addEventListener('click', onClick);
+
+                _greetEyeCleanup = () => {
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('touchmove', onMove);
+                    container.removeEventListener('click', onClick);
+                    if (_rafId) cancelAnimationFrame(_rafId);
+                    _rafId = null;
+                    _greetEyeCleanup = null;
+                };
+            }
+
             function _showGreetingChat() {
                 document.body.classList.remove('map-view', 'dashboard', 'trip-manager');
                 document.body.classList.add('chatting', 'greeting-mode');
@@ -4353,7 +4472,7 @@
                 const slot = document.getElementById('greetingInput');
                 const bar = document.querySelector('.input-bar');
                 if (slot && bar) slot.appendChild(bar);
-                setTimeout(() => input?.focus(), 100);
+                setTimeout(() => { input?.focus(); _initGreetingEye(); }, 50);
             }
 
             function openChat() {
