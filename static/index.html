@@ -655,6 +655,69 @@
 
         .api-notice-text strong { color: var(--text-primary); font-weight: 600; }
 
+        /* ========== CHAT GREETING ========== */
+        .chat-greeting {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0 24px;
+            max-width: 600px;
+            margin: 0 auto;
+            height: 100%;
+            gap: 20px;
+            animation: greetFadeIn 0.6s ease;
+        }
+        @keyframes greetFadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .chat-greeting-eye {
+            width: 48px;
+            height: 48px;
+        }
+        .chat-greeting-eye .otto-eye { width: 48px; height: 48px; }
+        .chat-greeting-text {
+            font-size: 32px;
+            font-weight: 300;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.3;
+            letter-spacing: -0.5px;
+        }
+        .chat-greeting-input {
+            width: 100%;
+            max-width: 520px;
+            margin-top: 4px;
+        }
+        .chat-greeting-input .input-bar {
+            max-width: 100%;
+        }
+        .chat-suggestions {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        .chat-suggestion {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.12);
+            color: rgba(255,255,255,0.55);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .chat-suggestion:hover {
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.85);
+            border-color: rgba(255,255,255,0.25);
+        }
+        /* Hide bottom input bar when greeting is visible */
+        body.greeting-mode .input-area { display: none; }
+
         /* ========== CHAT MESSAGES ========== */
         .messages {
             max-width: 720px;
@@ -3340,6 +3403,13 @@
             /* Mobile chat padding */
             .chat-scroll { padding: 0 12px 60px; }
             body.chatting .chat-scroll { padding-top: 60px; }
+            /* Mobile greeting */
+            .chat-greeting { padding: 0 16px; gap: 16px; }
+            .chat-greeting-text { font-size: 24px; }
+            .chat-greeting-eye { width: 40px; height: 40px; }
+            .chat-greeting-eye .otto-eye { width: 40px; height: 40px; }
+            .chat-suggestion { font-size: 11px; padding: 7px 10px; }
+            .chat-suggestions { flex-wrap: wrap; }
         }
         @media (max-width: 380px) {
             .btn-ghost, .btn-map, .btn-dash, .btn-trips { font-size: 10px; padding: 10px 8px; }
@@ -4033,6 +4103,15 @@
                 if (!messagesDiv) {
                     const w = $('welcome');
                     if (w) w.remove();
+                    const g = scroll.querySelector('.chat-greeting');
+                    if (g) {
+                        // Move input bar back to its original home
+                        const bar = g.querySelector('.input-bar');
+                        const inputArea = document.querySelector('.input-area');
+                        if (bar && inputArea) inputArea.appendChild(bar);
+                        g.remove();
+                    }
+                    document.body.classList.remove('greeting-mode');
                     document.body.classList.add('chatting');
                     messagesDiv = document.createElement('div');
                     messagesDiv.className = 'messages';
@@ -4187,26 +4266,57 @@
 </div>`;
             }
 
-            function openChat() {
+            const _suggestions = [
+                "Who are my hottest leads?",
+                "Penske dealers in Georgia",
+                "Market price for ambulances",
+                "Plan a trip through Tennessee",
+                "Inventory vs competitors",
+                "Dealers gaining vehicles"
+            ];
+
+            function _buildGreeting() {
+                const h = new Date().getHours();
+                const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+                const picks = [..._suggestions].sort(() => Math.random() - 0.5).slice(0, 3);
+                const chips = picks.map(s =>
+                    `<button class="chat-suggestion" onclick="window._askSuggestion(this.textContent)">${esc(s)}</button>`
+                ).join('');
+                const eye = ottoEyeSvg();
+                // Move the real input bar into the greeting
+                const inputArea = document.querySelector('.input-area');
+                return `<div class="chat-greeting">
+                    <div class="chat-greeting-eye">${eye}</div>
+                    <div class="chat-greeting-text">${greet}</div>
+                    <div class="chat-greeting-input" id="greetingInput"></div>
+                    <div class="chat-suggestions">${chips}</div>
+                </div>`;
+            }
+
+            function _showGreetingChat() {
                 document.body.classList.remove('map-view', 'dashboard', 'trip-manager');
-                ensureMessages();
+                document.body.classList.add('chatting', 'greeting-mode');
+                messagesDiv = null;
+                scroll.innerHTML = _buildGreeting();
+                // Move the actual input bar into the greeting center
+                const slot = document.getElementById('greetingInput');
+                const bar = document.querySelector('.input-bar');
+                if (slot && bar) slot.appendChild(bar);
                 setTimeout(() => input?.focus(), 100);
-                scrollDown();
+            }
+
+            function openChat() {
+                _showGreetingChat();
             }
 
             async function clearChat() {
                 try { await fetchT(API_BASE + '/api/chat/' + sid, { method: 'DELETE' }); } catch(_) {}
-                messagesDiv = null;
                 _chatHistory = [];
                 sessionTokens = 0; sessionCost = 0;
                 const ub = $('usageBadge'); if (ub) { ub.textContent = ''; ub.classList.remove('warn'); }
-                scroll.innerHTML = '';
-                document.body.classList.remove('chatting', 'trip-manager', 'map-view', 'dashboard');
-                ensureMessages();
-                document.body.classList.add('chatting');
                 _repsLoaded = false;
+                _showGreetingChat();
                 checkApiStatus();
-                setTimeout(() => input?.focus(), 100);
             }
 
             function toggleDropdown() {
@@ -6793,6 +6903,7 @@
         window.openTripManager = () => TripManager.open();
         window.clearChat = () => Chat.clearChat();
         window.openChat = () => Chat.openChat();
+        window._askSuggestion = (text) => { Chat.ensureMessages(); Chat.ask(text); };
         window.ask = (t) => Chat.ask(t);
         window.send = () => Chat.send();
         window.onKey = (e) => Chat.onKey(e);
