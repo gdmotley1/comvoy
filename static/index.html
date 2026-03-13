@@ -6247,23 +6247,27 @@
                         <text x="${mX + 5}" y="${padT + 14}" fill="#D2691E" font-size="10" font-family="inherit" font-weight="700">${markerLabel}</text>` : ''}
                         <line x1="${padL}" y1="${svgH - padB}" x2="${svgW - padR}" y2="${svgH - padB}" stroke="rgba(255,255,255,0.1)"/>
                         ${xLabels.map((lbl, i) => `<text x="${toX(xLabelVals[i])}" y="${svgH - 6}" text-anchor="middle" fill="var(--text-tertiary)" font-size="10" font-family="inherit">${lbl}</text>`).join('')}
+                        <text x="8" y="${padT + 8}" fill="var(--text-tertiary)" font-size="8" font-family="inherit" text-anchor="start" letter-spacing="0.5">VEHICLES ↑</text>
+                        <text x="${svgW / 2}" y="${svgH + 6}" fill="var(--text-tertiary)" font-size="8" font-family="inherit" text-anchor="middle" letter-spacing="0.5">PRICE →</text>
                     </svg>`;
                 }
 
                 let priceHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s;display:flex;flex-direction:column">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-                        <div class="dash-card-title" style="margin-bottom:0">Price Distribution</div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+                        <div>
+                            <div class="dash-card-title" style="margin-bottom:0">Market Price Distribution</div>
+                            <div style="font-size:9px;color:var(--text-tertiary);margin-top:2px">How many vehicles are listed at each price point across the market</div>
+                        </div>
                         <select class="dash-filter-select" id="priceBtSelect" style="width:auto;min-width:120px;padding:4px 8px;font-size:10px">
                             <option value="all">All Body Types</option>
                             ${priceBtKeys.map(bt => `<option value="${bt}">${bt}</option>`).join('')}
                         </select>
                     </div>
                     <div id="priceSubtitle" style="display:flex;gap:16px;margin-bottom:8px;font-size:11px;color:var(--text-secondary)">
-                        <span><b style="color:#00d4ff">${fmtPrice(t.avg_price)}</b> avg · ${fmtK(totalPriced)} vehicles</span>
-                        <span>Spread <b style="color:#34d399">${fmtPrice(spread)}</b></span>
+                        <span><b style="color:#00d4ff">${fmtPrice(t.avg_price)}</b> avg across ${fmtK(totalPriced)} vehicles</span>
                     </div>
                     <div class="dash-price-curve-wrap" id="priceCurveWrap" style="flex:1;position:relative">
-                        ${renderPriceCurve(brVals, smyrnaAvgPrice, 'Smyrna ' + fmtPrice(smyrnaAvgPrice))}
+                        ${renderPriceCurve(brVals, smyrnaAvgPrice, 'Our avg ' + fmtPrice(smyrnaAvgPrice))}
                         <div class="dash-price-crosshair" id="priceCrosshair" style="height:${svgH - padB}px">
                             <div class="dash-price-crosshair-tip" id="priceCrosshairTip"></div>
                             <div class="dash-price-crosshair-dot" id="priceCrosshairDot"></div>
@@ -6574,18 +6578,16 @@
                 sel.addEventListener('change', () => {
                     const s = _priceCurveState;
                     const val = sel.value;
+                    const crosshairHTML = '<div class="dash-price-crosshair" id="priceCrosshair"><div class="dash-price-crosshair-tip" id="priceCrosshairTip"></div><div class="dash-price-crosshair-dot" id="priceCrosshairDot"></div></div>';
                     if (val === 'all') {
-                        curveWrap.innerHTML = s.renderPriceCurve(s.brVals, s.smyrnaAvgPrice, 'Smyrna ' + fmtPrice(s.smyrnaAvgPrice)) +
-                            '<div class="dash-price-crosshair" id="priceCrosshair"><div class="dash-price-crosshair-tip" id="priceCrosshairTip"></div><div class="dash-price-crosshair-dot" id="priceCrosshairDot"></div></div>';
-                        subtitle.innerHTML = `<span><b style="color:#00d4ff">${fmtPrice(s.avgPrice)}</b> avg · ${fmtK(s.totalPriced)} vehicles</span>` +
-                            `<span>Spread <b style="color:#34d399">${fmtPrice(s.spread)}</b></span>`;
+                        curveWrap.innerHTML = s.renderPriceCurve(s.brVals, s.smyrnaAvgPrice, 'Our avg ' + fmtPrice(s.smyrnaAvgPrice)) + crosshairHTML;
+                        subtitle.innerHTML = `<span><b style="color:#00d4ff">${fmtPrice(s.avgPrice)}</b> avg across ${fmtK(s.totalPriced)} vehicles</span>`;
                     } else {
                         const btd = s.priceBtData[val];
                         if (!btd) return;
                         const btVals = s.brKeys.map(k => btd.brackets[k] || 0);
-                        curveWrap.innerHTML = s.renderPriceCurve(btVals, btd.avg, val + ' avg ' + fmtPrice(btd.avg)) +
-                            '<div class="dash-price-crosshair" id="priceCrosshair"><div class="dash-price-crosshair-tip" id="priceCrosshairTip"></div><div class="dash-price-crosshair-dot" id="priceCrosshairDot"></div></div>';
-                        subtitle.innerHTML = `<span><b style="color:#00d4ff">${fmtPrice(btd.avg)}</b> avg · ${fmtK(btd.count)} vehicles</span>`;
+                        curveWrap.innerHTML = s.renderPriceCurve(btVals, btd.avg, val + ' avg ' + fmtPrice(btd.avg)) + crosshairHTML;
+                        subtitle.innerHTML = `<span><b style="color:#00d4ff">${fmtPrice(btd.avg)}</b> avg across ${fmtK(btd.count)} vehicles</span>`;
                     }
                     setupPriceCrosshair();
                 });
