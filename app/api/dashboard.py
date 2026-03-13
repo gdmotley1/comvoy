@@ -66,6 +66,7 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
     fuel_counter = Counter()
     trans_counter = Counter()
     smyrna_count = 0
+    smyrna_prices = []
     dealer_vehicles = defaultdict(int)
     dealer_info = {}
 
@@ -82,6 +83,8 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
             trans_counter[v["transmission"]] += 1
         if v["is_smyrna"]:
             smyrna_count += 1
+            if v["price"]:
+                smyrna_prices.append(v["price"])
         did = v["dealer_id"]
         dealer_vehicles[did] += 1
         if did not in dealer_info and v.get("dealers"):
@@ -96,19 +99,33 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
     avg_price = round(sum(prices) / n) if n else 0
     median_price = prices[n // 2] if n else 0
 
-    # Price brackets
-    brackets = {"<30k": 0, "30-50k": 0, "50-75k": 0, "75-100k": 0, "100k+": 0}
-    for p in prices:
-        if p < 30000:
-            brackets["<30k"] += 1
-        elif p < 50000:
-            brackets["30-50k"] += 1
-        elif p < 75000:
-            brackets["50-75k"] += 1
-        elif p < 100000:
-            brackets["75-100k"] += 1
-        else:
-            brackets["100k+"] += 1
+    # Price brackets (overall + per body type)
+    def _bracket(p):
+        if p < 30000: return "<30k"
+        if p < 50000: return "30-50k"
+        if p < 75000: return "50-75k"
+        if p < 100000: return "75-100k"
+        return "100k+"
+
+    bracket_keys = ["<30k", "30-50k", "50-75k", "75-100k", "100k+"]
+    brackets = {k: 0 for k in bracket_keys}
+    bt_brackets = defaultdict(lambda: {k: 0 for k in bracket_keys})
+    for v in vehicles:
+        if v["price"]:
+            bk = _bracket(v["price"])
+            brackets[bk] += 1
+            if v["body_type"]:
+                bt_brackets[v["body_type"]][bk] += 1
+
+    # Build per-body-type bracket data for top body types
+    price_by_body_type = {}
+    for bt, counts in sorted(bt_brackets.items(), key=lambda x: sum(x[1].values()), reverse=True)[:12]:
+        bt_prices_list = [v["price"] for v in vehicles if v["price"] and v["body_type"] == bt]
+        price_by_body_type[bt] = {
+            "brackets": counts,
+            "avg": round(sum(bt_prices_list) / len(bt_prices_list)) if bt_prices_list else 0,
+            "count": len(bt_prices_list),
+        }
 
     # Lead scores
     lead_query = db.table("lead_scores").select("tier, score, dealer_id")
@@ -204,6 +221,7 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
             "avg_price": avg_price,
             "median_price": median_price,
             "smyrna_units": smyrna_count,
+            "smyrna_avg_price": round(sum(smyrna_prices) / len(smyrna_prices)) if smyrna_prices else 0,
         },
         "leads": {
             "hot": lead_tiers.get("hot", 0),
@@ -223,6 +241,7 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
             for b, c in builder_counter.most_common(20)
         ],
         "price_brackets": brackets,
+        "price_by_body_type": price_by_body_type,
         "by_condition": {
             "New": {"count": condition_counter.get("New", 0), "avg_price": round(sum(new_prices) / len(new_prices)) if new_prices else 0},
             "Used": {"count": condition_counter.get("Used", 0), "avg_price": round(sum(used_prices) / len(used_prices)) if used_prices else 0},

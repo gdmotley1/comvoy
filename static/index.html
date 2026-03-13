@@ -2999,38 +2999,23 @@
             font-size: 9px; color: var(--text-tertiary); text-transform: uppercase;
             letter-spacing: 0.5px; margin-top: 4px;
         }
-        .dash-price-brackets {
-            display: flex; justify-content: space-between; gap: 8px; margin-bottom: 16px;
-            height: 140px; align-items: flex-end;
+        .dash-price-curve-wrap {
+            position: relative;
+            margin: 8px 0 0;
         }
-        .dash-price-bracket {
-            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
-        }
-        .dash-price-bracket-bar-wrap {
-            width: 100%; height: 100px; display: flex; align-items: flex-end;
-            background: rgba(255,255,255,0.02); border-radius: 6px 6px 0 0;
-        }
-        .dash-price-bracket-bar {
-            width: 100%; border-radius: 5px 5px 0 0; opacity: 0.75;
-            transition: height 0.7s var(--ease-out-expo);
-        }
-        .dash-price-bracket:hover .dash-price-bracket-bar { opacity: 1; filter: brightness(1.3); }
-        .dash-price-bracket-count {
-            font-size: 11px; font-weight: 600; color: var(--text-secondary);
-            font-variant-numeric: tabular-nums;
-        }
-        .dash-price-bracket-label {
-            font-size: 10px; color: var(--text-tertiary);
-        }
-        .dash-price-newused {
-            display: flex; flex-direction: column; gap: 8px;
-            padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.04);
-        }
-        .dash-price-nu-item {
-            display: flex; align-items: center; gap: 8px; font-size: 12px;
-        }
-        .dash-price-nu-dot {
-            width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+        .dash-price-curve-tip {
+            position: absolute;
+            background: rgba(0,0,0,0.92);
+            color: #fff;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 5px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s;
+            z-index: 10;
+            border: 1px solid rgba(79,143,255,0.3);
         }
 
         /* Top dealers table */
@@ -6053,6 +6038,9 @@
             }
             function fmtPrice(n) { return '$' + n.toLocaleString(); }
 
+            // Module-level state for price curve dropdown
+            let _priceCurveState = {};
+
             async function open() {
                 document.body.classList.remove('chatting', 'map-view', 'trip-manager');
                 document.body.classList.add('dashboard');
@@ -6168,40 +6156,78 @@
                 const usedAvg = cond.Used?.avg_price || 0;
                 const spread = newAvg - usedAvg;
 
-                let priceHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
-                    <div class="dash-card-title">Price Distribution</div>
-                    <div style="display:flex;gap:16px;margin-bottom:16px;font-size:11px;color:var(--text-secondary)">
-                        <span>New <b style="color:#4f8fff">${fmtPrice(newAvg)}</b> avg</span>
-                        <span>Used <b style="color:#a855f7">${fmtPrice(usedAvg)}</b> avg</span>
-                        <span>Spread <b style="color:#34d399">${fmtPrice(spread)}</b></span>
+                // Price curve renderer (reusable for dropdown)
+                const smyrnaAvgPrice = t.smyrna_avg_price || 0;
+                const priceBtData = d.price_by_body_type || {};
+                const priceBtKeys = Object.keys(priceBtData);
+                const curveMids = [15000, 40000, 62500, 87500, 120000];
+                const svgW = 460, svgH = 160, padL = 0, padR = 0, padT = 10, padB = 30;
+                const plotW = svgW - padL - padR, plotH = svgH - padT - padB;
+                const xMin = 0, xMax = 150000;
+                const xLabels = ['$0', '$30k', '$50k', '$75k', '$100k', '$150k'];
+                const xLabelVals = [0, 30000, 50000, 75000, 100000, 150000];
+
+                function smoothPath(points) {
+                    if (points.length < 2) return '';
+                    let p = 'M ' + points[0][0] + ' ' + points[0][1];
+                    for (let i = 0; i < points.length - 1; i++) {
+                        const p0 = points[Math.max(i - 1, 0)];
+                        const p1 = points[i];
+                        const p2 = points[i + 1];
+                        const p3 = points[Math.min(i + 2, points.length - 1)];
+                        p += ' C ' + (p1[0] + (p2[0] - p0[0]) / 6) + ' ' + (p1[1] + (p2[1] - p0[1]) / 6) + ', ' +
+                             (p2[0] - (p3[0] - p1[0]) / 6) + ' ' + (p2[1] - (p3[1] - p1[1]) / 6) + ', ' + p2[0] + ' ' + p2[1];
+                    }
+                    return p;
+                }
+
+                function renderPriceCurve(vals, markerPrice, markerLabel) {
+                    const cMax = Math.max(...vals, 1);
+                    const toX = v => padL + (v - xMin) / (xMax - xMin) * plotW;
+                    const toY = v => padT + plotH - (v / cMax) * plotH;
+                    const pts = curveMids.map((m, i) => [toX(m), toY(vals[i])]);
+                    const startPt = [toX(xMin), toY(0)];
+                    const endPt = [toX(xMax), toY(0)];
+                    const allPts = [startPt, ...pts, endPt];
+                    const linePath = smoothPath(allPts);
+                    const fillPath = linePath + ' L ' + endPt[0] + ' ' + toY(0) + ' L ' + startPt[0] + ' ' + toY(0) + ' Z';
+                    const mX = toX(markerPrice);
+                    return `<svg viewBox="0 0 ${svgW} ${svgH}" style="width:100%;height:100%;overflow:visible" preserveAspectRatio="none">
+                        <defs><linearGradient id="curveGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.4"/>
+                            <stop offset="100%" stop-color="#00d4ff" stop-opacity="0.02"/>
+                        </linearGradient></defs>
+                        ${xLabelVals.slice(1, -1).map(v => `<line x1="${toX(v)}" y1="${padT}" x2="${toX(v)}" y2="${svgH - padB}" stroke="rgba(255,255,255,0.04)" stroke-dasharray="3,3"/>`).join('')}
+                        <path d="${fillPath}" fill="url(#curveGrad)"/>
+                        <path d="${linePath}" fill="none" stroke="#00d4ff" stroke-width="2.5" stroke-linecap="round" style="filter:drop-shadow(0 0 6px rgba(0,212,255,0.4))"/>
+                        ${pts.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#00d4ff" stroke="#0d1117" stroke-width="2" style="filter:drop-shadow(0 0 4px rgba(0,212,255,0.5))"/>
+                        <text x="${p[0]}" y="${p[1] - 10}" text-anchor="middle" fill="var(--text-secondary)" font-size="9" font-family="inherit">${fmtK(vals[i])}</text>`).join('')}
+                        ${markerPrice ? `<line x1="${mX}" y1="${padT}" x2="${mX}" y2="${svgH - padB}" stroke="#D2691E" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.8"/>
+                        <text x="${mX + 4}" y="${padT + 12}" fill="#D2691E" font-size="9" font-family="inherit" font-weight="600">${markerLabel}</text>` : ''}
+                        <line x1="${padL}" y1="${svgH - padB}" x2="${svgW - padR}" y2="${svgH - padB}" stroke="rgba(255,255,255,0.08)"/>
+                        ${xLabels.map((lbl, i) => `<text x="${toX(xLabelVals[i])}" y="${svgH - 8}" text-anchor="middle" fill="var(--text-tertiary)" font-size="9" font-family="inherit">${lbl}</text>`).join('')}
+                    </svg>`;
+                }
+
+                let priceHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s;display:flex;flex-direction:column">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+                        <div class="dash-card-title" style="margin-bottom:0">Price Distribution</div>
+                        <select class="dash-filter-select" id="priceBtSelect" style="width:auto;min-width:120px;padding:4px 8px;font-size:10px">
+                            <option value="all">All Body Types</option>
+                            ${priceBtKeys.map(bt => `<option value="${bt}">${bt}</option>`).join('')}
+                        </select>
                     </div>
-                    <div class="dash-price-brackets">
-                        ${brKeys.map((k, i) => {
-                            const pct = (brVals[i] / totalPriced * 100).toFixed(1);
-                            return `<div class="dash-price-bracket">
-                                <div class="dash-price-bracket-bar-wrap">
-                                    <div class="dash-price-bracket-bar" style="height:0%;background:${histColors[i]}" data-bh="${pct}%"></div>
-                                </div>
-                                <div class="dash-price-bracket-count">${fmtK(brVals[i])}</div>
-                                <div class="dash-price-bracket-label">${k}</div>
-                            </div>`;
-                        }).join('')}
+                    <div id="priceSubtitle" style="display:flex;gap:16px;margin-bottom:4px;font-size:11px;color:var(--text-secondary)">
+                        <span>New <b style="color:#4f8fff">${fmtPrice(newAvg)}</b> avg · ${fmtK(cond.New?.count||0)}</span>
+                        <span>Used <b style="color:#a855f7">${fmtPrice(usedAvg)}</b> avg · ${fmtK(cond.Used?.count||0)}</span>
                     </div>
-                    <div class="dash-price-newused">
-                        <div class="dash-price-nu-item">
-                            <span class="dash-price-nu-dot" style="background:#4f8fff"></span>
-                            <span style="color:var(--text-secondary);font-size:10px">New</span>
-                            <span style="color:#4f8fff;font-weight:600;font-size:11px;margin-left:auto">${fmtPrice(newAvg)} avg</span>
-                            <span style="color:var(--text-tertiary);font-size:10px">(${fmtK(cond.New?.count||0)})</span>
-                        </div>
-                        <div class="dash-price-nu-item">
-                            <span class="dash-price-nu-dot" style="background:#a855f7"></span>
-                            <span style="color:var(--text-secondary);font-size:10px">Used</span>
-                            <span style="color:#a855f7;font-weight:600;font-size:11px;margin-left:auto">${fmtPrice(usedAvg)} avg</span>
-                            <span style="color:var(--text-tertiary);font-size:10px">(${fmtK(cond.Used?.count||0)})</span>
-                        </div>
+                    <div class="dash-price-curve-wrap" id="priceCurveWrap" style="flex:1;display:flex;align-items:center">
+                        ${renderPriceCurve(brVals, smyrnaAvgPrice, 'Smyrna ' + fmtPrice(smyrnaAvgPrice))}
                     </div>
                 </div>`;
+
+                // Store state for dropdown handler
+                _priceCurveState = { renderPriceCurve, brVals, brKeys, smyrnaAvgPrice, priceBtData, newAvg, usedAvg, cond };
 
                 // Body type donut
                 const btypes = d.by_body_type.slice(0, 8);
@@ -6428,6 +6454,8 @@
                 setup3DHover(wrap);
                 // Donut arc hover tooltips
                 setupDonutHover();
+                // Price curve body type dropdown
+                setupPriceBtDropdown();
             }
 
             function setup3DHover(container) {
@@ -6489,6 +6517,28 @@
                     arc.setAttribute('stroke-width', '20');
                     arc.setAttribute('opacity', '0.75');
                     if (tip) tip.style.opacity = '0';
+                });
+            }
+
+            function setupPriceBtDropdown() {
+                const sel = document.getElementById('priceBtSelect');
+                const curveWrap = document.getElementById('priceCurveWrap');
+                const subtitle = document.getElementById('priceSubtitle');
+                if (!sel || !curveWrap) return;
+                sel.addEventListener('change', () => {
+                    const s = _priceCurveState;
+                    const val = sel.value;
+                    if (val === 'all') {
+                        curveWrap.innerHTML = s.renderPriceCurve(s.brVals, s.smyrnaAvgPrice, 'Smyrna ' + fmtPrice(s.smyrnaAvgPrice));
+                        subtitle.innerHTML = `<span>New <b style="color:#4f8fff">${fmtPrice(s.newAvg)}</b> avg · ${fmtK(s.cond.New?.count||0)}</span>` +
+                            `<span>Used <b style="color:#a855f7">${fmtPrice(s.usedAvg)}</b> avg · ${fmtK(s.cond.Used?.count||0)}</span>`;
+                    } else {
+                        const btd = s.priceBtData[val];
+                        if (!btd) return;
+                        const btVals = s.brKeys.map(k => btd.brackets[k] || 0);
+                        curveWrap.innerHTML = s.renderPriceCurve(btVals, btd.avg, val + ' avg ' + fmtPrice(btd.avg));
+                        subtitle.innerHTML = `<span><b style="color:#00d4ff">${fmtPrice(btd.avg)}</b> avg · ${fmtK(btd.count)} vehicles</span>`;
+                    }
                 });
             }
 
