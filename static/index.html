@@ -6189,7 +6189,21 @@
                             <div class="dash-lead-fill dash-bar" style="width:0%;background:linear-gradient(90deg,#4169e1,#6366f1)" data-w="${(l.cold/totalLeads*100).toFixed(1)}%">${l.cold}</div>
                         </div>
                     </div>
-                    <div style="margin-top:12px;font-size:11px;color:var(--text-tertiary);text-align:center">${totalLeads} scored dealers · ${((l.hot/totalLeads)*100).toFixed(0)}% conversion-ready</div>
+                    <div style="margin-top:16px;display:flex;justify-content:space-around;text-align:center">
+                        <div>
+                            <div style="font-size:22px;font-weight:700;color:#ef4444">${l.hot}</div>
+                            <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase;margin-top:2px">Hot</div>
+                        </div>
+                        <div>
+                            <div style="font-size:22px;font-weight:700;color:#ff8c00">${l.warm}</div>
+                            <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase;margin-top:2px">Warm</div>
+                        </div>
+                        <div>
+                            <div style="font-size:22px;font-weight:700;color:#4169e1">${l.cold}</div>
+                            <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase;margin-top:2px">Cold</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:12px;font-size:11px;color:var(--text-tertiary);text-align:center">${((l.hot/totalLeads)*100).toFixed(0)}% conversion-ready</div>
                 </div>`;
 
                 // (New vs Used data merged into Pricing Intelligence panel above)
@@ -6245,9 +6259,25 @@
                     </div>` : ''}
                 </div>`;
 
+                // Territory breakdown by state
+                const stList = d.by_state || [];
+                const maxState = stList[0]?.vehicles || 1;
+                const stateColors = ['#4f8fff','#00d4ff','#34d399','#a855f7','#ec4899','#f97316','#fbbf24','#ef4444','#6366f1','#14b8a6','#8b5cf6','#f43f5e'];
+                let stateHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
+                    <div class="dash-card-title">Territory Breakdown</div>
+                    ${stList.slice(0, 12).map((s, i) => `<div class="dash-hbar-row">
+                        <div class="dash-hbar-label">${s.state}</div>
+                        <div class="dash-hbar-track">
+                            <div class="dash-hbar-fill dash-bar" style="width:0%;background:${stateColors[i % stateColors.length]};opacity:0.7" data-w="${(s.vehicles/maxState*100).toFixed(1)}%"></div>
+                            <span class="dash-hbar-tooltip">${s.vehicles.toLocaleString()} vehicles</span>
+                        </div>
+                        <div class="dash-hbar-val">${fmtK(s.vehicles)}</div>
+                    </div>`).join('')}
+                </div>`;
+
                 wrap.innerHTML = filtersHTML + '<div class="dash-grid">' +
                     kpiHTML + brandHTML + priceHTML + bodyHTML + builderHTML +
-                    leadHTML + dealersHTML + smyrnaHTML +
+                    stateHTML + dealersHTML + smyrnaHTML + leadHTML +
                 '</div>';
 
                 // Animate bars and arcs after paint

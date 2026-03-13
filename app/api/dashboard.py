@@ -197,6 +197,14 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
             "Used": {"count": condition_counter.get("Used", 0), "avg_price": round(sum(used_prices) / len(used_prices)) if used_prices else 0},
         },
         "by_state": by_state,
+        "by_fuel": [
+            {"fuel": f, "count": c, "share": round(c / total * 100, 1)}
+            for f, c in fuel_counter.most_common()
+        ],
+        "by_transmission": [
+            {"type": t, "count": c, "share": round(c / total * 100, 1)}
+            for t, c in trans_counter.most_common()
+        ],
         "top_dealers": top_dealer_list,
         "smyrna_intel": {
             "total_units": smyrna_count,
