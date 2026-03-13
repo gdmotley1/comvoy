@@ -4309,62 +4309,70 @@
                         if (!_clusterLayer) return;
                         const zoom = _map.getZoom();
                         const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ember-scale')) || 1;
-                        const minDist = 18 * scale; // pixel threshold for overlap
+                        const minDist = Math.max(20 * scale, 12);
                         const layers = [];
                         _clusterLayer.eachLayer(m => { if (m._trueLat != null) layers.push(m); });
                         // Reset all to true position first
                         for (const m of layers) {
-                            const cur = m.getLatLng();
-                            if (cur.lat !== m._trueLat || cur.lng !== m._trueLng) {
-                                m.setLatLng([m._trueLat, m._trueLng]);
-                            }
+                            m.setLatLng([m._trueLat, m._trueLng]);
                         }
-                        // Only declutter at zoom >= 8 where overlaps are visible
-                        if (zoom < 8) return;
+                        if (zoom < 7) return;
                         // Build pixel position array
                         const pts = layers.map(m => {
                             const px = _map.latLngToContainerPoint([m._trueLat, m._trueLng]);
                             return { m, x: px.x, y: px.y, nudgedX: px.x, nudgedY: px.y };
                         });
-                        // Spatial grid for efficient collision checks
-                        const cellSize = minDist * 2;
-                        const grid = {};
-                        const key = (x, y) => Math.floor(x / cellSize) + ',' + Math.floor(y / cellSize);
+                        // Phase 1: Spread exact-duplicate coords into a circle
+                        const exactGroups = {};
                         for (const p of pts) {
-                            const k = key(p.x, p.y);
-                            (grid[k] || (grid[k] = [])).push(p);
+                            const k = Math.round(p.x) + '|' + Math.round(p.y);
+                            (exactGroups[k] || (exactGroups[k] = [])).push(p);
                         }
-                        // Iterative nudge (3 passes)
+                        for (const k in exactGroups) {
+                            const grp = exactGroups[k];
+                            if (grp.length < 2) continue;
+                            const r = minDist * 0.8 * Math.max(1, grp.length / 4);
+                            for (let i = 0; i < grp.length; i++) {
+                                const angle = (2 * Math.PI * i) / grp.length - Math.PI / 2;
+                                grp[i].nudgedX += Math.cos(angle) * r;
+                                grp[i].nudgedY += Math.sin(angle) * r;
+                            }
+                        }
+                        // Phase 2: Grid-based repulsion for remaining close overlaps
                         for (let pass = 0; pass < 3; pass++) {
+                            const cellSize = minDist * 2;
+                            const grid = {};
+                            const gk = (x, y) => (Math.floor(x / cellSize)) + ',' + (Math.floor(y / cellSize));
+                            for (const p of pts) {
+                                const k = gk(p.nudgedX, p.nudgedY);
+                                (grid[k] || (grid[k] = [])).push(p);
+                            }
                             for (const k in grid) {
-                                const cell = grid[k];
-                                // Check neighbors too
                                 const [cx, cy] = k.split(',').map(Number);
-                                const neighbors = [];
-                                for (let dx = -1; dx <= 1; dx++) {
+                                const nearby = [];
+                                for (let dx = -1; dx <= 1; dx++)
                                     for (let dy = -1; dy <= 1; dy++) {
-                                        const nk = (cx + dx) + ',' + (cy + dy);
-                                        if (grid[nk]) neighbors.push(...grid[nk]);
+                                        const nk = (cx+dx)+','+(cy+dy);
+                                        if (grid[nk]) nearby.push(...grid[nk]);
                                     }
-                                }
-                                for (const a of cell) {
-                                    for (const b of neighbors) {
+                                for (const a of grid[k]) {
+                                    for (const b of nearby) {
                                         if (a === b) continue;
                                         const dx = a.nudgedX - b.nudgedX;
                                         const dy = a.nudgedY - b.nudgedY;
-                                        const dist = Math.sqrt(dx * dx + dy * dy);
-                                        if (dist < minDist && dist > 0.01) {
-                                            const push = (minDist - dist) * 0.5;
-                                            const nx = (dx / dist) * push;
-                                            const ny = (dy / dist) * push;
-                                            a.nudgedX += nx; a.nudgedY += ny;
-                                            b.nudgedX -= nx; b.nudgedY -= ny;
+                                        const dist = Math.sqrt(dx*dx + dy*dy);
+                                        if (dist < minDist && dist > 0.1) {
+                                            const push = (minDist - dist) * 0.35;
+                                            a.nudgedX += (dx/dist)*push;
+                                            a.nudgedY += (dy/dist)*push;
+                                            b.nudgedX -= (dx/dist)*push;
+                                            b.nudgedY -= (dy/dist)*push;
                                         }
                                     }
                                 }
                             }
                         }
-                        // Apply nudges only to markers that actually moved
+                        // Apply nudges
                         for (const p of pts) {
                             const dx = p.nudgedX - p.x;
                             const dy = p.nudgedY - p.y;
@@ -4378,6 +4386,8 @@
                         clearTimeout(_declutterTimer);
                         _declutterTimer = setTimeout(declutterMarkers, 150);
                     });
+                    // Run once after initial load
+                    setTimeout(declutterMarkers, 500);
 
                     _mapLoaded = true;
                     RouteOverlay.loadReps();
