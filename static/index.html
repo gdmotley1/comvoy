@@ -3001,21 +3001,44 @@
         }
         .dash-price-curve-wrap {
             position: relative;
-            margin: 8px 0 0;
+            margin: 4px 0 0;
+            cursor: crosshair;
         }
-        .dash-price-curve-tip {
+        .dash-price-crosshair {
             position: absolute;
+            top: 0;
+            width: 1px;
+            background: rgba(255,255,255,0.5);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.1s;
+            z-index: 5;
+        }
+        .dash-price-crosshair-tip {
+            position: absolute;
+            top: -4px;
+            left: 50%;
+            transform: translate(-50%, -100%);
             background: rgba(0,0,0,0.92);
             color: #fff;
             font-size: 11px;
-            padding: 4px 8px;
+            font-weight: 600;
+            padding: 4px 10px;
             border-radius: 5px;
             white-space: nowrap;
             pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.15s;
-            z-index: 10;
-            border: 1px solid rgba(79,143,255,0.3);
+            border: 1px solid rgba(0,212,255,0.4);
+        }
+        .dash-price-crosshair-dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #00d4ff;
+            border: 2px solid #0d1117;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            box-shadow: 0 0 8px rgba(0,212,255,0.6);
         }
 
         /* Top dealers table */
@@ -6161,7 +6184,7 @@
                 const priceBtData = d.price_by_body_type || {};
                 const priceBtKeys = Object.keys(priceBtData);
                 const curveMids = [15000, 40000, 62500, 87500, 120000];
-                const svgW = 460, svgH = 160, padL = 0, padR = 0, padT = 10, padB = 30;
+                const svgW = 460, svgH = 220, padL = 0, padR = 0, padT = 15, padB = 30;
                 const plotW = svgW - padL - padR, plotH = svgH - padT - padB;
                 const xMin = 0, xMax = 150000;
                 const xLabels = ['$0', '$30k', '$50k', '$75k', '$100k', '$150k'];
@@ -6181,6 +6204,17 @@
                     return p;
                 }
 
+                // Interpolate Y value on the curve at a given X
+                function interpolateCurveY(allPts, xPx) {
+                    for (let i = 0; i < allPts.length - 1; i++) {
+                        if (xPx >= allPts[i][0] && xPx <= allPts[i + 1][0]) {
+                            const t = (xPx - allPts[i][0]) / (allPts[i + 1][0] - allPts[i][0]);
+                            return allPts[i][1] + t * (allPts[i + 1][1] - allPts[i][1]);
+                        }
+                    }
+                    return allPts[allPts.length - 1][1];
+                }
+
                 function renderPriceCurve(vals, markerPrice, markerLabel) {
                     const cMax = Math.max(...vals, 1);
                     const toX = v => padL + (v - xMin) / (xMax - xMin) * plotW;
@@ -6191,21 +6225,28 @@
                     const allPts = [startPt, ...pts, endPt];
                     const linePath = smoothPath(allPts);
                     const fillPath = linePath + ' L ' + endPt[0] + ' ' + toY(0) + ' L ' + startPt[0] + ' ' + toY(0) + ' Z';
-                    const mX = toX(markerPrice);
-                    return `<svg viewBox="0 0 ${svgW} ${svgH}" style="width:100%;height:100%;overflow:visible" preserveAspectRatio="none">
-                        <defs><linearGradient id="curveGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.4"/>
-                            <stop offset="100%" stop-color="#00d4ff" stop-opacity="0.02"/>
-                        </linearGradient></defs>
+                    const mX = markerPrice ? toX(markerPrice) : 0;
+                    // Store points for crosshair interpolation
+                    _priceCurveState._curvePoints = allPts;
+                    _priceCurveState._baselineY = toY(0);
+                    return `<svg viewBox="0 0 ${svgW} ${svgH}" style="width:100%;overflow:visible" preserveAspectRatio="xMidYMid meet">
+                        <defs>
+                            <linearGradient id="curveGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.5"/>
+                                <stop offset="40%" stop-color="#00d4ff" stop-opacity="0.25"/>
+                                <stop offset="100%" stop-color="#00d4ff" stop-opacity="0.03"/>
+                            </linearGradient>
+                            <filter id="curveGlow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                        </defs>
                         ${xLabelVals.slice(1, -1).map(v => `<line x1="${toX(v)}" y1="${padT}" x2="${toX(v)}" y2="${svgH - padB}" stroke="rgba(255,255,255,0.04)" stroke-dasharray="3,3"/>`).join('')}
                         <path d="${fillPath}" fill="url(#curveGrad)"/>
-                        <path d="${linePath}" fill="none" stroke="#00d4ff" stroke-width="2.5" stroke-linecap="round" style="filter:drop-shadow(0 0 6px rgba(0,212,255,0.4))"/>
-                        ${pts.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#00d4ff" stroke="#0d1117" stroke-width="2" style="filter:drop-shadow(0 0 4px rgba(0,212,255,0.5))"/>
-                        <text x="${p[0]}" y="${p[1] - 10}" text-anchor="middle" fill="var(--text-secondary)" font-size="9" font-family="inherit">${fmtK(vals[i])}</text>`).join('')}
-                        ${markerPrice ? `<line x1="${mX}" y1="${padT}" x2="${mX}" y2="${svgH - padB}" stroke="#D2691E" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.8"/>
-                        <text x="${mX + 4}" y="${padT + 12}" fill="#D2691E" font-size="9" font-family="inherit" font-weight="600">${markerLabel}</text>` : ''}
-                        <line x1="${padL}" y1="${svgH - padB}" x2="${svgW - padR}" y2="${svgH - padB}" stroke="rgba(255,255,255,0.08)"/>
-                        ${xLabels.map((lbl, i) => `<text x="${toX(xLabelVals[i])}" y="${svgH - 8}" text-anchor="middle" fill="var(--text-tertiary)" font-size="9" font-family="inherit">${lbl}</text>`).join('')}
+                        <path d="${linePath}" fill="none" stroke="#00d4ff" stroke-width="3" stroke-linecap="round" filter="url(#curveGlow)"/>
+                        ${pts.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="#00d4ff" stroke="#0d1117" stroke-width="2.5" style="filter:drop-shadow(0 0 6px rgba(0,212,255,0.6))"/>
+                        <text x="${p[0]}" y="${p[1] - 12}" text-anchor="middle" fill="var(--text-primary)" font-size="10" font-weight="600" font-family="inherit">${fmtK(vals[i])}</text>`).join('')}
+                        ${markerPrice ? `<line x1="${mX}" y1="${padT}" x2="${mX}" y2="${svgH - padB}" stroke="#D2691E" stroke-width="2" stroke-dasharray="5,4" opacity="0.9"/>
+                        <text x="${mX + 5}" y="${padT + 14}" fill="#D2691E" font-size="10" font-family="inherit" font-weight="700">${markerLabel}</text>` : ''}
+                        <line x1="${padL}" y1="${svgH - padB}" x2="${svgW - padR}" y2="${svgH - padB}" stroke="rgba(255,255,255,0.1)"/>
+                        ${xLabels.map((lbl, i) => `<text x="${toX(xLabelVals[i])}" y="${svgH - 6}" text-anchor="middle" fill="var(--text-tertiary)" font-size="10" font-family="inherit">${lbl}</text>`).join('')}
                     </svg>`;
                 }
 
@@ -6217,12 +6258,16 @@
                             ${priceBtKeys.map(bt => `<option value="${bt}">${bt}</option>`).join('')}
                         </select>
                     </div>
-                    <div id="priceSubtitle" style="display:flex;gap:16px;margin-bottom:4px;font-size:11px;color:var(--text-secondary)">
+                    <div id="priceSubtitle" style="display:flex;gap:16px;margin-bottom:2px;font-size:11px;color:var(--text-secondary)">
                         <span>New <b style="color:#4f8fff">${fmtPrice(newAvg)}</b> avg · ${fmtK(cond.New?.count||0)}</span>
                         <span>Used <b style="color:#a855f7">${fmtPrice(usedAvg)}</b> avg · ${fmtK(cond.Used?.count||0)}</span>
                     </div>
-                    <div class="dash-price-curve-wrap" id="priceCurveWrap" style="flex:1;display:flex;align-items:center">
+                    <div class="dash-price-curve-wrap" id="priceCurveWrap" style="flex:1;position:relative">
                         ${renderPriceCurve(brVals, smyrnaAvgPrice, 'Smyrna ' + fmtPrice(smyrnaAvgPrice))}
+                        <div class="dash-price-crosshair" id="priceCrosshair" style="height:${svgH - padB}px">
+                            <div class="dash-price-crosshair-tip" id="priceCrosshairTip"></div>
+                            <div class="dash-price-crosshair-dot" id="priceCrosshairDot"></div>
+                        </div>
                     </div>
                 </div>`;
 
@@ -6454,8 +6499,9 @@
                 setup3DHover(wrap);
                 // Donut arc hover tooltips
                 setupDonutHover();
-                // Price curve body type dropdown
+                // Price curve body type dropdown + crosshair
                 setupPriceBtDropdown();
+                setupPriceCrosshair();
             }
 
             function setup3DHover(container) {
@@ -6529,16 +6575,67 @@
                     const s = _priceCurveState;
                     const val = sel.value;
                     if (val === 'all') {
-                        curveWrap.innerHTML = s.renderPriceCurve(s.brVals, s.smyrnaAvgPrice, 'Smyrna ' + fmtPrice(s.smyrnaAvgPrice));
+                        curveWrap.innerHTML = s.renderPriceCurve(s.brVals, s.smyrnaAvgPrice, 'Smyrna ' + fmtPrice(s.smyrnaAvgPrice)) +
+                            '<div class="dash-price-crosshair" id="priceCrosshair"><div class="dash-price-crosshair-tip" id="priceCrosshairTip"></div><div class="dash-price-crosshair-dot" id="priceCrosshairDot"></div></div>';
                         subtitle.innerHTML = `<span>New <b style="color:#4f8fff">${fmtPrice(s.newAvg)}</b> avg · ${fmtK(s.cond.New?.count||0)}</span>` +
                             `<span>Used <b style="color:#a855f7">${fmtPrice(s.usedAvg)}</b> avg · ${fmtK(s.cond.Used?.count||0)}</span>`;
                     } else {
                         const btd = s.priceBtData[val];
                         if (!btd) return;
                         const btVals = s.brKeys.map(k => btd.brackets[k] || 0);
-                        curveWrap.innerHTML = s.renderPriceCurve(btVals, btd.avg, val + ' avg ' + fmtPrice(btd.avg));
+                        curveWrap.innerHTML = s.renderPriceCurve(btVals, btd.avg, val + ' avg ' + fmtPrice(btd.avg)) +
+                            '<div class="dash-price-crosshair" id="priceCrosshair"><div class="dash-price-crosshair-tip" id="priceCrosshairTip"></div><div class="dash-price-crosshair-dot" id="priceCrosshairDot"></div></div>';
                         subtitle.innerHTML = `<span><b style="color:#00d4ff">${fmtPrice(btd.avg)}</b> avg · ${fmtK(btd.count)} vehicles</span>`;
                     }
+                    setupPriceCrosshair();
+                });
+            }
+
+            function setupPriceCrosshair() {
+                const wrap = document.getElementById('priceCurveWrap');
+                const crosshair = document.getElementById('priceCrosshair');
+                const tip = document.getElementById('priceCrosshairTip');
+                const dot = document.getElementById('priceCrosshairDot');
+                if (!wrap || !crosshair) return;
+                const svg = wrap.querySelector('svg');
+                if (!svg) return;
+
+                wrap.addEventListener('mousemove', (e) => {
+                    const rect = svg.getBoundingClientRect();
+                    const xPct = (e.clientX - rect.left) / rect.width;
+                    const price = Math.round(xPct * 150000);
+                    if (price < 0 || price > 150000) { crosshair.style.opacity = '0'; return; }
+
+                    // Position crosshair line
+                    const leftPx = e.clientX - wrap.getBoundingClientRect().left;
+                    crosshair.style.left = leftPx + 'px';
+                    crosshair.style.opacity = '1';
+                    crosshair.style.height = rect.height + 'px';
+
+                    // Price label
+                    if (tip) tip.textContent = '$' + Math.round(price / 1000) + 'k';
+
+                    // Interpolate dot Y position on curve
+                    const s = _priceCurveState;
+                    if (s._curvePoints && dot) {
+                        const svgXPx = xPct * 460; // svgW
+                        const svgYPx = s._curvePoints ? (function() {
+                            const pts = s._curvePoints;
+                            for (let i = 0; i < pts.length - 1; i++) {
+                                if (svgXPx >= pts[i][0] && svgXPx <= pts[i + 1][0]) {
+                                    const t = (svgXPx - pts[i][0]) / (pts[i + 1][0] - pts[i][0]);
+                                    return pts[i][1] + t * (pts[i + 1][1] - pts[i][1]);
+                                }
+                            }
+                            return s._baselineY;
+                        })() : s._baselineY;
+                        const dotYPct = svgYPx / 220; // svgH
+                        dot.style.top = (dotYPct * rect.height) + 'px';
+                    }
+                });
+
+                wrap.addEventListener('mouseleave', () => {
+                    crosshair.style.opacity = '0';
                 });
             }
 
