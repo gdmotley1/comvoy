@@ -14,6 +14,7 @@ import sys
 import os
 import csv
 import argparse
+import asyncio
 import glob
 import logging
 from datetime import datetime
@@ -21,6 +22,8 @@ from datetime import datetime
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from app.database import get_service_client
+from app.etl.geocoder import geocode_single
+from app.etl.places import search_place
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
@@ -104,6 +107,57 @@ def upsert_dealers_from_csv(db, csv_path):
         batch = rows[i:i + BATCH_SIZE]
         db.table("dealers").upsert(batch, on_conflict="name,city,state").execute()
     logger.info(f"Upserted {len(rows)} dealers")
+
+
+def enrich_new_dealers(db):
+    """Fetch Google Places data for dealers missing coordinates, use Places lat/lng."""
+    # Find dealers without lat/lng
+    missing = db.table("dealers").select("id, name, city, state").is_("latitude", "null").execute()
+    if not missing.data:
+        logger.info("All dealers already geocoded — nothing to enrich")
+        return
+
+    logger.info(f"Enriching {len(missing.data)} new dealers (Places API for coords + metadata)...")
+
+    async def _enrich_all():
+        geocoded = 0
+        places_ok = 0
+
+        for d in missing.data:
+            # Google Places returns precise lat/lng + all metadata in one call
+            place = await search_place(d["name"], d["city"], d["state"])
+            if place:
+                from datetime import timezone
+                lat = place.get("latitude")
+                lng = place.get("longitude")
+
+                # Update dealer coordinates from Places (street-level precision)
+                if lat and lng:
+                    db.table("dealers").update({
+                        "latitude": lat, "longitude": lng,
+                    }).eq("id", d["id"]).execute()
+                    geocoded += 1
+
+                # Cache Places metadata
+                row = {
+                    "dealer_id": d["id"],
+                    "fetched_at": datetime.now(timezone.utc).isoformat(),
+                    **{k: v for k, v in place.items() if k not in ("latitude", "longitude")},
+                }
+                try:
+                    db.table("dealer_places").upsert(row, on_conflict="dealer_id").execute()
+                    places_ok += 1
+                except Exception as e:
+                    logger.warning(f"  Places upsert failed for {d['name']}: {e}")
+            else:
+                logger.warning(f"  Places not found: {d['name']} — {d['city']}, {d['state']}")
+
+            # Rate limit (Places API allows 600 QPM, stay safe)
+            await asyncio.sleep(0.2)
+
+        logger.info(f"Enrichment complete: {geocoded}/{len(missing.data)} geocoded, {places_ok}/{len(missing.data)} Places fetched")
+
+    asyncio.run(_enrich_all())
 
 
 def load_vehicles(db, csv_path, snapshot_id, dealer_map, smyrna_vins):
@@ -391,6 +445,7 @@ def main():
 
     # Ensure dealers exist
     upsert_dealers_from_csv(db, csv_path)
+    enrich_new_dealers(db)
     dealer_map = get_dealer_map(db)
 
     # Get/create snapshot

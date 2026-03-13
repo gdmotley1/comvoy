@@ -8,6 +8,7 @@ Caches for 30 days. Lazy fetch on first request per dealer.
 
 import asyncio
 import logging
+import math
 from datetime import datetime, timedelta, timezone
 
 import httpx
@@ -23,6 +24,7 @@ CACHE_TTL_DAYS = 30
 # Field mask controls cost — only request fields we actually use
 SEARCH_FIELD_MASK = ",".join([
     "places.id",
+    "places.location",
     "places.rating",
     "places.userRatingCount",
     "places.regularOpeningHours",
@@ -59,8 +61,12 @@ def _parse_place(place: dict) -> dict:
 
     hours = place.get("regularOpeningHours")
 
+    loc = place.get("location", {})
+
     return {
         "google_place_id": place.get("id"),
+        "latitude": loc.get("latitude"),
+        "longitude": loc.get("longitude"),
         "rating": place.get("rating"),
         "review_count": place.get("userRatingCount"),
         "phone": place.get("nationalPhoneNumber"),
@@ -73,6 +79,15 @@ def _parse_place(place: dict) -> dict:
     }
 
 
+def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    """Great-circle distance between two points in km."""
+    R = 6371
+    dlat = math.radians(lat2 - lat1)
+    dlng = math.radians(lng2 - lng1)
+    a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlng/2)**2
+    return R * 2 * math.asin(math.sqrt(a))
+
+
 async def search_place(
     name: str, city: str, state: str,
     lat: float | None = None, lng: float | None = None,
@@ -80,6 +95,8 @@ async def search_place(
     """Find a business via Google Places Text Search.
 
     Returns parsed place dict or None if unavailable.
+    If Google returns a location >100km from the expected city, falls back
+    to Nominatim geocoding for coordinates while keeping Places metadata.
     """
     if not settings.google_maps_api_key:
         logger.debug("No Google Maps API key — skipping Places search")
@@ -93,7 +110,7 @@ async def search_place(
     }
 
     body: dict = {
-        "textQuery": f"{name}, {city}, {state}",
+        "textQuery": f"{name} {city} {state}",
         "languageCode": "en",
     }
 
@@ -119,6 +136,23 @@ async def search_place(
         result = _parse_place(places[0])
         logger.info(f"Places found: {name} — rating {result.get('rating')}, "
                      f"{result.get('review_count')} reviews")
+
+        # Validate location — if result is >100km from expected city, fix coords
+        result_lat = result.get("latitude")
+        result_lng = result.get("longitude")
+        if result_lat and result_lng:
+            from app.etl.geocoder import geocode_single
+            city_coords = await geocode_single(city, state)
+            if city_coords:
+                dist = _haversine_km(result_lat, result_lng, city_coords[0], city_coords[1])
+                if dist > 100:
+                    logger.warning(
+                        f"Places result for {name} ({city}, {state}) is {dist:.0f}km away "
+                        f"— using city geocode instead"
+                    )
+                    result["latitude"] = city_coords[0]
+                    result["longitude"] = city_coords[1]
+
         return result
 
     except httpx.TimeoutException:

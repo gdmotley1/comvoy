@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     # --- Token budget guardrails ---
     agent_model: str = "claude-sonnet-4-20250514"
     agent_max_tokens: int = 2048          # max output tokens per API call
-    agent_max_loop: int = 5               # max tool-use iterations per request
+    agent_max_loop: int = 3               # max tool-use iterations per request
     agent_max_history: int = 20           # max messages kept in conversation
     agent_tool_result_cap: int = 8000     # max chars per tool result
     agent_search_limit: int = 10          # default dealer search results

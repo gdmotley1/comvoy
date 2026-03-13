@@ -1,11 +1,16 @@
 """Dashboard analytics endpoint — returns all data for the visual dashboard in one call."""
 
 import logging
+import time
 from collections import Counter, defaultdict
 
 from fastapi import APIRouter, Query, HTTPException, Response
 
 from app.database import get_service_client
+
+# In-memory TTL cache — data only changes after monthly scrape
+_cache: dict[str, tuple[float, dict]] = {}
+_CACHE_TTL = 300  # 5 minutes
 
 router = APIRouter(prefix="/api", tags=["dashboard"])
 logger = logging.getLogger(__name__)
@@ -19,7 +24,7 @@ def _latest_snapshot_id(db) -> str:
 
 
 def _paginate_vehicles(db, snap_id, state=None):
-    """Fetch all vehicles for a snapshot, paginating past 1000-row limit."""
+    """Fetch all vehicles for a snapshot, paginating past Supabase 1000-row limit."""
     vehicles = []
     offset = 0
     page_size = 1000
@@ -48,6 +53,15 @@ def _paginate_vehicles(db, snap_id, state=None):
 def get_dashboard(response: Response, state: str = Query(None, description="Filter by state code")):
     """Single endpoint returning all dashboard analytics."""
     response.headers["Cache-Control"] = "public, max-age=300"
+
+    # Check cache
+    cache_key = f"dashboard:{state or 'all'}"
+    now = time.time()
+    if cache_key in _cache:
+        ts, cached = _cache[cache_key]
+        if now - ts < _CACHE_TTL:
+            return cached
+
     db = get_service_client()
     snap_id, snap_date = _latest_snapshot_id(db)
 
@@ -213,7 +227,7 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
                 city_counter[v["dealers"]["city"]] += 1
         by_city = [{"city": c, "vehicles": n} for c, n in city_counter.most_common(12)]
 
-    return {
+    result = {
         "snapshot_date": snap_date,
         "totals": {
             "vehicles": total,
@@ -272,3 +286,5 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
             ],
         },
     }
+    _cache[cache_key] = (time.time(), result)
+    return result

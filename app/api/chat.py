@@ -2,27 +2,51 @@
 
 Token-efficiency guardrails:
 - Capped output tokens (2048)
-- Max 5 tool-use loop iterations
+- Max 3 tool-use loop iterations
 - Sliding-window conversation history (20 messages)
 - Tool result truncation (8000 chars)
 - Per-request usage logging with cost estimates
 """
 
+import asyncio
 import json
 import logging
 import time
 from datetime import date
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 from anthropic import Anthropic, APIError, APITimeoutError, AuthenticationError, RateLimitError
 
 from app.config import settings
 from app.models import ChatMessage
-from app.agent.prompts import SALES_AGENT_SYSTEM_PROMPT
+from app.agent.prompts import SALES_AGENT_SYSTEM_PROMPT, SALES_KNOWLEDGE_BASE
 from app.agent.tools import TOOL_DEFINITIONS, execute_tool
 
 router = APIRouter(prefix="/api", tags=["chat"])
 logger = logging.getLogger(__name__)
+
+# Human-friendly tool status messages
+TOOL_STATUS_MAP = {
+    "search_dealers": "Searching dealers...",
+    "find_nearby_dealers": "Finding nearby dealers...",
+    "get_dealer_briefing": "Pulling dealer briefing...",
+    "get_territory_summary": "Analyzing territory...",
+    "get_dealer_trend": "Loading dealer trends...",
+    "get_territory_trend": "Loading territory trends...",
+    "get_alerts": "Checking alerts...",
+    "get_lead_scores": "Scoring leads...",
+    "get_route_dealers": "Planning route...",
+    "get_dealer_intel": "Gathering dealer intel...",
+    "get_dealer_places": "Looking up business details...",
+    "search_vehicles": "Searching vehicles...",
+    "get_dealer_inventory": "Loading inventory...",
+    "get_inventory_changes": "Checking inventory changes...",
+    "get_price_analytics": "Analyzing pricing...",
+    "get_market_intel": "Gathering market intel...",
+    "suggest_travel_plan": "Building travel plan...",
+    "get_upload_report": "Loading report data...",
+}
 
 # In-memory conversation history (per-session) with timestamps for expiry
 _conversations: dict[str, list] = {}
@@ -78,18 +102,11 @@ async def api_status():
     return {"api_key_configured": bool(settings.anthropic_api_key)}
 
 
-@router.post("/chat")
-async def chat(msg: ChatMessage, session_id: str = "default"):
-    """Send a message to the sales intelligence agent and get a response.
-
-    Token guardrails:
-    - max_tokens capped at 2048 (configurable)
-    - Max 5 tool-use loop iterations (configurable)
-    - Conversation history pruned to 20 messages (configurable)
-    - Tool results truncated to 8000 chars (configurable)
-    - Usage stats returned with every response
+def _prepare_chat(msg: ChatMessage, session_id: str):
+    """Shared setup for both streaming and non-streaming chat endpoints.
+    Returns (history, system_prompt, client) or raises HTTPException.
     """
-    # Rate limiting — 20 requests/minute per session
+    # Rate limiting
     now = time.time()
     hits = _rate_window.get(session_id, [])
     hits = [t for t in hits if now - t < _RATE_WINDOW_SEC]
@@ -98,7 +115,7 @@ async def chat(msg: ChatMessage, session_id: str = "default"):
     hits.append(now)
     _rate_window[session_id] = hits
 
-    # Expire stale sessions (> 1 hour idle) — lightweight cleanup each request
+    # Expire stale sessions
     _session_last_active[session_id] = now
     stale = [sid for sid, ts in _session_last_active.items() if now - ts > _SESSION_TTL]
     for sid_key in stale:
@@ -106,23 +123,14 @@ async def chat(msg: ChatMessage, session_id: str = "default"):
         _session_last_active.pop(sid_key, None)
         _rate_window.pop(sid_key, None)
 
-    # No API key — clean error, not a fake response
+    # No API key
     if not settings.anthropic_api_key:
         logger.warning("No Anthropic API key configured")
-        return {
-            "response": None,
-            "session_id": session_id,
-            "usage": None,
-            "error": "no_api_key",
-            "error_message": "Otto needs an Anthropic API key to work. Add ANTHROPIC_API_KEY to your .env file and restart the server.",
-        }
+        return None
 
-    client = Anthropic(api_key=settings.anthropic_api_key, timeout=30.0)
-    start_time = time.time()
+    client = Anthropic(api_key=settings.anthropic_api_key, timeout=90.0)
 
-    # Get or create conversation history.
-    # On serverless cold start, _conversations is empty — recover from
-    # client-sent history if available.
+    # History recovery & pruning
     if session_id not in _conversations:
         if msg.history:
             _conversations[session_id] = msg.history
@@ -132,20 +140,31 @@ async def chat(msg: ChatMessage, session_id: str = "default"):
 
     history = _conversations[session_id]
     history.append({"role": "user", "content": msg.message})
-
-    # Prune history to stay within budget
     history = _prune_history(history, settings.agent_max_history)
     _conversations[session_id] = history
 
-    # Track cumulative usage across loop iterations
+    system_prompt = f"TODAY: {date.today().isoformat()}\n\n{SALES_KNOWLEDGE_BASE}\n\n{SALES_AGENT_SYSTEM_PROMPT}"
+
+    return history, system_prompt, client
+
+
+@router.post("/chat")
+async def chat(msg: ChatMessage, session_id: str = "default"):
+    """Non-streaming chat endpoint (kept as fallback)."""
+    result = _prepare_chat(msg, session_id)
+    if result is None:
+        return {
+            "response": None, "session_id": session_id, "usage": None,
+            "error": "no_api_key",
+            "error_message": "Otto needs an Anthropic API key to work. Add ANTHROPIC_API_KEY to your .env file and restart the server.",
+        }
+
+    history, system_prompt, client = result
+    start_time = time.time()
     total_input_tokens = 0
     total_output_tokens = 0
     tools_called = []
 
-    # Inject today's date so Otto can resolve "tomorrow", "this Wednesday", etc.
-    system_prompt = f"TODAY: {date.today().isoformat()}\n\n{SALES_AGENT_SYSTEM_PROMPT}"
-
-    # Agent loop — keep going until we get a text response
     for iteration in range(settings.agent_max_loop):
         try:
             response = client.messages.create(
@@ -156,99 +175,180 @@ async def chat(msg: ChatMessage, session_id: str = "default"):
                 messages=history,
             )
         except AuthenticationError:
-            logger.error("Anthropic API key is invalid")
-            return {"response": "API key is invalid. Check ANTHROPIC_API_KEY in .env and restart the server.",
-                    "session_id": session_id, "usage": None}
+            return {"response": "API key is invalid.", "session_id": session_id, "usage": None}
         except RateLimitError:
-            logger.warning("Anthropic rate limit hit")
-            return {"response": "Rate limit reached. Wait a moment and try again.",
-                    "session_id": session_id, "usage": None}
+            return {"response": "Rate limit reached. Wait a moment.", "session_id": session_id, "usage": None}
         except APITimeoutError:
-            logger.warning("Anthropic API request timed out (30s)")
-            return {"response": "Request timed out. Try a simpler question or try again.",
-                    "session_id": session_id, "usage": None}
+            return {"response": "Request timed out. Try a simpler question.", "session_id": session_id, "usage": None}
         except APIError as e:
             logger.exception(f"Anthropic API error: {e}")
-            return {"response": "Something went wrong. Try again in a moment.",
-                    "session_id": session_id, "usage": None}
+            return {"response": "Something went wrong.", "session_id": session_id, "usage": None}
 
-        # Accumulate token usage
         total_input_tokens += response.usage.input_tokens
         total_output_tokens += response.usage.output_tokens
 
-        # If the model wants to use tools, execute them and continue
         if response.stop_reason == "tool_use":
-            # Add assistant message with tool calls
             history.append({"role": "assistant", "content": response.content})
-
-            # Execute each tool call
             tool_results = []
             for block in response.content:
                 if block.type == "tool_use":
                     logger.info(f"Agent tool [{iteration+1}/{settings.agent_max_loop}]: {block.name}({block.input})")
                     tools_called.append(block.name)
-
                     result = execute_tool(block.name, block.input)
-                    # Truncate oversized results
                     result = _truncate_tool_result(result, settings.agent_tool_result_cap)
-
-                    tool_results.append({
-                        "type": "tool_result",
-                        "tool_use_id": block.id,
-                        "content": result,
-                    })
-
+                    tool_results.append({"type": "tool_result", "tool_use_id": block.id, "content": result})
             history.append({"role": "user", "content": tool_results})
             continue
 
-        # Extract final text response
         text_parts = [block.text for block in response.content if hasattr(block, "text")]
         assistant_text = "\n".join(text_parts)
         history.append({"role": "assistant", "content": assistant_text})
 
-        # Calculate cost and log
         elapsed = time.time() - start_time
         cost = _estimate_cost(total_input_tokens, total_output_tokens)
-        logger.info(
-            f"Chat complete — {total_input_tokens:,} in + {total_output_tokens:,} out "
-            f"= ~${cost:.4f} | {len(tools_called)} tools | {elapsed:.1f}s"
-        )
+        logger.info(f"Chat complete — {total_input_tokens:,} in + {total_output_tokens:,} out = ~${cost:.4f} | {len(tools_called)} tools | {elapsed:.1f}s")
 
         return {
-            "response": assistant_text,
-            "session_id": session_id,
+            "response": assistant_text, "session_id": session_id,
             "usage": {
-                "input_tokens": total_input_tokens,
-                "output_tokens": total_output_tokens,
+                "input_tokens": total_input_tokens, "output_tokens": total_output_tokens,
                 "total_tokens": total_input_tokens + total_output_tokens,
-                "estimated_cost_usd": round(cost, 6),
-                "tools_called": tools_called,
-                "loop_iterations": iteration + 1,
-                "elapsed_seconds": round(elapsed, 2),
+                "estimated_cost_usd": round(cost, 6), "tools_called": tools_called,
+                "loop_iterations": iteration + 1, "elapsed_seconds": round(elapsed, 2),
             },
         }
 
-    # If we exhausted the loop, still return what we have with a warning
     elapsed = time.time() - start_time
     cost = _estimate_cost(total_input_tokens, total_output_tokens)
-    logger.warning(
-        f"Agent loop maxed at {settings.agent_max_loop} iterations — "
-        f"{total_input_tokens:,} in + {total_output_tokens:,} out = ~${cost:.4f}"
-    )
     return {
-        "response": "I gathered a lot of data but hit my thinking limit. Could you ask a more specific question so I can give you a focused answer?",
+        "response": "I gathered a lot of data but hit my thinking limit. Try a more specific question.",
         "session_id": session_id,
         "usage": {
-            "input_tokens": total_input_tokens,
-            "output_tokens": total_output_tokens,
+            "input_tokens": total_input_tokens, "output_tokens": total_output_tokens,
             "total_tokens": total_input_tokens + total_output_tokens,
-            "estimated_cost_usd": round(cost, 6),
-            "tools_called": tools_called,
-            "loop_iterations": settings.agent_max_loop,
-            "elapsed_seconds": round(elapsed, 2),
-            "warning": "max_iterations_reached",
+            "estimated_cost_usd": round(cost, 6), "tools_called": tools_called,
+            "loop_iterations": settings.agent_max_loop, "elapsed_seconds": round(elapsed, 2),
         },
     }
+
+
+def _sse_event(event: str, data: dict) -> str:
+    """Format a Server-Sent Event."""
+    return f"event: {event}\ndata: {json.dumps(data)}\n\n"
+
+
+@router.post("/chat/stream")
+async def chat_stream(msg: ChatMessage, session_id: str = "default"):
+    """Streaming chat endpoint — SSE events for real-time UI updates."""
+    result = _prepare_chat(msg, session_id)
+    if result is None:
+        return StreamingResponse(
+            iter([_sse_event("error", {"message": "No API key configured."})]),
+            media_type="text/event-stream",
+        )
+
+    history, system_prompt, client = result
+
+    async def generate():
+        start_time = time.time()
+        total_input_tokens = 0
+        total_output_tokens = 0
+        tools_called = []
+
+        try:
+            for iteration in range(settings.agent_max_loop):
+                try:
+                    response = client.messages.create(
+                        model=settings.agent_model,
+                        max_tokens=settings.agent_max_tokens,
+                        system=system_prompt,
+                        tools=TOOL_DEFINITIONS,
+                        messages=history,
+                    )
+                except AuthenticationError:
+                    yield _sse_event("error", {"message": "API key is invalid."})
+                    return
+                except RateLimitError:
+                    yield _sse_event("error", {"message": "Rate limit reached. Wait a moment."})
+                    return
+                except APITimeoutError:
+                    yield _sse_event("error", {"message": "Request timed out. Try a simpler question."})
+                    return
+                except APIError as e:
+                    logger.exception(f"Anthropic API error: {e}")
+                    yield _sse_event("error", {"message": "Something went wrong."})
+                    return
+
+                total_input_tokens += response.usage.input_tokens
+                total_output_tokens += response.usage.output_tokens
+
+                if response.stop_reason == "tool_use":
+                    history.append({"role": "assistant", "content": response.content})
+                    tool_results = []
+                    for block in response.content:
+                        if block.type == "tool_use":
+                            status_msg = TOOL_STATUS_MAP.get(block.name, f"Working...")
+                            yield _sse_event("status", {"status": status_msg, "tool": block.name})
+                            logger.info(f"Agent tool [{iteration+1}/{settings.agent_max_loop}]: {block.name}")
+                            tools_called.append(block.name)
+
+                            tool_result = execute_tool(block.name, block.input)
+                            tool_result = _truncate_tool_result(tool_result, settings.agent_tool_result_cap)
+                            tool_results.append({"type": "tool_result", "tool_use_id": block.id, "content": tool_result})
+
+                    history.append({"role": "user", "content": tool_results})
+                    continue
+
+                # Final text response — emit in chunks
+                text_parts = [block.text for block in response.content if hasattr(block, "text")]
+                full_text = "\n".join(text_parts)
+                history.append({"role": "assistant", "content": full_text})
+
+                # Stream text in small chunks for typing effect
+                chunk_size = 12
+                for i in range(0, len(full_text), chunk_size):
+                    chunk = full_text[i:i + chunk_size]
+                    yield _sse_event("delta", {"text": chunk})
+                    await asyncio.sleep(0.015)
+
+                # Done event with usage
+                elapsed = time.time() - start_time
+                cost = _estimate_cost(total_input_tokens, total_output_tokens)
+                logger.info(f"Stream complete — {total_input_tokens:,} in + {total_output_tokens:,} out = ~${cost:.4f} | {len(tools_called)} tools | {elapsed:.1f}s")
+
+                yield _sse_event("done", {
+                    "full_text": full_text,
+                    "usage": {
+                        "input_tokens": total_input_tokens, "output_tokens": total_output_tokens,
+                        "total_tokens": total_input_tokens + total_output_tokens,
+                        "estimated_cost_usd": round(cost, 6), "tools_called": tools_called,
+                        "loop_iterations": iteration + 1, "elapsed_seconds": round(elapsed, 2),
+                    },
+                })
+                return
+
+            # Max iterations exhausted
+            yield _sse_event("done", {
+                "full_text": "I gathered a lot of data but hit my thinking limit. Try a more specific question.",
+                "usage": {
+                    "input_tokens": total_input_tokens, "output_tokens": total_output_tokens,
+                    "total_tokens": total_input_tokens + total_output_tokens,
+                    "estimated_cost_usd": round(_estimate_cost(total_input_tokens, total_output_tokens), 6),
+                    "tools_called": tools_called,
+                    "loop_iterations": settings.agent_max_loop,
+                    "elapsed_seconds": round(time.time() - start_time, 2),
+                },
+            })
+
+        except Exception as e:
+            logger.exception(f"Stream error: {e}")
+            yield _sse_event("error", {"message": "Something went wrong."})
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @router.delete("/chat/{session_id}")

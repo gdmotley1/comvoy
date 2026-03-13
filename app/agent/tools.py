@@ -766,7 +766,7 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
             try:
                 db_p = get_service_client()
                 places_row = db_p.table("dealer_places").select(
-                    "rating, review_count, phone, website, hours_json, business_status"
+                    "rating, review_count, phone, website, hours_json, business_status, formatted_address"
                 ).eq("dealer_id", tool_input["dealer_id"]).execute()
                 if places_row.data:
                     p = places_row.data[0]
@@ -777,6 +777,8 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                         briefing["phone"] = p["phone"]
                     if p.get("website"):
                         briefing["website"] = p["website"]
+                    if p.get("formatted_address"):
+                        briefing["address"] = p["formatted_address"]
                     if p.get("business_status") and p["business_status"] != "OPERATIONAL":
                         briefing["business_status"] = p["business_status"]
                     if p.get("hours_json"):
@@ -1041,9 +1043,20 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                 pass  # trends unavailable (single month)
 
             # Build intel
+            # Get full address from Places if available
+            full_address = None
+            try:
+                places_row = db.table("dealer_places").select(
+                    "formatted_address"
+                ).eq("dealer_id", dealer_id).execute()
+                if places_row.data and places_row.data[0].get("formatted_address"):
+                    full_address = places_row.data[0]["formatted_address"]
+            except Exception:
+                pass
+
             intel = {
                 "dealer": d.name,
-                "location": f"{d.city}, {d.state}",
+                "address": full_address or f"{d.city}, {d.state}",
                 "inventory_size": f"{d.total_vehicles} vehicles (rank #{d.rank} in territory)",
                 "top_brand": d.top_brand,
                 "top_body_types": [

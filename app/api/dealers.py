@@ -1,6 +1,7 @@
 """Dealer query endpoints — used by both the API and the agent tools."""
 
 import logging
+import time
 
 from fastapi import APIRouter, Query, HTTPException, Response
 
@@ -9,6 +10,10 @@ from app.models import DealerSummary, DealerBriefing, NearbyQuery, SnapshotInfo
 
 router = APIRouter(prefix="/api/dealers", tags=["dealers"])
 logger = logging.getLogger(__name__)
+
+# In-memory TTL cache — data only changes after monthly scrape
+_cache: dict[str, tuple[float, dict]] = {}
+_CACHE_TTL = 300  # 5 minutes
 
 
 def _latest_snapshot_id(db) -> str:
@@ -212,6 +217,14 @@ def get_dealer_briefing(dealer_id: str):
 def get_map_data(response: Response):
     """All dealers with lat/lng + lead scores for map display."""
     response.headers["Cache-Control"] = "public, max-age=300"  # 5 min
+
+    # Check cache
+    now = time.time()
+    if "map" in _cache:
+        ts, cached = _cache["map"]
+        if now - ts < _CACHE_TTL:
+            return cached
+
     db = get_service_client()
     snap_id = _latest_snapshot_id(db)
 
@@ -233,7 +246,7 @@ def get_map_data(response: Response):
     places_map = {}
     try:
         places_data = db.table("dealer_places").select(
-            "dealer_id, rating, review_count, phone, hours_json, business_status"
+            "dealer_id, rating, review_count, phone, hours_json, business_status, formatted_address"
         ).execute()
         places_map = {r["dealer_id"]: r for r in (places_data.data or [])}
     except Exception as e:
@@ -297,11 +310,14 @@ def get_map_data(response: Response):
             "reviews": pl.get("review_count"),
             "hours": pl.get("hours_json"),
             "biz_status": pl.get("business_status"),
+            "address": pl.get("formatted_address"),
             "body_types": body_type_map.get(d["id"], []),
             "brands": brand_map.get(d["id"], []),
         })
 
-    return {"dealers": markers, "total": len(markers)}
+    resp = {"dealers": markers, "total": len(markers)}
+    _cache["map"] = (time.time(), resp)
+    return resp
 
 
 @router.get("/territory/{state}")
