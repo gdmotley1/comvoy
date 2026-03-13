@@ -2676,13 +2676,16 @@
         }
 
         .tm-title {
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 700;
-            color: var(--text-primary);
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(79,143,255,0.9), rgba(168,85,247,0.8));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .tm-subtitle {
-            font-size: 14px;
+            font-size: 15px;
             color: var(--text-tertiary);
             margin-top: 2px;
         }
@@ -2703,24 +2706,242 @@
 
         .tm-rep-select:focus { border-color: var(--accent-blue); }
 
-        .tm-add-btn {
-            padding: 10px 20px;
-            border-radius: 12px;
-            border: 1px dashed rgba(79,143,255,0.3);
-            background: rgba(79,143,255,0.06);
-            color: var(--accent-blue);
-            font-size: 13px;
-            font-family: inherit;
-            font-weight: 500;
+        /* TM cinematic empty state */
+        .tm-hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 80px 20px 60px;
+            overflow: hidden;
+        }
+
+        .tm-hero-icon {
+            width: 80px;
+            height: 80px;
+            position: relative;
+            z-index: 2;
+            filter: drop-shadow(0 0 24px rgba(79,143,255,0.35));
+            animation: tmIconFloat 4s ease-in-out infinite alternate;
+            opacity: 0;
+            animation: tmIconEntrance 0.8s cubic-bezier(0.16,1,0.3,1) forwards, tmIconFloat 4s ease-in-out 0.8s infinite alternate;
+        }
+
+        @keyframes tmIconFloat { 0% { transform: translateY(0); } 100% { transform: translateY(-8px); } }
+        @keyframes tmIconEntrance { 0% { opacity: 0; transform: translateY(20px) scale(0.9); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+        .tm-hero-headline {
+            font-size: 28px;
+            font-weight: 600;
+            margin-top: 24px;
+            position: relative;
+            z-index: 2;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(79,143,255,0.9), rgba(168,85,247,0.8));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            opacity: 0;
+            animation: tmTextEntrance 0.7s cubic-bezier(0.16,1,0.3,1) 0.2s forwards;
+        }
+
+        .tm-hero-sub {
+            font-size: 15px;
+            color: var(--text-tertiary);
+            margin-top: 8px;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            max-width: 380px;
+            line-height: 1.5;
+            opacity: 0;
+            animation: tmTextEntrance 0.7s cubic-bezier(0.16,1,0.3,1) 0.35s forwards;
+        }
+
+        @keyframes tmTextEntrance { 0% { opacity: 0; transform: translateY(12px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        /* Aurora blobs for TM */
+        .tm-aurora {
+            position: absolute;
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            filter: blur(80px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .tm-aurora-1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(79,143,255,0.18), transparent 70%);
+            top: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: auroraFadeIn 2s ease 0.2s forwards, auroraDrift1 15s ease-in-out 2s infinite alternate, auroraMorph1 12s ease-in-out infinite;
+        }
+
+        .tm-aurora-2 {
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, rgba(168,85,247,0.14), transparent 70%);
+            top: -40px;
+            right: 10%;
+            animation: auroraFadeIn 2s ease 0.6s forwards, auroraDrift2 20s ease-in-out 2s infinite alternate, auroraMorph2 14s ease-in-out infinite;
+        }
+
+        /* Glass rep cards */
+        .tm-rep-cards {
+            display: flex;
+            gap: 14px;
+            margin-top: 32px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .tm-rep-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 20px 28px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.06);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03), 0 2px 12px rgba(0,0,0,0.2);
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s var(--smooth);
+            opacity: 0;
+            animation: tmCardEntrance 0.6s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+
+        .tm-rep-card:nth-child(1) { animation-delay: 0.5s; }
+        .tm-rep-card:nth-child(2) { animation-delay: 0.65s; }
+
+        @keyframes tmCardEntrance { 0% { opacity: 0; transform: translateY(16px) scale(0.95); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+        .tm-rep-card:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(79,143,255,0.3);
+            box-shadow: inset 0 0 0 1px rgba(79,143,255,0.1), 0 4px 20px rgba(79,143,255,0.15);
+            transform: translateY(-2px);
+        }
+
+        .tm-rep-card-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .tm-rep-card-territory {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            letter-spacing: 0.3px;
+        }
+
+        /* TM add trip button — glassmorphism */
+        .tm-add-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: 14px;
+            border: 1px solid rgba(79,143,255,0.15);
+            background: rgba(79,143,255,0.06);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+            color: var(--accent-blue);
+            font-size: 14px;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s var(--smooth);
             width: 100%;
             margin-bottom: 16px;
         }
 
         .tm-add-btn:hover {
             background: rgba(79,143,255,0.12);
-            border-color: rgba(79,143,255,0.5);
+            border-color: rgba(79,143,255,0.35);
+            box-shadow: inset 0 0 0 1px rgba(79,143,255,0.08), 0 4px 16px rgba(79,143,255,0.12);
+            transform: translateY(-1px);
+        }
+
+        .tm-add-icon {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(79,143,255,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        /* Empty trips state (rep selected, no trips) */
+        .tm-empty-trips {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 48px 20px;
+            position: relative;
+        }
+
+        .tm-empty-trips-icon {
+            width: 56px;
+            height: 56px;
+            filter: drop-shadow(0 0 18px rgba(79,143,255,0.3));
+            opacity: 0;
+            animation: tmIconEntrance 0.7s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+
+        .tm-empty-trips-headline {
+            font-size: 22px;
+            font-weight: 600;
+            margin-top: 18px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(79,143,255,0.9), rgba(168,85,247,0.8));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            opacity: 0;
+            animation: tmTextEntrance 0.6s cubic-bezier(0.16,1,0.3,1) 0.15s forwards;
+        }
+
+        .tm-empty-trips-sub {
+            font-size: 14px;
+            color: var(--text-tertiary);
+            margin-top: 6px;
+            text-align: center;
+            opacity: 0;
+            animation: tmTextEntrance 0.6s cubic-bezier(0.16,1,0.3,1) 0.25s forwards;
+        }
+
+        .tm-empty-trips-cta {
+            margin-top: 20px;
+            padding: 12px 28px;
+            border-radius: 14px;
+            border: 1px solid rgba(79,143,255,0.25);
+            background: rgba(79,143,255,0.1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: var(--accent-blue);
+            font-size: 15px;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s var(--smooth);
+            opacity: 0;
+            animation: tmCardEntrance 0.6s cubic-bezier(0.16,1,0.3,1) 0.4s forwards;
+        }
+
+        .tm-empty-trips-cta:hover {
+            background: rgba(79,143,255,0.18);
+            border-color: rgba(79,143,255,0.4);
+            box-shadow: 0 4px 16px rgba(79,143,255,0.15);
+            transform: translateY(-2px);
         }
 
         .tm-empty {
@@ -2730,6 +2951,7 @@
             font-size: 14px;
         }
 
+        /* Enhanced trip cards */
         .tm-card {
             background: var(--glass);
             border: 1px solid var(--glass-border);
@@ -2737,11 +2959,27 @@
             padding: 16px 20px;
             margin-bottom: 10px;
             transition: all 0.25s var(--smooth);
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            animation: tmCardEntrance 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+
+        .tm-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, var(--accent-blue), rgba(168,85,247,0.7));
+            border-radius: 3px 0 0 3px;
         }
 
         .tm-card:hover {
             background: var(--glass-hover);
-            border-color: rgba(255,255,255,0.12);
+            border-color: rgba(79,143,255,0.18);
+            box-shadow: 0 4px 16px rgba(79,143,255,0.08);
         }
 
         .tm-card-top {
@@ -2752,20 +2990,21 @@
         }
 
         .tm-card-date {
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 18px;
+            font-weight: 700;
             color: var(--accent-blue);
         }
 
         .tm-card-route {
-            font-size: 14px;
+            font-size: 15px;
             color: var(--text-secondary);
             margin-top: 4px;
         }
 
         .tm-card-route span {
-            color: var(--text-tertiary);
-            margin: 0 6px;
+            color: var(--accent-blue);
+            margin: 0 8px;
+            opacity: 0.6;
         }
 
         .tm-card-notes {
@@ -3611,6 +3850,13 @@
             .topbar-center { display: none; }
             .tm-header { flex-direction: column; gap: 12px; align-items: flex-start; }
             .tm-card-actions { flex-wrap: wrap; }
+            .tm-rep-cards { flex-direction: column; gap: 10px; }
+            .tm-rep-card { padding: 16px 24px; }
+            .tm-hero { padding: 50px 16px 40px; }
+            .tm-hero-icon { width: 60px; height: 60px; }
+            .tm-hero-headline { font-size: 24px; }
+            .tm-aurora-1 { width: 280px; height: 280px; }
+            .tm-aurora-2 { width: 220px; height: 220px; }
             .dash-grid { grid-template-columns: 1fr; }
             .dash-card.span-2, .dash-card.span-3, .dash-card.span-4 { grid-column: span 1; }
             .hero-cards { grid-template-columns: 1fr; }
@@ -4995,15 +5241,34 @@
                             <div class="tm-title">Trip Manager</div>
                             <div class="tm-subtitle">Plan routes, get auto-briefings via email</div>
                         </div>
-                        <select class="tm-rep-select" id="tmRepSelect" onchange="onTmRepChange()">
+                        <select class="tm-rep-select" id="tmRepSelect" onchange="onTmRepChange()" style="display:none">
                             <option value="">Select a rep...</option>
                         </select>
                     </div>
                     <div id="tmContent">
-                        <div class="tm-empty">Select a rep to view their trips</div>
+                        <div class="tm-hero">
+                            <div class="tm-aurora tm-aurora-1"></div>
+                            <div class="tm-aurora tm-aurora-2"></div>
+                            <svg class="tm-hero-icon" viewBox="0 0 80 80" fill="none">
+                                <path d="M40 8 L40 28 M40 52 L40 72" stroke="rgba(79,143,255,0.6)" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 5"/>
+                                <circle cx="40" cy="28" r="8" fill="none" stroke="rgba(79,143,255,0.8)" stroke-width="2"/>
+                                <circle cx="40" cy="28" r="3" fill="rgba(79,143,255,0.9)"/>
+                                <circle cx="40" cy="52" r="8" fill="none" stroke="rgba(168,85,247,0.8)" stroke-width="2"/>
+                                <circle cx="40" cy="52" r="3" fill="rgba(168,85,247,0.9)"/>
+                                <path d="M40 36 C56 40, 56 44, 40 44" stroke="rgba(79,143,255,0.4)" stroke-width="1.5" fill="none"/>
+                            </svg>
+                            <div class="tm-hero-headline">Plan your next route</div>
+                            <div class="tm-hero-sub">Select a rep to view trips, build routes, and send auto-briefings</div>
+                            <div class="tm-rep-cards" id="tmRepCards"></div>
+                        </div>
                     </div>
                 </div>`;
             }
+
+            const REP_TERRITORIES = {
+                'Wesley White': 'GA · TN · NC · SC · AL',
+                'Kenneth Greene': 'TX · LA · OK · AR · MS'
+            };
 
             async function loadReps() {
                 try {
@@ -5011,9 +5276,18 @@
                     if (!res.ok) return;
                     _tmReps = await res.json();
                     const sel = document.getElementById('tmRepSelect');
-                    if (!sel) return;
-                    sel.innerHTML = '<option value="">Select a rep...</option>' +
-                        _tmReps.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+                    if (sel) {
+                        sel.innerHTML = '<option value="">Select a rep...</option>' +
+                            _tmReps.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+                    }
+                    // Populate rep cards in the hero empty state
+                    const cards = document.getElementById('tmRepCards');
+                    if (cards) {
+                        cards.innerHTML = _tmReps.map(r => `<div class="tm-rep-card" onclick="onTmRepCard('${r.id}')">
+                            <div class="tm-rep-card-name">${esc(r.name)}</div>
+                            <div class="tm-rep-card-territory">${REP_TERRITORIES[r.name] || ''}</div>
+                        </div>`).join('');
+                    }
                 } catch(e) { console.error('Failed to load reps:', e); }
             }
 
@@ -5021,11 +5295,20 @@
                 const sel = document.getElementById('tmRepSelect');
                 _tmSelectedRep = sel ? sel.value : '';
                 if (_tmSelectedRep) {
+                    // Show the dropdown, hide hero
+                    if (sel) sel.style.display = '';
                     await loadTrips();
                 } else {
-                    const ct = document.getElementById('tmContent');
-                    if (ct) ct.innerHTML = '<div class="tm-empty">Select a rep to view their trips</div>';
+                    // Back to cinematic hero state
+                    open();
                 }
+            }
+
+            async function selectRep(repId) {
+                _tmSelectedRep = repId;
+                const sel = document.getElementById('tmRepSelect');
+                if (sel) { sel.value = repId; sel.style.display = ''; }
+                await loadTrips();
             }
 
             async function loadTrips() {
@@ -5049,30 +5332,46 @@
                 if (!ct) return;
                 const rep = _tmReps.find(r => r.id === _tmSelectedRep);
                 const repName = rep ? rep.name : '';
-                let html = `<button class="tm-add-btn" onclick="showTripForm()">+ Add Trip Day</button>`;
+
                 if (_tmTrips.length === 0) {
-                    html += '<div class="tm-empty">No trips scheduled. Add one above!</div>';
-                } else {
-                    _tmTrips.forEach(t => {
-                        const d = new Date(t.travel_date + 'T12:00:00');
-                        const dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                        html += `<div class="tm-card">
-                            <div class="tm-card-top">
-                                <div>
-                                    <div class="tm-card-date">${esc(dateStr)}</div>
-                                    <div class="tm-card-route">${esc(t.start_location)} <span>→</span> ${esc(t.end_location)}</div>
-                                    ${t.notes ? `<div class="tm-card-notes">${esc(t.notes)}</div>` : ''}
-                                </div>
-                                <div class="tm-card-actions">
-                                    <button class="tm-card-btn hot" onclick="tmDealers('${t.id}','${esc(repName)}','${t.travel_date}')">Dealers</button>
-                                    <button class="tm-card-btn" onclick="tmBrief('${t.id}','${esc(repName)}','${t.travel_date}')">Brief</button>
-                                    <button class="tm-card-btn" onclick="showTripForm('${t.id}')">Edit</button>
-                                    <button class="tm-card-btn danger" onclick="deleteTripPlan('${t.id}')">Delete</button>
-                                </div>
-                            </div>
-                        </div>`;
-                    });
+                    ct.innerHTML = `<div class="tm-empty-trips">
+                        <div class="tm-aurora tm-aurora-2" style="top:-60px;left:50%;transform:translateX(-50%);width:260px;height:260px;"></div>
+                        <svg class="tm-empty-trips-icon" viewBox="0 0 56 56" fill="none">
+                            <rect x="8" y="12" width="40" height="34" rx="6" fill="none" stroke="rgba(79,143,255,0.7)" stroke-width="2"/>
+                            <line x1="8" y1="22" x2="48" y2="22" stroke="rgba(79,143,255,0.4)" stroke-width="1.5"/>
+                            <line x1="20" y1="8" x2="20" y2="16" stroke="rgba(79,143,255,0.6)" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="36" y1="8" x2="36" y2="16" stroke="rgba(79,143,255,0.6)" stroke-width="2" stroke-linecap="round"/>
+                            <circle cx="28" cy="33" r="4" fill="rgba(168,85,247,0.6)"/>
+                        </svg>
+                        <div class="tm-empty-trips-headline">No trips yet</div>
+                        <div class="tm-empty-trips-sub">Create your first trip to start route optimization and auto-briefings</div>
+                        <button class="tm-empty-trips-cta" onclick="showTripForm()">+ Plan a Trip</button>
+                    </div>`;
+                    return;
                 }
+
+                let html = `<button class="tm-add-btn" onclick="showTripForm()">
+                    <span class="tm-add-icon">+</span> Add Trip Day
+                </button>`;
+                _tmTrips.forEach((t, i) => {
+                    const d = new Date(t.travel_date + 'T12:00:00');
+                    const dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                    html += `<div class="tm-card" style="animation-delay:${i * 0.08}s">
+                        <div class="tm-card-top">
+                            <div>
+                                <div class="tm-card-date">${esc(dateStr)}</div>
+                                <div class="tm-card-route">${esc(t.start_location)} <span>→</span> ${esc(t.end_location)}</div>
+                                ${t.notes ? `<div class="tm-card-notes">${esc(t.notes)}</div>` : ''}
+                            </div>
+                            <div class="tm-card-actions">
+                                <button class="tm-card-btn hot" onclick="tmDealers('${t.id}','${esc(repName)}','${t.travel_date}')">Dealers</button>
+                                <button class="tm-card-btn" onclick="tmBrief('${t.id}','${esc(repName)}','${t.travel_date}')">Brief</button>
+                                <button class="tm-card-btn" onclick="showTripForm('${t.id}')">Edit</button>
+                                <button class="tm-card-btn danger" onclick="deleteTripPlan('${t.id}')">Delete</button>
+                            </div>
+                        </div>
+                    </div>`;
+                });
                 ct.innerHTML = html;
             }
 
@@ -5197,7 +5496,7 @@
             }
 
             return {
-                open, onRepChange, showForm, closeForm, save, deletePlan,
+                open, onRepChange, selectRep, showForm, closeForm, save, deletePlan,
                 dealers, brief, getReps: () => _tmReps,
             };
         })();
@@ -7307,6 +7606,7 @@
         window.closeTripCreatePanel = () => TripCreate.close();
         window.saveMapTrip = () => TripCreate.save();
         window.onTmRepChange = () => TripManager.onRepChange();
+        window.onTmRepCard = (id) => TripManager.selectRep(id);
         window.showTripForm = (id) => TripManager.showForm(id);
         window.closeTripForm = () => TripManager.closeForm();
         window.saveTripPlan = () => TripManager.save();
