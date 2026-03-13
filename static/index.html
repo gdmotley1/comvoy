@@ -6254,10 +6254,7 @@
 
                 let priceHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s;display:flex;flex-direction:column">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
-                        <div>
-                            <div class="dash-card-title" style="margin-bottom:0">Market Price Distribution</div>
-                            <div style="font-size:9px;color:var(--text-tertiary);margin-top:2px">How many vehicles are listed at each price point across the market</div>
-                        </div>
+                        <div class="dash-card-title" style="margin-bottom:0">Market Price Distribution</div>
                         <select class="dash-filter-select" id="priceBtSelect" style="width:auto;min-width:120px;padding:4px 8px;font-size:10px">
                             <option value="all">All Body Types</option>
                             ${priceBtKeys.map(bt => `<option value="${bt}">${bt}</option>`).join('')}
