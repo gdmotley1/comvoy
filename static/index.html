@@ -3256,6 +3256,30 @@
             font-size: 11px;
             color: var(--text-tertiary);
         }
+        .dash-price-pos-row { position: relative; }
+        .dash-price-pos-tip {
+            position: absolute;
+            left: 50%;
+            top: -4px;
+            transform: translate(-50%, -100%) scale(0.8);
+            background: rgba(0,0,0,0.92);
+            color: #fff;
+            font-size: 11px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 10;
+            border: 1px solid rgba(210,105,30,0.3);
+            line-height: 1.5;
+        }
+        .dash-price-pos-row:hover .dash-price-pos-tip {
+            opacity: 1;
+            transform: translate(-50%, -100%) scale(1);
+        }
+        .dash-price-pos-row:hover .dash-price-pos-bar { opacity: 1 !important; filter: brightness(1.3); }
 
         /* ========== RESPONSIVE ========== */
         @media (max-width: 900px) {
@@ -6238,7 +6262,7 @@
                 const spp = d.smyrna_price_position || [];
                 const maxDelta = Math.max(...spp.map(p => Math.abs(p.delta_pct)), 1);
                 let smyrnaPriceHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s;display:flex;flex-direction:column">
-                    <div class="dash-card-title" style="color:#D2691E">Smyrna vs Market Pricing</div>
+                    <div class="dash-card-title" style="color:#D2691E">Smyrna vs Market Pricing <span style="font-size:10px;color:var(--text-tertiary);font-weight:400">new units only</span></div>
                     <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:9px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px">
                         <span>← Cheaper than market</span>
                         <span>More expensive →</span>
@@ -6259,6 +6283,11 @@
                             </div>
                             <div class="dash-price-pos-delta" style="color:${color}">${isNeg ? '' : '+'}${p.delta_pct}%</div>
                             <div class="dash-price-pos-count">${p.smyrna_count}</div>
+                            <div class="dash-price-pos-tip">
+                                <b>${p.body_type}</b><br>
+                                Smyrna avg: <b style="color:#D2691E">${fmtPrice(p.smyrna_avg)}</b> (${p.smyrna_count} units)<br>
+                                Market avg: <b style="color:#4f8fff">${fmtPrice(p.market_avg)}</b> (${p.market_count} units)
+                            </div>
                         </div>`;
                     }).join('') : '<div style="text-align:center;color:var(--text-tertiary);font-size:12px;padding:20px">No Smyrna pricing data</div>'}
                     </div>

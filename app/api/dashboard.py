@@ -165,11 +165,11 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
     new_prices = [v["price"] for v in vehicles if v["price"] and v.get("condition") == "New"]
     used_prices = [v["price"] for v in vehicles if v["price"] and v.get("condition") == "Used"]
 
-    # Smyrna price position vs market by body type
+    # Smyrna price position vs market by body type (New vs New only)
     bt_prices_all = defaultdict(list)
     bt_prices_smyrna = defaultdict(list)
     for v in vehicles:
-        if v["price"] and v["body_type"]:
+        if v["price"] and v["body_type"] and v.get("condition") == "New":
             bt_prices_all[v["body_type"]].append(v["price"])
             if v["is_smyrna"]:
                 bt_prices_smyrna[v["body_type"]].append(v["price"])
