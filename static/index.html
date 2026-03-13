@@ -3626,7 +3626,7 @@
                         <div class="hero-card-title">Plan a Trip</div>
                         <div class="hero-card-desc">Build optimized visit routes with auto email briefings</div>
                     </div>
-                    <div class="hero-card" onclick="document.getElementById('input').focus()">
+                    <div class="hero-card" onclick="openChat()">
                         <div class="hero-card-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
                         <div class="hero-card-title">Ask Otto</div>
                         <div class="hero-card-desc">Dealer intel, territory trends, hot leads — just ask</div>
@@ -4171,7 +4171,7 @@
 <div class="hero-card-title">Plan a Trip</div>
 <div class="hero-card-desc">Build optimized visit routes with auto email briefings</div>
 </div>
-<div class="hero-card" onclick="document.getElementById('input').focus()">
+<div class="hero-card" onclick="openChat()">
 <div class="hero-card-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
 <div class="hero-card-title">Ask Otto</div>
 <div class="hero-card-desc">Dealer intel, territory trends, hot leads — just ask</div>
@@ -4187,20 +4187,26 @@
 </div>`;
             }
 
+            function openChat() {
+                document.body.classList.remove('map-view', 'dashboard', 'trip-manager');
+                ensureMessages();
+                setTimeout(() => input?.focus(), 100);
+                scrollDown();
+            }
+
             async function clearChat() {
                 try { await fetchT(API_BASE + '/api/chat/' + sid, { method: 'DELETE' }); } catch(_) {}
                 messagesDiv = null;
                 _chatHistory = [];
                 sessionTokens = 0; sessionCost = 0;
                 const ub = $('usageBadge'); if (ub) { ub.textContent = ''; ub.classList.remove('warn'); }
-                document.body.classList.remove('chatting');
-                document.body.classList.remove('trip-manager', 'map-view', 'dashboard');
-                scroll.innerHTML = buildWelcomeHTML();
-                const wtEl = $('welcomeTitle');
-                if (wtEl) Effects.splitTextReveal(wtEl, 'Otto — Comvoy Sales Intelligence', 0.3);
-                Effects.initEyeTracking();
+                scroll.innerHTML = '';
+                document.body.classList.remove('chatting', 'trip-manager', 'map-view', 'dashboard');
+                ensureMessages();
+                document.body.classList.add('chatting');
                 _repsLoaded = false;
                 checkApiStatus();
+                setTimeout(() => input?.focus(), 100);
             }
 
             function toggleDropdown() {
@@ -4309,7 +4315,7 @@
             checkApiStatus();
 
             return {
-                ask, send, addBot, ensureMessages, clearChat, scrollDown,
+                ask, send, addBot, ensureMessages, clearChat, openChat, scrollDown,
                 updateUsage, getHistory: () => _chatHistory, getSid: () => sid,
                 getScroll: () => scroll, setMessagesDiv: v => { messagesDiv = v; },
                 getMessagesDiv: () => messagesDiv,
@@ -6786,6 +6792,7 @@
         window.dashFilterState = (s) => Dashboard.filterState(s);
         window.openTripManager = () => TripManager.open();
         window.clearChat = () => Chat.clearChat();
+        window.openChat = () => Chat.openChat();
         window.ask = (t) => Chat.ask(t);
         window.send = () => Chat.send();
         window.onKey = (e) => Chat.onKey(e);
