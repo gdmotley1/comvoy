@@ -655,133 +655,297 @@
 
         .api-notice-text strong { color: var(--text-primary); font-weight: 600; }
 
-        /* ========== CHAT GREETING ========== */
+        /* ========== CHAT GREETING — CINEMATIC ========== */
         .chat-greeting {
+            position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
             padding: 0 24px;
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto;
             min-height: 100%;
-            gap: 16px;
-            animation: greetFadeIn 0.6s ease;
+            gap: 20px;
             box-sizing: border-box;
             padding-top: 20px;
             padding-bottom: 20px;
+            overflow: visible;
         }
-        @keyframes greetFadeIn {
-            from { opacity: 0; transform: translateY(12px); }
-            to   { opacity: 1; transform: translateY(0); }
+
+        /* ---- Liquid Aurora Blobs ---- */
+        .greet-aurora {
+            position: absolute;
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            filter: blur(80px);
+            pointer-events: none;
+            will-change: transform, border-radius;
         }
+        .greet-aurora-1 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(79,143,255,0.22), transparent 70%);
+            top: -15%; left: -20%;
+            animation: auroraDrift1 15s ease-in-out infinite alternate, auroraMorph1 12s ease-in-out infinite;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+        .greet-aurora-2 {
+            width: 420px; height: 420px;
+            background: radial-gradient(circle, rgba(168,85,247,0.18), transparent 70%);
+            bottom: -10%; right: -15%;
+            animation: auroraDrift2 20s ease-in-out infinite alternate, auroraMorph2 14s ease-in-out infinite;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+        .greet-aurora-3 {
+            width: 360px; height: 360px;
+            background: radial-gradient(circle, rgba(0,212,255,0.14), transparent 70%);
+            top: 30%; left: 35%;
+            animation: auroraDrift3 18s ease-in-out infinite alternate, auroraMorph3 16s ease-in-out infinite;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+        /* Staggered aurora fade-in */
+        .greet-aurora-1 { animation: auroraFadeIn 2s ease 0.2s forwards, auroraDrift1 15s ease-in-out 2s infinite alternate, auroraMorph1 12s ease-in-out infinite; }
+        .greet-aurora-2 { animation: auroraFadeIn 2s ease 0.6s forwards, auroraDrift2 20s ease-in-out 2s infinite alternate, auroraMorph2 14s ease-in-out infinite; }
+        .greet-aurora-3 { animation: auroraFadeIn 2s ease 1.0s forwards, auroraDrift3 18s ease-in-out 2s infinite alternate, auroraMorph3 16s ease-in-out infinite; }
+
+        @keyframes auroraFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes auroraDrift1 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(60px, 30px) scale(1.12); } }
+        @keyframes auroraDrift2 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(-50px, -40px) scale(1.08); } }
+        @keyframes auroraDrift3 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(30px, -25px) scale(1.15); } }
+        @keyframes auroraMorph1 {
+            0%, 100% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+            25% { border-radius: 58% 42% 36% 64% / 43% 65% 35% 57%; }
+            50% { border-radius: 45% 55% 62% 38% / 53% 38% 62% 47%; }
+            75% { border-radius: 63% 37% 45% 55% / 38% 58% 42% 62%; }
+        }
+        @keyframes auroraMorph2 {
+            0%, 100% { border-radius: 45% 55% 50% 50% / 55% 45% 55% 45%; }
+            33% { border-radius: 60% 40% 35% 65% / 40% 60% 40% 60%; }
+            66% { border-radius: 35% 65% 55% 45% / 60% 35% 65% 35%; }
+        }
+        @keyframes auroraMorph3 {
+            0%, 100% { border-radius: 50% 50% 40% 60% / 60% 40% 50% 50%; }
+            50% { border-radius: 40% 60% 65% 35% / 35% 65% 40% 60%; }
+        }
+
+        /* ---- Floating Particles ---- */
+        .greet-particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            animation: particleFadeIn 1.5s ease forwards, particleFloat var(--dur) ease-in-out var(--delay) infinite;
+            animation-delay: var(--delay);
+        }
+        @keyframes particleFadeIn { from { opacity: 0; } to { opacity: var(--opa); } }
+        @keyframes particleFloat {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(var(--dx1), var(--dy1)); }
+            50% { transform: translate(var(--dx2), var(--dy2)); }
+            75% { transform: translate(var(--dx3), var(--dy3)); }
+        }
+
+        /* ---- Otto Eye — Cinematic Size ---- */
         .chat-greeting-eye {
             position: relative;
-            width: 120px; height: 120px;
-            animation: greetEyeEntrance 0.8s cubic-bezier(0.16,1,0.3,1) forwards, heroFloat 5s ease-in-out 0.8s infinite;
+            width: 180px; height: 180px;
+            animation: greetEyeEntrance 1s cubic-bezier(0.16,1,0.3,1) forwards, heroFloat 5s ease-in-out 1s infinite;
             overflow: visible;
             cursor: pointer;
+            z-index: 2;
         }
         @keyframes greetEyeEntrance {
-            from { opacity: 0; transform: translateY(30px) scale(0.85); }
+            from { opacity: 0; transform: translateY(40px) scale(0.8); }
             to   { opacity: 1; transform: translateY(0) scale(1); }
         }
+
+        /* Aura halo — bigger, richer */
+        .chat-greeting-eye::before {
+            content: '';
+            position: absolute;
+            inset: -80px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(79,143,255,0.2) 0%, rgba(79,143,255,0.08) 35%, rgba(168,85,247,0.03) 60%, transparent 75%);
+            animation: auraBreath 4s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        /* Light rays emanating from Otto */
+        .chat-greeting-eye::after {
+            content: '';
+            position: absolute;
+            width: 450px; height: 450px;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                transparent 0deg, rgba(79,143,255,0.04) 8deg, transparent 16deg,
+                transparent 40deg, rgba(168,85,247,0.03) 48deg, transparent 56deg,
+                transparent 90deg, rgba(0,212,255,0.04) 98deg, transparent 106deg,
+                transparent 140deg, rgba(79,143,255,0.03) 148deg, transparent 156deg,
+                transparent 200deg, rgba(168,85,247,0.04) 208deg, transparent 216deg,
+                transparent 260deg, rgba(0,212,255,0.03) 268deg, transparent 276deg,
+                transparent 320deg, rgba(79,143,255,0.04) 328deg, transparent 336deg,
+                transparent 360deg
+            );
+            animation: lightRaysRotate 30s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes lightRaysRotate { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+        /* Reflected glow beneath Otto */
+        .greet-reflection {
+            position: absolute;
+            width: 280px; height: 40px;
+            bottom: -24px; left: 50%;
+            transform: translateX(-50%);
+            background: radial-gradient(ellipse 100% 100%, rgba(79,143,255,0.12), rgba(168,85,247,0.06), transparent 70%);
+            border-radius: 50%;
+            filter: blur(12px);
+            animation: reflectionPulse 4s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes reflectionPulse {
+            0%, 100% { opacity: 0.5; transform: translateX(-50%) scaleX(1); }
+            50% { opacity: 0.8; transform: translateX(-50%) scaleX(1.1); }
+        }
+
+        /* Enhanced eye glow — deeper, more layers */
+        .chat-greeting-eye .otto-eye {
+            width: 100%; height: 100%;
+            filter:
+                drop-shadow(0 0 20px rgba(79,143,255,0.55))
+                drop-shadow(0 0 50px rgba(79,143,255,0.35))
+                drop-shadow(0 0 100px rgba(79,143,255,0.2))
+                drop-shadow(0 0 200px rgba(168,85,247,0.12));
+        }
+
+        /* 5 orb rings — expanding outward */
+        .chat-greeting-eye .orb-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1.5px solid rgba(79,143,255,0.2);
+            animation: orbRingPulse 4s ease-in-out infinite;
+            box-shadow: 0 0 15px rgba(79,143,255,0.06);
+        }
+        .chat-greeting-eye .orb-ring:nth-child(1) { inset: -20px; }
+        .chat-greeting-eye .orb-ring:nth-child(2) { inset: -42px; border-color: rgba(168,85,247,0.15); animation-delay: -0.8s; box-shadow: 0 0 18px rgba(168,85,247,0.05); }
+        .chat-greeting-eye .orb-ring:nth-child(3) { inset: -64px; border-color: rgba(0,212,255,0.1); animation-delay: -1.6s; box-shadow: 0 0 20px rgba(0,212,255,0.04); }
+        .chat-greeting-eye .orb-ring:nth-child(4) { inset: -88px; border-color: rgba(79,143,255,0.06); animation-delay: -2.4s; animation-duration: 5s; }
+        .chat-greeting-eye .orb-ring:nth-child(5) { inset: -114px; border-color: rgba(168,85,247,0.04); animation-delay: -3.2s; animation-duration: 6s; }
+
         /* Click shake — Otto gets "shaken up" */
         .chat-greeting-eye.otto-shaken {
             animation: ottoShake 0.6s ease-out forwards;
         }
         .chat-greeting-eye.otto-shaken .otto-eye {
             filter:
-                drop-shadow(0 0 20px rgba(255,100,50,0.6))
-                drop-shadow(0 0 50px rgba(255,60,120,0.4))
-                drop-shadow(0 0 90px rgba(168,85,247,0.3));
+                drop-shadow(0 0 25px rgba(255,100,50,0.7))
+                drop-shadow(0 0 60px rgba(255,60,120,0.5))
+                drop-shadow(0 0 120px rgba(168,85,247,0.35))
+                drop-shadow(0 0 200px rgba(255,100,50,0.15));
         }
         .chat-greeting-eye.otto-shaken .orb-ring {
             border-color: rgba(255,100,50,0.35) !important;
-            box-shadow: 0 0 20px rgba(255,100,50,0.15) !important;
+            box-shadow: 0 0 25px rgba(255,100,50,0.18) !important;
         }
         @keyframes ottoShake {
-            0%   { transform: translateX(0); }
-            10%  { transform: translateX(-6px) rotate(-3deg); }
-            20%  { transform: translateX(5px) rotate(2deg); }
-            30%  { transform: translateX(-4px) rotate(-2deg); }
-            40%  { transform: translateX(3px) rotate(1deg); }
-            50%  { transform: translateX(-2px) rotate(-0.5deg); }
-            60%  { transform: translateX(1px); }
-            100% { transform: translateX(0); }
+            0%   { transform: translateX(0) scale(1); }
+            8%   { transform: translateX(-8px) rotate(-4deg) scale(1.04); }
+            16%  { transform: translateX(7px) rotate(3deg) scale(1.02); }
+            24%  { transform: translateX(-5px) rotate(-2deg); }
+            32%  { transform: translateX(4px) rotate(1.5deg); }
+            44%  { transform: translateX(-2px) rotate(-0.5deg); }
+            56%  { transform: translateX(1px); }
+            100% { transform: translateX(0) scale(1); }
         }
-        /* Color recovery transition */
         .chat-greeting-eye.otto-recovering .otto-eye {
             transition: filter 0.8s ease;
         }
         .chat-greeting-eye.otto-recovering .orb-ring {
             transition: border-color 0.8s ease, box-shadow 0.8s ease;
         }
-        .chat-greeting-eye::before {
-            content: '';
-            position: absolute;
-            inset: -50px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(79,143,255,0.15) 0%, rgba(79,143,255,0.05) 40%, transparent 70%);
-            animation: auraBreath 4s ease-in-out infinite;
-            pointer-events: none;
-        }
-        .chat-greeting-eye .otto-eye {
-            width: 100%; height: 100%;
-            filter:
-                drop-shadow(0 0 15px rgba(79,143,255,0.45))
-                drop-shadow(0 0 40px rgba(79,143,255,0.3))
-                drop-shadow(0 0 80px rgba(79,143,255,0.15));
-        }
-        .chat-greeting-eye .orb-ring {
-            position: absolute;
-            inset: -18px;
-            border-radius: 50%;
-            border: 1.5px solid rgba(79,143,255,0.18);
-            animation: orbRingPulse 4s ease-in-out infinite;
-            box-shadow: 0 0 15px rgba(79,143,255,0.06);
-        }
-        .chat-greeting-eye .orb-ring:nth-child(2) { inset: -34px; border-color: rgba(168,85,247,0.12); animation-delay: -1.3s; }
-        .chat-greeting-eye .orb-ring:nth-child(3) { inset: -50px; border-color: rgba(0,212,255,0.08); animation-delay: -2.6s; }
+
+        /* ---- Gradient Text + Staggered Entrance ---- */
         .chat-greeting-text {
-            font-size: 26px;
-            font-weight: 400;
-            color: rgba(255,255,255,0.8);
+            font-size: 32px;
+            font-weight: 500;
             line-height: 1.3;
-            letter-spacing: -0.3px;
-            max-width: 480px;
+            letter-spacing: -0.5px;
+            max-width: 520px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(79,143,255,0.9) 50%, rgba(168,85,247,0.8) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            opacity: 0;
+            animation: greetTextIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.3s forwards;
+            z-index: 2;
         }
+        @keyframes greetTextIn {
+            from { opacity: 0; transform: translateY(20px); filter: blur(4px); }
+            to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+
         .chat-greeting-input {
             width: 100%;
             max-width: 520px;
             margin-top: 4px;
+            opacity: 0;
+            animation: greetElIn 0.7s cubic-bezier(0.16,1,0.3,1) 0.5s forwards;
+            z-index: 2;
         }
         .chat-greeting-input .input-bar {
             max-width: 100%;
         }
+        @keyframes greetElIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ---- Glassmorphism Suggestion Chips ---- */
         .chat-suggestions {
             display: flex;
             flex-wrap: nowrap;
-            gap: 8px;
+            gap: 10px;
             justify-content: center;
+            z-index: 2;
+            opacity: 0;
+            animation: greetElIn 0.7s cubic-bezier(0.16,1,0.3,1) 0.7s forwards;
         }
         .chat-suggestion {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.12);
-            color: rgba(255,255,255,0.55);
-            padding: 8px 14px;
-            border-radius: 20px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.6);
+            padding: 10px 18px;
+            border-radius: 24px;
             font-size: 13px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
             white-space: nowrap;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05), 0 2px 8px rgba(0,0,0,0.15);
         }
         .chat-suggestion:hover {
-            background: rgba(255,255,255,0.08);
-            color: rgba(255,255,255,0.85);
-            border-color: rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.9);
+            border-color: rgba(79,143,255,0.3);
+            transform: translateY(-1px) scale(1.03);
+            box-shadow: inset 0 0 0 1px rgba(79,143,255,0.12), 0 4px 16px rgba(0,0,0,0.2), 0 0 20px rgba(79,143,255,0.06);
         }
+        /* Stagger each chip */
+        .chat-suggestion:nth-child(1) { animation: chipIn 0.5s cubic-bezier(0.16,1,0.3,1) 0.8s both; }
+        .chat-suggestion:nth-child(2) { animation: chipIn 0.5s cubic-bezier(0.16,1,0.3,1) 0.9s both; }
+        .chat-suggestion:nth-child(3) { animation: chipIn 0.5s cubic-bezier(0.16,1,0.3,1) 1.0s both; }
+        @keyframes chipIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.92); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
         /* Hide bottom input bar when greeting is visible */
         body.greeting-mode .input-area { display: none; }
 
@@ -3472,8 +3636,14 @@
             body.chatting .chat-scroll { padding-top: 60px; }
             /* Mobile greeting */
             .chat-greeting { padding: 0 16px; gap: 14px; }
-            .chat-greeting-text { font-size: 24px; font-weight: 400; }
-            .chat-greeting-eye { width: 90px; height: 90px; }
+            .chat-greeting-text { font-size: 26px; }
+            .chat-greeting-eye { width: 120px; height: 120px; }
+            .chat-greeting-eye::after { width: 300px; height: 300px; }
+            .greet-reflection { width: 180px; }
+            .greet-aurora-1 { width: 300px; height: 300px; }
+            .greet-aurora-2 { width: 260px; height: 260px; }
+            .greet-aurora-3 { width: 220px; height: 220px; }
+            .greet-particle { display: none; }
             .chat-suggestion { font-size: 13px; padding: 8px 12px; }
             .chat-suggestions { flex-wrap: wrap; }
         }
@@ -4375,10 +4545,33 @@
                     `<button class="chat-suggestion" onclick="window._askSuggestion(this.textContent)">${esc(s)}</button>`
                 ).join('');
                 const eye = ottoEyeSvgFull();
+
+                /* Generate floating particles */
+                const colors = ['rgba(79,143,255,', 'rgba(168,85,247,', 'rgba(0,212,255,'];
+                let particles = '';
+                for (let i = 0; i < 14; i++) {
+                    const sz = 2 + Math.random() * 3;
+                    const x = 10 + Math.random() * 80;
+                    const y = 10 + Math.random() * 80;
+                    const c = colors[i % 3];
+                    const opa = 0.15 + Math.random() * 0.25;
+                    const dur = 10 + Math.random() * 12;
+                    const delay = Math.random() * 4;
+                    const dx1 = -15 + Math.random() * 30, dy1 = -20 + Math.random() * 40;
+                    const dx2 = -15 + Math.random() * 30, dy2 = -20 + Math.random() * 40;
+                    const dx3 = -15 + Math.random() * 30, dy3 = -20 + Math.random() * 40;
+                    particles += `<div class="greet-particle" style="width:${sz}px;height:${sz}px;left:${x}%;top:${y}%;background:${c}${opa});box-shadow:0 0 ${sz*3}px ${c}${opa*0.6});--opa:${opa};--dur:${dur}s;--delay:${delay}s;--dx1:${dx1}px;--dy1:${dy1}px;--dx2:${dx2}px;--dy2:${dy2}px;--dx3:${dx3}px;--dy3:${dy3}px"></div>`;
+                }
+
                 return `<div class="chat-greeting">
+                    <div class="greet-aurora greet-aurora-1"></div>
+                    <div class="greet-aurora greet-aurora-2"></div>
+                    <div class="greet-aurora greet-aurora-3"></div>
+                    ${particles}
                     <div class="chat-greeting-eye">
-                        <div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
+                        <div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
                         ${eye}
+                        <div class="greet-reflection"></div>
                     </div>
                     <div class="chat-greeting-text">${greet}</div>
                     <div class="chat-greeting-input" id="greetingInput"></div>
