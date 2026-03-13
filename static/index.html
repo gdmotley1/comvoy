@@ -6258,9 +6258,9 @@
                             ${priceBtKeys.map(bt => `<option value="${bt}">${bt}</option>`).join('')}
                         </select>
                     </div>
-                    <div id="priceSubtitle" style="display:flex;gap:16px;margin-bottom:2px;font-size:11px;color:var(--text-secondary)">
-                        <span>New <b style="color:#4f8fff">${fmtPrice(newAvg)}</b> avg · ${fmtK(cond.New?.count||0)}</span>
-                        <span>Used <b style="color:#a855f7">${fmtPrice(usedAvg)}</b> avg · ${fmtK(cond.Used?.count||0)}</span>
+                    <div id="priceSubtitle" style="display:flex;gap:16px;margin-bottom:8px;font-size:11px;color:var(--text-secondary)">
+                        <span><b style="color:#00d4ff">${fmtPrice(t.avg_price)}</b> avg · ${fmtK(totalPriced)} vehicles</span>
+                        <span>Spread <b style="color:#34d399">${fmtPrice(spread)}</b></span>
                     </div>
                     <div class="dash-price-curve-wrap" id="priceCurveWrap" style="flex:1;position:relative">
                         ${renderPriceCurve(brVals, smyrnaAvgPrice, 'Smyrna ' + fmtPrice(smyrnaAvgPrice))}
@@ -6272,7 +6272,7 @@
                 </div>`;
 
                 // Store state for dropdown handler
-                _priceCurveState = { renderPriceCurve, brVals, brKeys, smyrnaAvgPrice, priceBtData, newAvg, usedAvg, cond };
+                _priceCurveState = { renderPriceCurve, brVals, brKeys, smyrnaAvgPrice, priceBtData, avgPrice: t.avg_price, totalPriced, spread };
 
                 // Body type donut
                 const btypes = d.by_body_type.slice(0, 8);
@@ -6577,8 +6577,8 @@
                     if (val === 'all') {
                         curveWrap.innerHTML = s.renderPriceCurve(s.brVals, s.smyrnaAvgPrice, 'Smyrna ' + fmtPrice(s.smyrnaAvgPrice)) +
                             '<div class="dash-price-crosshair" id="priceCrosshair"><div class="dash-price-crosshair-tip" id="priceCrosshairTip"></div><div class="dash-price-crosshair-dot" id="priceCrosshairDot"></div></div>';
-                        subtitle.innerHTML = `<span>New <b style="color:#4f8fff">${fmtPrice(s.newAvg)}</b> avg · ${fmtK(s.cond.New?.count||0)}</span>` +
-                            `<span>Used <b style="color:#a855f7">${fmtPrice(s.usedAvg)}</b> avg · ${fmtK(s.cond.Used?.count||0)}</span>`;
+                        subtitle.innerHTML = `<span><b style="color:#00d4ff">${fmtPrice(s.avgPrice)}</b> avg · ${fmtK(s.totalPriced)} vehicles</span>` +
+                            `<span>Spread <b style="color:#34d399">${fmtPrice(s.spread)}</b></span>`;
                     } else {
                         const btd = s.priceBtData[val];
                         if (!btd) return;
