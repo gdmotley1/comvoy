@@ -27,7 +27,7 @@ def _latest_snapshot_id(db) -> str:
 @router.get("/snapshots", response_model=list[SnapshotInfo])
 def list_snapshots(response: Response):
     """List all ingested report snapshots."""
-    response.headers["Cache-Control"] = "public, max-age=300"  # 5 min
+    response.headers["Cache-Control"] = "public, s-maxage=300, stale-while-revalidate=60"
     db = get_service_client()
     result = db.table("report_snapshots").select("*").order("report_date", desc=True).execute()
     return result.data
@@ -216,7 +216,7 @@ def get_dealer_briefing(dealer_id: str):
 @router.get("/map")
 def get_map_data(response: Response):
     """All dealers with lat/lng + lead scores for map display."""
-    response.headers["Cache-Control"] = "public, max-age=300"  # 5 min
+    response.headers["Cache-Control"] = "public, s-maxage=300, stale-while-revalidate=60"
 
     # Check cache
     now = time.time()

@@ -52,7 +52,7 @@ def _paginate_vehicles(db, snap_id, state=None):
 @router.get("/dashboard")
 def get_dashboard(response: Response, state: str = Query(None, description="Filter by state code")):
     """Single endpoint returning all dashboard analytics."""
-    response.headers["Cache-Control"] = "public, max-age=300"
+    response.headers["Cache-Control"] = "public, s-maxage=300, stale-while-revalidate=60"
 
     # Check cache
     cache_key = f"dashboard:{state or 'all'}"

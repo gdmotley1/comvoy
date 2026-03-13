@@ -5,10 +5,12 @@
       "src": "api/index.py",
       "use": "@vercel/python",
       "config": {
-        "maxDuration": 120
+        "maxDuration": 300,
+        "memory": 1024
       }
     }
   ],
+  "regions": ["iad1"],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/index.py" },
     { "src": "/health", "dest": "/api/index.py" }

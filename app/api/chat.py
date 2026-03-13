@@ -1,10 +1,10 @@
 """Chat endpoint — the agent loop that powers the web interface.
 
 Token-efficiency guardrails:
-- Capped output tokens (2048)
-- Max 3 tool-use loop iterations
-- Sliding-window conversation history (20 messages)
-- Tool result truncation (8000 chars)
+- Capped output tokens (4096)
+- Max 5 tool-use loop iterations
+- Sliding-window conversation history (30 messages)
+- Tool result truncation (12000 chars)
 - Per-request usage logging with cost estimates
 """
 
@@ -128,7 +128,7 @@ def _prepare_chat(msg: ChatMessage, session_id: str):
         logger.warning("No Anthropic API key configured")
         return None
 
-    client = Anthropic(api_key=settings.anthropic_api_key, timeout=90.0)
+    client = Anthropic(api_key=settings.anthropic_api_key, timeout=180.0)
 
     # History recovery & pruning
     if session_id not in _conversations:
@@ -189,14 +189,27 @@ async def chat(msg: ChatMessage, session_id: str = "default"):
 
         if response.stop_reason == "tool_use":
             history.append({"role": "assistant", "content": response.content})
-            tool_results = []
-            for block in response.content:
-                if block.type == "tool_use":
-                    logger.info(f"Agent tool [{iteration+1}/{settings.agent_max_loop}]: {block.name}({block.input})")
-                    tools_called.append(block.name)
-                    result = execute_tool(block.name, block.input)
-                    result = _truncate_tool_result(result, settings.agent_tool_result_cap)
-                    tool_results.append({"type": "tool_result", "tool_use_id": block.id, "content": result})
+            tool_blocks = [b for b in response.content if b.type == "tool_use"]
+            for block in tool_blocks:
+                logger.info(f"Agent tool [{iteration+1}/{settings.agent_max_loop}]: {block.name}({block.input})")
+                tools_called.append(block.name)
+
+            if len(tool_blocks) > 1:
+                # Parallel execution for multiple tools
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as pool:
+                    futures = {pool.submit(execute_tool, b.name, b.input): b for b in tool_blocks}
+                    tool_results = []
+                    for future in concurrent.futures.as_completed(futures):
+                        block = futures[future]
+                        result = _truncate_tool_result(future.result(), settings.agent_tool_result_cap)
+                        tool_results.append({"type": "tool_result", "tool_use_id": block.id, "content": result})
+            else:
+                block = tool_blocks[0]
+                result = execute_tool(block.name, block.input)
+                result = _truncate_tool_result(result, settings.agent_tool_result_cap)
+                tool_results = [{"type": "tool_result", "tool_use_id": block.id, "content": result}]
+
             history.append({"role": "user", "content": tool_results})
             continue
 
@@ -284,17 +297,30 @@ async def chat_stream(msg: ChatMessage, session_id: str = "default"):
 
                 if response.stop_reason == "tool_use":
                     history.append({"role": "assistant", "content": response.content})
-                    tool_results = []
-                    for block in response.content:
-                        if block.type == "tool_use":
-                            status_msg = TOOL_STATUS_MAP.get(block.name, f"Working...")
-                            yield _sse_event("status", {"status": status_msg, "tool": block.name})
-                            logger.info(f"Agent tool [{iteration+1}/{settings.agent_max_loop}]: {block.name}")
-                            tools_called.append(block.name)
+                    tool_blocks = [b for b in response.content if b.type == "tool_use"]
 
-                            tool_result = execute_tool(block.name, block.input)
-                            tool_result = _truncate_tool_result(tool_result, settings.agent_tool_result_cap)
-                            tool_results.append({"type": "tool_result", "tool_use_id": block.id, "content": tool_result})
+                    # Emit status for all tools first
+                    for block in tool_blocks:
+                        status_msg = TOOL_STATUS_MAP.get(block.name, "Working...")
+                        yield _sse_event("status", {"status": status_msg, "tool": block.name})
+                        logger.info(f"Agent tool [{iteration+1}/{settings.agent_max_loop}]: {block.name}")
+                        tools_called.append(block.name)
+
+                    # Execute tools in parallel when multiple
+                    if len(tool_blocks) > 1:
+                        async def _run_tool(b):
+                            return b.id, await asyncio.to_thread(execute_tool, b.name, b.input)
+                        results = await asyncio.gather(*[_run_tool(b) for b in tool_blocks])
+                        tool_results = [
+                            {"type": "tool_result", "tool_use_id": tid,
+                             "content": _truncate_tool_result(res, settings.agent_tool_result_cap)}
+                            for tid, res in results
+                        ]
+                    else:
+                        block = tool_blocks[0]
+                        tool_result = execute_tool(block.name, block.input)
+                        tool_result = _truncate_tool_result(tool_result, settings.agent_tool_result_cap)
+                        tool_results = [{"type": "tool_result", "tool_use_id": block.id, "content": tool_result}]
 
                     history.append({"role": "user", "content": tool_results})
                     continue
@@ -304,12 +330,12 @@ async def chat_stream(msg: ChatMessage, session_id: str = "default"):
                 full_text = "\n".join(text_parts)
                 history.append({"role": "assistant", "content": full_text})
 
-                # Stream text in small chunks for typing effect
-                chunk_size = 12
+                # Stream text in chunks for typing effect
+                chunk_size = 24
                 for i in range(0, len(full_text), chunk_size):
                     chunk = full_text[i:i + chunk_size]
                     yield _sse_event("delta", {"text": chunk})
-                    await asyncio.sleep(0.015)
+                    await asyncio.sleep(0.008)
 
                 # Done event with usage
                 elapsed = time.time() - start_time

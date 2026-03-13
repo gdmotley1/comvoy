@@ -4299,7 +4299,7 @@
 
             async function streamChat(url, body, callbacks) {
                 const ctrl = new AbortController();
-                const timer = setTimeout(() => ctrl.abort(), 120000);
+                const timer = setTimeout(() => ctrl.abort(), 300000);
                 try {
                     const resp = await fetch(url, {
                         method: 'POST',
@@ -4654,10 +4654,20 @@
                                     msgs.appendChild(botEl);
                                 }
                                 accumulated += data.text;
-                                bubbleEl.innerHTML = fmt(accumulated);
-                                scrollDown();
+                                // Throttled fmt() — run at most every 100ms during streaming
+                                if (!bubbleEl._fmtTimer) {
+                                    bubbleEl._fmtTimer = setTimeout(() => {
+                                        bubbleEl.innerHTML = fmt(accumulated);
+                                        bubbleEl._fmtTimer = null;
+                                        scrollDown();
+                                    }, 100);
+                                }
                             },
                             onDone(data) {
+                                if (bubbleEl && bubbleEl._fmtTimer) {
+                                    clearTimeout(bubbleEl._fmtTimer);
+                                    bubbleEl._fmtTimer = null;
+                                }
                                 if (data.full_text) {
                                     accumulated = data.full_text;
                                     if (bubbleEl) {
@@ -5141,10 +5151,19 @@
                                     msgs.appendChild(botEl);
                                 }
                                 accumulated += data.text;
-                                bubbleEl.innerHTML = fmt(accumulated);
-                                scrollDown();
+                                if (!bubbleEl._fmtTimer) {
+                                    bubbleEl._fmtTimer = setTimeout(() => {
+                                        bubbleEl.innerHTML = fmt(accumulated);
+                                        bubbleEl._fmtTimer = null;
+                                        scrollDown();
+                                    }, 100);
+                                }
                             },
                             onDone(data) {
+                                if (bubbleEl && bubbleEl._fmtTimer) {
+                                    clearTimeout(bubbleEl._fmtTimer);
+                                    bubbleEl._fmtTimer = null;
+                                }
                                 if (data.full_text) {
                                     accumulated = data.full_text;
                                     if (bubbleEl) {
