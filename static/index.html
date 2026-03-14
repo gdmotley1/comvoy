@@ -2714,99 +2714,102 @@
             justify-content: center;
             position: relative;
             padding: 16px 20px 20px;
-            overflow: hidden;
+            overflow: visible;
             min-height: calc(100vh - 120px);
         }
 
-        .tm-route-svg {
-            width: 180px;
-            height: 120px;
+        /* Animated truck scene */
+        .tm-scene {
             position: relative;
+            width: 320px;
+            height: 180px;
             z-index: 2;
-            filter: drop-shadow(0 0 20px rgba(79,143,255,0.3));
             opacity: 0;
             animation: tmIconEntrance 0.8s cubic-bezier(0.16,1,0.3,1) forwards;
         }
 
-        .tm-route-path {
-            stroke-dasharray: 200;
-            stroke-dashoffset: 200;
-            animation: tmPathDraw 1.5s cubic-bezier(0.4,0,0.2,1) 0.3s forwards;
+        .tm-scene svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
         }
 
+        /* The route path draws in */
+        .tm-route-path {
+            stroke-dasharray: 400;
+            stroke-dashoffset: 400;
+            animation: tmPathDraw 2s cubic-bezier(0.4,0,0.2,1) 0.3s forwards;
+        }
         @keyframes tmPathDraw { to { stroke-dashoffset: 0; } }
 
-        .tm-waypoint {
+        /* Truck moves along the path */
+        .tm-truck-group {
             opacity: 0;
-            animation: tmWaypointPop 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+            animation: tmTruckAppear 0.5s ease 1.8s forwards;
         }
-        .tm-waypoint:nth-child(2) { animation-delay: 0.6s; }
-        .tm-waypoint:nth-child(3) { animation-delay: 0.9s; }
-        .tm-waypoint:nth-child(4) { animation-delay: 1.2s; }
+        @keyframes tmTruckAppear { to { opacity: 1; } }
 
-        .tm-waypoint-pulse {
-            animation: tmPulse 2.5s ease-in-out infinite;
+        /* Glowing trail behind truck */
+        .tm-trail {
+            stroke-dasharray: 400;
+            stroke-dashoffset: 400;
+            animation: tmTrailDraw 6s linear 2.3s infinite;
         }
-
-        @keyframes tmPulse { 0%, 100% { r: 8; opacity: 0.15; } 50% { r: 14; opacity: 0; } }
-        @keyframes tmWaypointPop { 0% { opacity: 0; transform: scale(0); } 100% { opacity: 1; transform: scale(1); } }
-
-        .tm-route-wrap {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2;
+        @keyframes tmTrailDraw {
+            0% { stroke-dashoffset: 400; opacity: 0.8; }
+            80% { stroke-dashoffset: 0; opacity: 0.3; }
+            100% { stroke-dashoffset: 0; opacity: 0; }
         }
 
-        /* Layer 1: rotating conic light rays */
-        .tm-route-wrap::after {
-            content: '';
+        /* Waypoint pins pulse */
+        .tm-pin {
+            opacity: 0;
+            animation: tmPinPop 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+        .tm-pin:nth-child(2) { animation-delay: 0.8s; }
+        .tm-pin:nth-child(3) { animation-delay: 1.1s; }
+        .tm-pin:nth-child(4) { animation-delay: 1.4s; }
+
+        .tm-pin-ring {
+            animation: tmPinPulse 2.5s ease-in-out infinite;
+            transform-origin: center;
+        }
+        @keyframes tmPinPulse {
+            0%, 100% { r: 10; opacity: 0.12; }
+            50% { r: 18; opacity: 0; }
+        }
+        @keyframes tmPinPop { from { opacity: 0; transform: scale(0) translateY(5px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+        /* Floating glow underneath scene — no hard edges */
+        .tm-scene-glow {
             position: absolute;
-            width: 320px;
-            height: 320px;
-            top: 50%;
+            bottom: -20px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            background: conic-gradient(
-                from 0deg,
-                transparent 0deg,
-                rgba(79,143,255,0.06) 30deg,
-                transparent 60deg,
-                rgba(168,85,247,0.05) 120deg,
-                transparent 150deg,
-                rgba(0,212,255,0.04) 210deg,
-                transparent 240deg,
-                rgba(79,143,255,0.06) 300deg,
-                transparent 360deg
-            );
-            border-radius: 50%;
-            filter: blur(30px);
-            animation: tmRaysRotate 30s linear infinite;
+            transform: translateX(-50%);
+            width: 280px;
+            height: 60px;
+            background: radial-gradient(ellipse, rgba(79,143,255,0.12) 0%, rgba(168,85,247,0.05) 50%, transparent 80%);
+            filter: blur(25px);
             pointer-events: none;
-            z-index: -1;
-        }
-
-        @keyframes tmRaysRotate { to { transform: translate(-50%, -50%) rotate(360deg); } }
-
-        /* Layer 2: breathing radial glow */
-        .tm-route-wrap::before {
-            content: '';
-            position: absolute;
-            width: 200px;
-            height: 140px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: radial-gradient(ellipse, rgba(79,143,255,0.15) 0%, rgba(168,85,247,0.06) 40%, transparent 70%);
-            border-radius: 50%;
-            filter: blur(20px);
             animation: tmGlowBreathe 3s ease-in-out infinite alternate;
-            pointer-events: none;
-            z-index: -1;
         }
+        @keyframes tmGlowBreathe { 0% { opacity: 0.5; transform: translateX(-50%) scale(0.9); } 100% { opacity: 1; transform: translateX(-50%) scale(1.1); } }
 
-        @keyframes tmGlowBreathe { 0% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.9); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } }
+        /* Particle sparks from truck */
+        .tm-spark {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: #4f8fff;
+            pointer-events: none;
+            opacity: 0;
+            animation: tmSparkFloat 2s ease-out infinite;
+        }
+        @keyframes tmSparkFloat {
+            0% { opacity: 0.8; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(var(--sx), var(--sy)) scale(0); }
+        }
 
         @keyframes tmIconEntrance { 0% { opacity: 0; transform: translateY(20px) scale(0.9); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
 
@@ -4078,11 +4081,10 @@
             .tm-hero { padding: 8px 16px 16px; min-height: auto; }
             .tm-hero-headline { font-size: 24px; }
             .tm-hero-sub { font-size: 14px; }
-            .tm-route-svg { width: 120px; height: 80px; }
+            .tm-scene { width: 220px; height: 130px; }
             .tm-suggestions { grid-template-columns: 1fr; gap: 10px; max-width: 100%; }
             .tm-sug-card { padding: 14px; }
             .tm-stats { gap: 10px; flex-wrap: wrap; justify-content: center; }
-            .tm-route-wrap::after { width: 220px; height: 220px; }
             /* Mobile dashboard KPIs */
             .dash-kpi-row { gap: 8px; }
             .dash-kpi-item { min-width: calc(50% - 4px); }
@@ -5507,14 +5509,43 @@
                             '<div class="tm-aurora tm-aurora-2"></div>' +
                             '<div class="tm-aurora tm-aurora-3"></div>' +
                             _tmParticles() +
-                            '<div class="tm-route-wrap">' +
-                                '<svg class="tm-route-svg" viewBox="0 0 180 120" fill="none">' +
-                                    '<path class="tm-route-path" d="M20 95 C40 95, 45 55, 65 55 S90 20, 115 20 S140 55, 160 55" stroke="url(#tmRouteGrad)" stroke-width="2.5" stroke-linecap="round" fill="none"/>' +
-                                    '<defs><linearGradient id="tmRouteGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#4f8fff"/><stop offset="50%" stop-color="#a855f7"/><stop offset="100%" stop-color="#00d4ff"/></linearGradient></defs>' +
-                                    '<g class="tm-waypoint"><circle class="tm-waypoint-pulse" cx="20" cy="95" r="8" fill="#4f8fff" opacity="0.15"/><circle cx="20" cy="95" r="5" fill="none" stroke="#4f8fff" stroke-width="1.5" opacity="0.6"/><circle cx="20" cy="95" r="2.5" fill="#4f8fff"/></g>' +
-                                    '<g class="tm-waypoint"><circle class="tm-waypoint-pulse" cx="65" cy="55" r="8" fill="#a855f7" opacity="0.15" style="animation-delay:0.8s"/><circle cx="65" cy="55" r="4" fill="none" stroke="#a855f7" stroke-width="1.5" opacity="0.6"/><circle cx="65" cy="55" r="2" fill="#a855f7"/></g>' +
-                                    '<g class="tm-waypoint"><circle class="tm-waypoint-pulse" cx="115" cy="20" r="8" fill="#4f8fff" opacity="0.15" style="animation-delay:1.6s"/><circle cx="115" cy="20" r="4" fill="none" stroke="#4f8fff" stroke-width="1.5" opacity="0.6"/><circle cx="115" cy="20" r="2" fill="#4f8fff"/></g>' +
-                                    '<g class="tm-waypoint"><circle class="tm-waypoint-pulse" cx="160" cy="55" r="8" fill="#00d4ff" opacity="0.15" style="animation-delay:2.4s"/><circle cx="160" cy="55" r="5" fill="none" stroke="#00d4ff" stroke-width="1.5" opacity="0.6"/><circle cx="160" cy="55" r="2.5" fill="#00d4ff"/></g>' +
+                            '<div class="tm-scene" id="tmScene">' +
+                                '<div class="tm-scene-glow"></div>' +
+                                '<svg viewBox="0 0 320 180" fill="none">' +
+                                    '<defs>' +
+                                        '<linearGradient id="tmRouteGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#4f8fff"/><stop offset="50%" stop-color="#a855f7"/><stop offset="100%" stop-color="#00d4ff"/></linearGradient>' +
+                                        '<linearGradient id="tmTrailGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#4f8fff" stop-opacity="0"/><stop offset="40%" stop-color="#a855f7" stop-opacity="0.6"/><stop offset="100%" stop-color="#00d4ff" stop-opacity="0.9"/></linearGradient>' +
+                                        '<filter id="tmGlow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
+                                        '<filter id="tmTrailGlow"><feGaussianBlur stdDeviation="4"/></filter>' +
+                                    '</defs>' +
+                                    /* Road surface — subtle dashed center line */
+                                    '<path d="M20 150 C70 150, 80 90, 130 80 S200 30, 240 40 S280 80, 300 70" stroke="rgba(255,255,255,0.04)" stroke-width="18" stroke-linecap="round" fill="none"/>' +
+                                    /* Glowing trail (animated) */
+                                    '<path class="tm-trail" d="M20 150 C70 150, 80 90, 130 80 S200 30, 240 40 S280 80, 300 70" stroke="url(#tmTrailGrad)" stroke-width="4" stroke-linecap="round" fill="none" filter="url(#tmTrailGlow)"/>' +
+                                    /* Main route path (draws in) */
+                                    '<path class="tm-route-path" d="M20 150 C70 150, 80 90, 130 80 S200 30, 240 40 S280 80, 300 70" stroke="url(#tmRouteGrad)" stroke-width="2.5" stroke-linecap="round" fill="none"/>' +
+                                    /* Waypoint pins */
+                                    '<g class="tm-pin"><circle class="tm-pin-ring" cx="20" cy="150" r="10" fill="#4f8fff" opacity="0.12"/><circle cx="20" cy="150" r="5" fill="none" stroke="#4f8fff" stroke-width="1.5" opacity="0.7"/><circle cx="20" cy="150" r="2.5" fill="#4f8fff" filter="url(#tmGlow)"/></g>' +
+                                    '<g class="tm-pin"><circle class="tm-pin-ring" cx="130" cy="80" r="10" fill="#a855f7" opacity="0.12" style="animation-delay:0.5s"/><circle cx="130" cy="80" r="4" fill="none" stroke="#a855f7" stroke-width="1.5" opacity="0.7"/><circle cx="130" cy="80" r="2" fill="#a855f7" filter="url(#tmGlow)"/></g>' +
+                                    '<g class="tm-pin"><circle class="tm-pin-ring" cx="240" cy="40" r="10" fill="#4f8fff" opacity="0.12" style="animation-delay:1s"/><circle cx="240" cy="40" r="4" fill="none" stroke="#4f8fff" stroke-width="1.5" opacity="0.7"/><circle cx="240" cy="40" r="2" fill="#4f8fff" filter="url(#tmGlow)"/></g>' +
+                                    '<g class="tm-pin"><circle class="tm-pin-ring" cx="300" cy="70" r="10" fill="#00d4ff" opacity="0.12" style="animation-delay:1.5s"/><circle cx="300" cy="70" r="5" fill="none" stroke="#00d4ff" stroke-width="1.5" opacity="0.7"/><circle cx="300" cy="70" r="2.5" fill="#00d4ff" filter="url(#tmGlow)"/></g>' +
+                                    /* Truck that moves along the path */
+                                    '<g class="tm-truck-group">' +
+                                        '<g filter="url(#tmGlow)">' +
+                                            '<animateMotion dur="6s" repeatCount="indefinite" rotate="auto" path="M20 150 C70 150, 80 90, 130 80 S200 30, 240 40 S280 80, 300 70"/>' +
+                                            /* Truck body */
+                                            '<rect x="-14" y="-8" width="28" height="16" rx="3" fill="rgba(79,143,255,0.9)" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>' +
+                                            /* Cab */
+                                            '<rect x="10" y="-6" width="8" height="12" rx="2" fill="rgba(79,143,255,0.7)" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>' +
+                                            /* Windshield */
+                                            '<rect x="12" y="-4" width="4" height="5" rx="1" fill="rgba(168,85,247,0.5)"/>' +
+                                            /* Wheels */
+                                            '<circle cx="-7" cy="8" r="2.5" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>' +
+                                            '<circle cx="7" cy="8" r="2.5" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>' +
+                                            /* Headlight glow */
+                                            '<circle cx="18" cy="0" r="3" fill="rgba(255,220,100,0.3)"/>' +
+                                        '</g>' +
+                                    '</g>' +
                                 '</svg>' +
                             '</div>' +
                             '<div class="tm-hero-headline">Where should you go next?</div>' +
