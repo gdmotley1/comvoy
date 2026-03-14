@@ -2713,52 +2713,127 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            padding: 80px 20px 60px;
+            padding: 16px 20px 20px;
             overflow: hidden;
+            min-height: calc(100vh - 120px);
         }
 
-        .tm-hero-icon {
-            width: 80px;
-            height: 80px;
+        .tm-route-svg {
+            width: 180px;
+            height: 120px;
             position: relative;
             z-index: 2;
-            filter: drop-shadow(0 0 24px rgba(79,143,255,0.35));
-            animation: tmIconFloat 4s ease-in-out infinite alternate;
+            filter: drop-shadow(0 0 20px rgba(79,143,255,0.3));
             opacity: 0;
-            animation: tmIconEntrance 0.8s cubic-bezier(0.16,1,0.3,1) forwards, tmIconFloat 4s ease-in-out 0.8s infinite alternate;
+            animation: tmIconEntrance 0.8s cubic-bezier(0.16,1,0.3,1) forwards;
         }
 
-        @keyframes tmIconFloat { 0% { transform: translateY(0); } 100% { transform: translateY(-8px); } }
+        .tm-route-path {
+            stroke-dasharray: 200;
+            stroke-dashoffset: 200;
+            animation: tmPathDraw 1.5s cubic-bezier(0.4,0,0.2,1) 0.3s forwards;
+        }
+
+        @keyframes tmPathDraw { to { stroke-dashoffset: 0; } }
+
+        .tm-waypoint {
+            opacity: 0;
+            animation: tmWaypointPop 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+        .tm-waypoint:nth-child(2) { animation-delay: 0.6s; }
+        .tm-waypoint:nth-child(3) { animation-delay: 0.9s; }
+        .tm-waypoint:nth-child(4) { animation-delay: 1.2s; }
+
+        .tm-waypoint-pulse {
+            animation: tmPulse 2.5s ease-in-out infinite;
+        }
+
+        @keyframes tmPulse { 0%, 100% { r: 8; opacity: 0.15; } 50% { r: 14; opacity: 0; } }
+        @keyframes tmWaypointPop { 0% { opacity: 0; transform: scale(0); } 100% { opacity: 1; transform: scale(1); } }
+
+        .tm-route-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -60%);
+            width: 240px;
+            height: 100px;
+            background: radial-gradient(ellipse, rgba(79,143,255,0.12) 0%, transparent 70%);
+            z-index: 1;
+            animation: tmGlowPulse 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes tmGlowPulse { 0% { opacity: 0.6; } 100% { opacity: 1; } }
+
         @keyframes tmIconEntrance { 0% { opacity: 0; transform: translateY(20px) scale(0.9); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
 
         .tm-hero-headline {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 600;
-            margin-top: 24px;
+            margin-top: 16px;
             position: relative;
             z-index: 2;
-            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(79,143,255,0.9), rgba(168,85,247,0.8));
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(79,143,255,0.9), rgba(168,85,247,0.8));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             opacity: 0;
-            animation: tmTextEntrance 0.7s cubic-bezier(0.16,1,0.3,1) 0.2s forwards;
+            animation: tmTextEntrance 0.7s cubic-bezier(0.16,1,0.3,1) 0.3s forwards;
         }
 
         .tm-hero-sub {
             font-size: 15px;
             color: var(--text-tertiary);
-            margin-top: 8px;
+            margin-top: 6px;
             text-align: center;
             position: relative;
             z-index: 2;
             max-width: 380px;
             line-height: 1.5;
             opacity: 0;
-            animation: tmTextEntrance 0.7s cubic-bezier(0.16,1,0.3,1) 0.35s forwards;
+            animation: tmTextEntrance 0.7s cubic-bezier(0.16,1,0.3,1) 0.45s forwards;
         }
 
         @keyframes tmTextEntrance { 0% { opacity: 0; transform: translateY(12px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        /* TM floating particles */
+        .tm-particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: rgba(79,143,255,0.35);
+            pointer-events: none;
+            z-index: 1;
+            animation: tmParticleFloat linear infinite;
+        }
+
+        @keyframes tmParticleFloat {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-120px) translateX(30px); opacity: 0; }
+        }
+
+        .tm-stats {
+            display: flex;
+            gap: 16px;
+            margin-top: 20px;
+            position: relative;
+            z-index: 2;
+            opacity: 0;
+            animation: tmTextEntrance 0.6s cubic-bezier(0.16,1,0.3,1) 0.9s forwards;
+        }
+
+        .tm-stat {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            letter-spacing: 0.3px;
+        }
+
+        .tm-stat-sep {
+            color: rgba(79,143,255,0.4);
+        }
 
         /* Aurora blobs for TM */
         .tm-aurora {
@@ -2773,7 +2848,7 @@
             width: 400px;
             height: 400px;
             background: radial-gradient(circle, rgba(79,143,255,0.18), transparent 70%);
-            top: -80px;
+            top: -40px;
             left: 50%;
             transform: translateX(-50%);
             animation: auroraFadeIn 2s ease 0.2s forwards, auroraDrift1 15s ease-in-out 2s infinite alternate, auroraMorph1 12s ease-in-out infinite;
@@ -2783,16 +2858,25 @@
             width: 320px;
             height: 320px;
             background: radial-gradient(circle, rgba(168,85,247,0.14), transparent 70%);
-            top: -40px;
+            top: 10%;
             right: 10%;
             animation: auroraFadeIn 2s ease 0.6s forwards, auroraDrift2 20s ease-in-out 2s infinite alternate, auroraMorph2 14s ease-in-out infinite;
+        }
+
+        .tm-aurora-3 {
+            width: 280px;
+            height: 280px;
+            background: radial-gradient(circle, rgba(0,212,255,0.1), transparent 70%);
+            bottom: 10%;
+            left: 15%;
+            animation: auroraFadeIn 2s ease 1s forwards, auroraDrift1 18s ease-in-out 2s infinite alternate-reverse, auroraMorph2 16s ease-in-out infinite;
         }
 
         /* Glass rep cards */
         .tm-rep-cards {
             display: flex;
             gap: 14px;
-            margin-top: 32px;
+            margin-top: 20px;
             position: relative;
             z-index: 2;
         }
@@ -3870,8 +3954,16 @@
             .btn-ghost, .btn-map, .btn-dash, .btn-trips {
                 font-size: 11px; padding: 10px 10px; min-height: 36px;
             }
-            /* Mobile trip modal */
+            /* Mobile trip manager */
             .tm-modal { padding: 16px; margin: 8px; max-width: calc(100vw - 16px); border-radius: 16px; }
+            .tm-particle { display: none; }
+            .tm-hero { padding: 8px 16px 16px; min-height: auto; }
+            .tm-hero-headline { font-size: 24px; }
+            .tm-hero-sub { font-size: 14px; }
+            .tm-route-svg { width: 120px; height: 80px; }
+            .tm-rep-cards { flex-direction: column; gap: 10px; width: 100%; }
+            .tm-rep-card { padding: 16px 20px; }
+            .tm-stats { gap: 10px; flex-wrap: wrap; justify-content: center; }
             /* Mobile dashboard KPIs */
             .dash-kpi-row { gap: 8px; }
             .dash-kpi-item { min-width: calc(50% - 4px); }
@@ -3904,7 +3996,7 @@
     <div class="bg-canvas"><div class="bg-orb-3"></div></div>
 
     <div class="topbar" role="banner">
-        <div class="wordmark" onclick="clearChat()">
+        <div class="wordmark" onclick="goHome()">
             <div class="wordmark-text shiny-text">Otto</div>
             <div class="wordmark-sub">Comvoy Sales Intelligence</div>
         </div>
@@ -4938,6 +5030,21 @@
                 checkApiStatus();
             }
 
+            function goHome() {
+                document.body.classList.remove('chatting', 'map-view', 'dashboard', 'trip-manager', 'greeting-mode');
+                messagesDiv = null;
+                scroll.innerHTML = buildWelcomeHTML();
+                // Move input bar back to its normal position
+                const bar = document.querySelector('.input-bar');
+                const area = document.querySelector('.input-area');
+                if (bar && area) area.appendChild(bar);
+                // Re-init welcome title animation and eye tracking
+                const wtEl = Core.$('welcomeTitle');
+                if (wtEl) Effects.splitTextReveal(wtEl, 'Otto — Comvoy Sales Intelligence', 0.3);
+                Effects.initEyeTracking();
+                checkApiStatus();
+            }
+
             function toggleDropdown() {
                 _ddOpen = !_ddOpen;
                 $('snapshotDropdown').classList.toggle('open', _ddOpen);
@@ -5044,7 +5151,7 @@
             checkApiStatus();
 
             return {
-                ask, send, addBot, ensureMessages, clearChat, openChat, scrollDown,
+                ask, send, addBot, ensureMessages, clearChat, openChat, goHome, scrollDown,
                 updateUsage, getHistory: () => _chatHistory, getSid: () => sid,
                 getScroll: () => scroll, setMessagesDiv: v => { messagesDiv = v; },
                 getMessagesDiv: () => messagesDiv,
@@ -5253,32 +5360,72 @@
                 await loadReps();
             }
 
+            function _tmParticles() {
+                let html = '';
+                for (let i = 0; i < 10; i++) {
+                    const x = Math.random() * 100;
+                    const y = 20 + Math.random() * 60;
+                    const dur = 6 + Math.random() * 8;
+                    const delay = Math.random() * 6;
+                    const size = 2 + Math.random() * 2;
+                    const color = Math.random() > 0.5 ? 'rgba(79,143,255,0.35)' : 'rgba(168,85,247,0.25)';
+                    html += `<div class="tm-particle" style="left:${x}%;top:${y}%;width:${size}px;height:${size}px;background:${color};animation-duration:${dur}s;animation-delay:${delay}s"></div>`;
+                }
+                return html;
+            }
+
             function buildHTML() {
                 return `<div class="tm-container" id="tmContainer">
-                    <div class="tm-header">
-                        <div>
-                            <div class="tm-title">Trip Manager</div>
-                            <div class="tm-subtitle">Plan routes, get auto-briefings via email</div>
-                        </div>
-                        <select class="tm-rep-select" id="tmRepSelect" onchange="onTmRepChange()" style="display:none">
-                            <option value="">Select a rep...</option>
-                        </select>
-                    </div>
+                    <select class="tm-rep-select" id="tmRepSelect" onchange="onTmRepChange()" style="display:none">
+                        <option value="">Select a rep...</option>
+                    </select>
                     <div id="tmContent">
                         <div class="tm-hero">
                             <div class="tm-aurora tm-aurora-1"></div>
                             <div class="tm-aurora tm-aurora-2"></div>
-                            <svg class="tm-hero-icon" viewBox="0 0 80 80" fill="none">
-                                <path d="M40 8 L40 28 M40 52 L40 72" stroke="rgba(79,143,255,0.6)" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 5"/>
-                                <circle cx="40" cy="28" r="8" fill="none" stroke="rgba(79,143,255,0.8)" stroke-width="2"/>
-                                <circle cx="40" cy="28" r="3" fill="rgba(79,143,255,0.9)"/>
-                                <circle cx="40" cy="52" r="8" fill="none" stroke="rgba(168,85,247,0.8)" stroke-width="2"/>
-                                <circle cx="40" cy="52" r="3" fill="rgba(168,85,247,0.9)"/>
-                                <path d="M40 36 C56 40, 56 44, 40 44" stroke="rgba(79,143,255,0.4)" stroke-width="1.5" fill="none"/>
+                            <div class="tm-aurora tm-aurora-3"></div>
+                            ${_tmParticles()}
+                            <div class="tm-route-glow"></div>
+                            <svg class="tm-route-svg" viewBox="0 0 180 120" fill="none">
+                                <path class="tm-route-path" d="M20 95 C40 95, 45 55, 65 55 S90 20, 115 20 S140 55, 160 55" stroke="url(#tmRouteGrad)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                                <defs>
+                                    <linearGradient id="tmRouteGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#4f8fff"/>
+                                        <stop offset="50%" stop-color="#a855f7"/>
+                                        <stop offset="100%" stop-color="#00d4ff"/>
+                                    </linearGradient>
+                                </defs>
+                                <g class="tm-waypoint">
+                                    <circle class="tm-waypoint-pulse" cx="20" cy="95" r="8" fill="#4f8fff" opacity="0.15"/>
+                                    <circle cx="20" cy="95" r="5" fill="none" stroke="#4f8fff" stroke-width="1.5" opacity="0.6"/>
+                                    <circle cx="20" cy="95" r="2.5" fill="#4f8fff"/>
+                                </g>
+                                <g class="tm-waypoint">
+                                    <circle class="tm-waypoint-pulse" cx="65" cy="55" r="8" fill="#a855f7" opacity="0.15" style="animation-delay:0.8s"/>
+                                    <circle cx="65" cy="55" r="4" fill="none" stroke="#a855f7" stroke-width="1.5" opacity="0.6"/>
+                                    <circle cx="65" cy="55" r="2" fill="#a855f7"/>
+                                </g>
+                                <g class="tm-waypoint">
+                                    <circle class="tm-waypoint-pulse" cx="115" cy="20" r="8" fill="#4f8fff" opacity="0.15" style="animation-delay:1.6s"/>
+                                    <circle cx="115" cy="20" r="4" fill="none" stroke="#4f8fff" stroke-width="1.5" opacity="0.6"/>
+                                    <circle cx="115" cy="20" r="2" fill="#4f8fff"/>
+                                </g>
+                                <g class="tm-waypoint">
+                                    <circle class="tm-waypoint-pulse" cx="160" cy="55" r="8" fill="#00d4ff" opacity="0.15" style="animation-delay:2.4s"/>
+                                    <circle cx="160" cy="55" r="5" fill="none" stroke="#00d4ff" stroke-width="1.5" opacity="0.6"/>
+                                    <circle cx="160" cy="55" r="2.5" fill="#00d4ff"/>
+                                </g>
                             </svg>
                             <div class="tm-hero-headline">Plan your next route</div>
                             <div class="tm-hero-sub">Select a rep to view trips, build routes, and send auto-briefings</div>
                             <div class="tm-rep-cards" id="tmRepCards"></div>
+                            <div class="tm-stats">
+                                <span class="tm-stat">2 reps</span>
+                                <span class="tm-stat-sep">&middot;</span>
+                                <span class="tm-stat">12 states</span>
+                                <span class="tm-stat-sep">&middot;</span>
+                                <span class="tm-stat">Auto-briefing ready</span>
+                            </div>
                         </div>
                     </div>
                 </div>`;
@@ -7583,6 +7730,7 @@
         window.dashFilterState = (s) => Dashboard.filterState(s);
         window.openTripManager = () => TripManager.open();
         window.clearChat = () => Chat.clearChat();
+        window.goHome = () => Chat.goHome();
         window.openChat = () => Chat.openChat();
         window._askSuggestion = (text) => { Chat.ensureMessages(); Chat.ask(text); };
         window.ask = (t) => Chat.ask(t);
