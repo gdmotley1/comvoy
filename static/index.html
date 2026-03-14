@@ -2720,92 +2720,118 @@
             min-height: calc(100vh - 120px);
         }
 
-        /* Liquid route loop */
+        /* Liquid route scene */
         .tm-route-scene {
             position: relative;
-            width: 380px;
-            height: 220px;
+            width: min(520px, 90vw);
+            height: 260px;
             z-index: 2;
             overflow: visible;
             opacity: 0;
-            animation: tmIconEntrance 0.8s cubic-bezier(0.16,1,0.3,1) forwards;
-            margin-bottom: 8px;
+            animation: tmIconEntrance 1s cubic-bezier(0.16,1,0.3,1) forwards;
+            margin-bottom: 4px;
         }
         .tm-route-scene svg { width: 100%; height: 100%; overflow: visible; }
 
-        /* Glowing route trail */
-        .tm-route-path {
+        /* Primary route — thick liquid glow */
+        .tm-route-outer {
+            fill: none;
+            stroke: url(#tmRouteGrad);
+            stroke-width: 16;
+            stroke-linecap: round;
+            opacity: 0.06;
+            filter: blur(8px);
+        }
+        .tm-route-mid {
+            fill: none;
+            stroke: url(#tmRouteGrad);
+            stroke-width: 4;
+            stroke-linecap: round;
+            opacity: 0.5;
+            filter: blur(1px);
+        }
+        .tm-route-core {
             fill: none;
             stroke: url(#tmRouteGrad);
             stroke-width: 2;
             stroke-linecap: round;
-            filter: drop-shadow(0 0 6px rgba(79,143,255,0.4));
+            filter: drop-shadow(0 0 8px rgba(79,143,255,0.5)) drop-shadow(0 0 20px rgba(168,85,247,0.2));
         }
-        .tm-route-path-glow {
+        /* Secondary route — fainter */
+        .tm-route-secondary {
             fill: none;
-            stroke: url(#tmRouteGrad);
-            stroke-width: 6;
+            stroke: url(#tmRouteGrad2);
+            stroke-width: 1;
             stroke-linecap: round;
-            opacity: 0.15;
-            filter: blur(4px);
-        }
-        /* Dashed flow along path */
-        .tm-route-flow {
-            fill: none;
-            stroke: url(#tmRouteGrad);
-            stroke-width: 2.5;
-            stroke-linecap: round;
-            stroke-dasharray: 8 24;
-            animation: tmRouteFlow 3s linear infinite;
-        }
-        @keyframes tmRouteFlow {
-            to { stroke-dashoffset: -32; }
+            opacity: 0.2;
+            stroke-dasharray: 4 8;
+            filter: drop-shadow(0 0 4px rgba(0,212,255,0.2));
         }
 
-        /* Waypoint markers */
-        .tm-waypoint {
-            animation: tmWaypointPulse 2.5s ease-in-out infinite;
+        /* Flowing energy pulses along path */
+        .tm-flow {
+            fill: none;
+            stroke: url(#tmFlowGrad);
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-dasharray: 20 60;
+            animation: tmFlow 4s linear infinite;
         }
-        .tm-waypoint:nth-child(2) { animation-delay: -0.8s; }
-        .tm-waypoint:nth-child(3) { animation-delay: -1.6s; }
-        @keyframes tmWaypointPulse {
-            0%, 100% { opacity: 0.6; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.3); }
+        .tm-flow-2 {
+            fill: none;
+            stroke: url(#tmFlowGrad);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-dasharray: 12 80;
+            animation: tmFlow 5s linear infinite reverse;
+            opacity: 0.5;
         }
-        .tm-waypoint-ring {
-            animation: tmRingPulse 2.5s ease-in-out infinite;
+        @keyframes tmFlow { to { stroke-dashoffset: -80; } }
+
+        /* Waypoints — breathing glow nodes */
+        .tm-node {
+            filter: drop-shadow(0 0 6px var(--node-color, #4f8fff));
         }
-        .tm-waypoint-ring:nth-of-type(2) { animation-delay: -0.8s; }
-        .tm-waypoint-ring:nth-of-type(3) { animation-delay: -1.6s; }
-        @keyframes tmRingPulse {
-            0%, 100% { r: 6; opacity: 0.3; }
-            50% { r: 10; opacity: 0; }
+        .tm-node-ring {
+            fill: none;
+            stroke: var(--node-color, #4f8fff);
+            stroke-width: 1;
+            opacity: 0;
+            animation: tmNodeRing 3s ease-out infinite;
+        }
+        @keyframes tmNodeRing {
+            0% { r: 4; opacity: 0.5; stroke-width: 1.5; }
+            100% { r: 16; opacity: 0; stroke-width: 0.5; }
         }
 
-        /* Truck icons traveling along path */
-        .tm-truck {
-            animation: tmTruckMove 6s linear infinite;
-            filter: drop-shadow(0 0 4px rgba(79,143,255,0.6));
+        /* Orbs traveling along path */
+        .tm-orb {
+            offset-rotate: 0deg;
+            animation: tmOrbMove 7s cubic-bezier(0.4,0,0.6,1) infinite;
         }
-        .tm-truck:nth-of-type(2) { animation-delay: -2s; }
-        .tm-truck:nth-of-type(3) { animation-delay: -4s; }
-        @keyframes tmTruckMove {
+        .tm-orb:nth-of-type(2) { animation-delay: -2.3s; animation-duration: 8s; }
+        .tm-orb:nth-of-type(3) { animation-delay: -4.6s; animation-duration: 6s; }
+        .tm-orb:nth-of-type(4) { animation-delay: -1.5s; animation-duration: 9s; }
+        @keyframes tmOrbMove {
             0% { offset-distance: 0%; opacity: 0; }
-            5% { opacity: 1; }
-            95% { opacity: 1; }
+            8% { opacity: 1; }
+            92% { opacity: 1; }
             100% { offset-distance: 100%; opacity: 0; }
         }
 
-        /* Soft radial glow behind route */
-        .tm-route-scene::after {
+        /* Ambient glow behind scene */
+        .tm-route-scene::before {
             content: '';
             position: absolute;
-            inset: -40px;
+            width: 120%;
+            height: 160%;
+            top: -30%;
+            left: -10%;
             border-radius: 50%;
-            background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(79,143,255,0.08) 0%, rgba(168,85,247,0.04) 50%, transparent 80%);
-            filter: blur(20px);
+            background: radial-gradient(ellipse at 50% 50%, rgba(79,143,255,0.06) 0%, rgba(168,85,247,0.03) 40%, transparent 70%);
+            filter: blur(30px);
             z-index: -1;
-            animation: tmGlowBreathe 3s ease-in-out infinite alternate;
+            animation: tmGlowBreathe 4s ease-in-out infinite alternate;
         }
 
         @keyframes tmIconEntrance { 0% { opacity: 0; transform: translateY(20px) scale(0.9); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
@@ -4052,7 +4078,7 @@
             .tm-hero { padding: 8px 16px 16px; min-height: auto; }
             .tm-hero-headline { font-size: 24px; }
             .tm-hero-sub { font-size: 14px; }
-            .tm-route-scene { width: 280px; height: 160px; }
+            .tm-route-scene { width: 90vw; height: 180px; }
             .tm-suggestions { max-width: 100%; }
             .tm-sug-card { font-size: 12px; padding: 8px 14px 8px 10px; }
             .tm-stats { gap: 10px; flex-wrap: wrap; justify-content: center; }
@@ -5456,29 +5482,57 @@
             }
 
             function _buildScene() {
-                var path = 'M30,140 C80,140 100,40 190,50 C280,60 260,160 310,130 C360,100 350,50 350,50';
-                var wp = [[30,140],[190,50],[310,130]];
-                var truck = '<polygon points="-2,-5 10,-5 13,-2.5 13,2.5 10,5 -2,5" fill="#4f8fff" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/><circle cx="3" cy="5" r="1.8" fill="#1a1a3e" stroke="#4f8fff" stroke-width="0.5"/><circle cx="10" cy="5" r="1.8" fill="#1a1a3e" stroke="#4f8fff" stroke-width="0.5"/>';
-                var svg = '<svg viewBox="0 0 380 190" xmlns="http://www.w3.org/2000/svg">' +
+                var main = 'M20,180 C60,180 80,60 160,50 C240,40 220,160 300,140 C380,120 420,30 480,40 C520,48 500,120 500,140';
+                var sec1 = 'M60,200 C120,170 180,100 260,110 C340,120 380,80 440,60';
+                var sec2 = 'M100,30 C160,50 200,130 320,100 C380,85 420,130 460,160';
+                var nodes = [[20,180,'#4f8fff'],[160,50,'#a855f7'],[300,140,'#00d4ff'],[480,40,'#4f8fff']];
+
+                var svg = '<svg viewBox="0 0 520 220" xmlns="http://www.w3.org/2000/svg">' +
                     '<defs>' +
                         '<linearGradient id="tmRouteGrad" x1="0%" y1="0%" x2="100%" y2="0%">' +
                             '<stop offset="0%" stop-color="#4f8fff"/>' +
-                            '<stop offset="50%" stop-color="#a855f7"/>' +
+                            '<stop offset="40%" stop-color="#a855f7"/>' +
                             '<stop offset="100%" stop-color="#00d4ff"/>' +
                         '</linearGradient>' +
+                        '<linearGradient id="tmRouteGrad2" x1="0%" y1="0%" x2="100%" y2="0%">' +
+                            '<stop offset="0%" stop-color="#00d4ff" stop-opacity="0.3"/>' +
+                            '<stop offset="100%" stop-color="#a855f7" stop-opacity="0.1"/>' +
+                        '</linearGradient>' +
+                        '<linearGradient id="tmFlowGrad" x1="0%" y1="0%" x2="100%" y2="0%">' +
+                            '<stop offset="0%" stop-color="#4f8fff" stop-opacity="0"/>' +
+                            '<stop offset="50%" stop-color="#fff" stop-opacity="0.8"/>' +
+                            '<stop offset="100%" stop-color="#00d4ff" stop-opacity="0"/>' +
+                        '</linearGradient>' +
+                        '<radialGradient id="tmOrbGrad"><stop offset="0%" stop-color="#fff"/><stop offset="40%" stop-color="#4f8fff"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient>' +
                     '</defs>' +
-                    '<path class="tm-route-path-glow" d="' + path + '"/>' +
-                    '<path class="tm-route-path" d="' + path + '"/>' +
-                    '<path class="tm-route-flow" d="' + path + '"/>';
-                wp.forEach(function(p, i) {
-                    var colors = ['#4f8fff','#a855f7','#00d4ff'];
-                    svg += '<circle class="tm-waypoint-ring" cx="'+p[0]+'" cy="'+p[1]+'" r="6" fill="none" stroke="'+colors[i]+'" stroke-width="1" style="animation-delay:'+(i*-0.8)+'s;transform-origin:'+p[0]+'px '+p[1]+'px"/>';
-                    svg += '<circle class="tm-waypoint" cx="'+p[0]+'" cy="'+p[1]+'" r="4" fill="'+colors[i]+'" style="animation-delay:'+(i*-0.8)+'s;transform-origin:'+p[0]+'px '+p[1]+'px"/>';
-                    svg += '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="2" fill="white" opacity="0.8"/>';
+
+                    /* secondary routes (faint) */
+                    '<path class="tm-route-secondary" d="' + sec1 + '"/>' +
+                    '<path class="tm-route-secondary" d="' + sec2 + '" style="animation-delay:-2s;opacity:0.12"/>' +
+
+                    /* main route layers: outer glow → mid → core → flow */
+                    '<path class="tm-route-outer" d="' + main + '"/>' +
+                    '<path class="tm-route-mid" d="' + main + '"/>' +
+                    '<path class="tm-route-core" d="' + main + '"/>' +
+                    '<path class="tm-flow" d="' + main + '"/>' +
+                    '<path class="tm-flow-2" d="' + main + '"/>';
+
+                /* waypoint nodes */
+                nodes.forEach(function(n, i) {
+                    svg += '<g class="tm-node" style="--node-color:' + n[2] + '">' +
+                        '<circle class="tm-node-ring" cx="'+n[0]+'" cy="'+n[1]+'" r="4" style="animation-delay:'+(i*-0.7)+'s"/>' +
+                        '<circle cx="'+n[0]+'" cy="'+n[1]+'" r="3.5" fill="' + n[2] + '" opacity="0.3"/>' +
+                        '<circle cx="'+n[0]+'" cy="'+n[1]+'" r="2" fill="' + n[2] + '"/>' +
+                        '<circle cx="'+n[0]+'" cy="'+n[1]+'" r="1" fill="white" opacity="0.9"/>' +
+                    '</g>';
                 });
-                for (var t = 0; t < 3; t++) {
-                    svg += '<g class="tm-truck" style="offset-path:path(\''+path+'\');offset-rotate:auto;animation-delay:'+(t*-2)+'s">' + truck + '</g>';
+
+                /* traveling orbs — smooth glowing dots */
+                for (var t = 0; t < 4; t++) {
+                    var sizes = [3.5, 2.5, 3, 2];
+                    svg += '<circle class="tm-orb" r="'+sizes[t]+'" fill="url(#tmOrbGrad)" style="offset-path:path(\''+main+'\')" />';
                 }
+
                 svg += '</svg>';
                 return '<div class="tm-route-scene">' + svg + '</div>';
             }
@@ -5495,7 +5549,9 @@
                             '<div class="tm-hero-headline">Where should you go next?</div>' +
                             '<div class="tm-hero-sub">AI-suggested trips based on your latest inventory data</div>' +
                             '<div class="tm-suggestions" id="tmSuggestions">' +
-                                '<div class="tm-sug-card sug-hot" style="opacity:0.3;grid-column:1/-1"><div class="tm-sug-icon">' + ICONS.fire + '</div><div class="tm-sug-text"><div class="tm-sug-title">Loading suggestions...</div></div></div>' +
+                                '<div class="tm-sug-card sug-hot" onclick="tmSuggest(\'Show me the hottest leads to visit\')"><div class="tm-sug-icon">' + ICONS.fire + '</div><div class="tm-sug-text"><div class="tm-sug-title">Visit hot leads</div></div></div>' +
+                                '<div class="tm-sug-card sug-target" onclick="tmSuggest(\'Show me all dealers near the largest market\')"><div class="tm-sug-icon">' + ICONS.target + '</div><div class="tm-sug-text"><div class="tm-sug-title">Scout top markets</div></div></div>' +
+                                '<div class="tm-sug-card sug-territory" onclick="tmSuggest(\'Help me plan an optimized route to visit dealers\')"><div class="tm-sug-icon">' + ICONS.map + '</div><div class="tm-sug-text"><div class="tm-sug-title">Build a route</div></div></div>' +
                             '</div>' +
                             '<div class="tm-stats" id="tmStats"><span class="tm-stat">Analyzing inventory...</span></div>' +
                         '</div>' +
