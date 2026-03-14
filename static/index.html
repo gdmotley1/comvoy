@@ -751,7 +751,7 @@
         /* ---- Otto Eye — Cinematic Size ---- */
         .chat-greeting-eye {
             position: relative;
-            width: 180px; height: 180px;
+            width: 220px; height: 220px;
             animation: greetEyeEntrance 1s cubic-bezier(0.16,1,0.3,1) forwards, heroFloat 5s ease-in-out 1s infinite;
             overflow: visible;
             cursor: pointer;
@@ -814,7 +814,22 @@
             50% { opacity: 0.8; transform: translateX(-50%) scaleX(1.1); }
         }
 
-        /* Enhanced eye glow — deeper, more layers */
+        /* Spline 3D robot — replaces SVG eye */
+        .otto-spline {
+            width: 260%;
+            height: 260%;
+            border: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: auto;
+            background: transparent;
+            border-radius: 50%;
+            -webkit-mask-image: radial-gradient(ellipse 42% 42% at 50% 50%, black 60%, transparent 100%);
+            mask-image: radial-gradient(ellipse 42% 42% at 50% 50%, black 60%, transparent 100%);
+        }
+
         .chat-greeting-eye .otto-eye {
             width: 100%; height: 100%;
             filter:
@@ -4039,7 +4054,7 @@
             /* Mobile greeting */
             .chat-greeting { padding: 0 16px; gap: 14px; }
             .chat-greeting-text { font-size: 26px; }
-            .chat-greeting-eye { width: 120px; height: 120px; }
+            .chat-greeting-eye { width: 150px; height: 150px; }
             .chat-greeting-eye::after { width: 300px; height: 300px; }
             .greet-reflection { width: 180px; }
             .greet-aurora-1 { width: 300px; height: 300px; }
@@ -4982,7 +4997,7 @@
                     ${particles}
                     <div class="chat-greeting-eye">
                         <div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
-                        ${eye}
+                        <iframe class="otto-spline" src="https://my.spline.design/robo-yG5GWfQq3fZapw3pG9hovu8Q/" loading="lazy" allow="autoplay"></iframe>
                         <div class="greet-reflection"></div>
                     </div>
                     <div class="chat-greeting-text">${greet}</div>
@@ -4996,10 +5011,8 @@
                 if (_greetEyeCleanup) _greetEyeCleanup();
                 const container = document.querySelector('.chat-greeting-eye');
                 if (!container) return;
-                const eye = container.querySelector('.otto-eye');
-                if (!eye) return;
 
-                /* ---- Mouse/touch tracking (matches home page) ---- */
+                /* Magnetic drift toward cursor */
                 let _magX = 0, _magY = 0, _curMagX = 0, _curMagY = 0, _rafId = null;
                 const onMove = e => {
                     if (!document.contains(container)) return;
@@ -5011,17 +5024,6 @@
                     const dx = clientX - cx, dy = clientY - cy;
                     const dist = Math.sqrt(dx * dx + dy * dy);
                     const angle = Math.atan2(dy, dx);
-                    const pupilR = Math.min(dist / 8, 4);
-                    const px = 30 + Math.cos(angle) * pupilR;
-                    const py = 30 + Math.sin(angle) * pupilR;
-                    const pupil = eye.querySelector('.otto-pupil');
-                    const glow = eye.querySelector('.pupil-glow');
-                    const spec1 = eye.querySelector('.specular-1');
-                    const spec2 = eye.querySelector('.specular-2');
-                    if (pupil) { pupil.setAttribute('cx', px); pupil.setAttribute('cy', py); }
-                    if (glow) { glow.setAttribute('cx', px); glow.setAttribute('cy', py); }
-                    if (spec1) { spec1.setAttribute('cx', px - 5); spec1.setAttribute('cy', py - 5); }
-                    if (spec2) { spec2.setAttribute('cx', px - 3.5); spec2.setAttribute('cy', py - 3.5); }
                     const magnetRange = 300;
                     if (dist < magnetRange) {
                         const strength = (1 - dist / magnetRange) * 8;
@@ -5043,25 +5045,9 @@
                 }
                 _rafId = requestAnimationFrame(magLoop);
 
-                /* ---- Click shake interaction ---- */
-                const onClick = () => {
-                    container.classList.remove('otto-recovering');
-                    container.classList.add('otto-shaken');
-                    container.addEventListener('animationend', function onEnd() {
-                        container.removeEventListener('animationend', onEnd);
-                        container.classList.remove('otto-shaken');
-                        container.classList.add('otto-recovering');
-                        // Re-apply floating after shake
-                        container.style.animation = '';
-                        setTimeout(() => container.classList.remove('otto-recovering'), 800);
-                    });
-                };
-                container.addEventListener('click', onClick);
-
                 _greetEyeCleanup = () => {
                     document.removeEventListener('mousemove', onMove);
                     document.removeEventListener('touchmove', onMove);
-                    container.removeEventListener('click', onClick);
                     if (_rafId) cancelAnimationFrame(_rafId);
                     _rafId = null;
                     _greetEyeCleanup = null;
