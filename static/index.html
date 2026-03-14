@@ -2720,37 +2720,89 @@
             min-height: calc(100vh - 120px);
         }
 
-        /* 3D Spline scene */
-        .tm-scene {
+        /* Liquid route loop */
+        .tm-route-scene {
             position: relative;
-            width: 320px;
-            height: 320px;
+            width: 380px;
+            height: 220px;
             z-index: 2;
-            overflow: hidden;
+            overflow: visible;
             opacity: 0;
             animation: tmIconEntrance 0.8s cubic-bezier(0.16,1,0.3,1) forwards;
-            margin-bottom: -20px;
-            -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 40%, transparent 70%);
-            mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 40%, transparent 70%);
+            margin-bottom: 8px;
+        }
+        .tm-route-scene svg { width: 100%; height: 100%; overflow: visible; }
+
+        /* Glowing route trail */
+        .tm-route-path {
+            fill: none;
+            stroke: url(#tmRouteGrad);
+            stroke-width: 2;
+            stroke-linecap: round;
+            filter: drop-shadow(0 0 6px rgba(79,143,255,0.4));
+        }
+        .tm-route-path-glow {
+            fill: none;
+            stroke: url(#tmRouteGrad);
+            stroke-width: 6;
+            stroke-linecap: round;
+            opacity: 0.15;
+            filter: blur(4px);
+        }
+        /* Dashed flow along path */
+        .tm-route-flow {
+            fill: none;
+            stroke: url(#tmRouteGrad);
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-dasharray: 8 24;
+            animation: tmRouteFlow 3s linear infinite;
+        }
+        @keyframes tmRouteFlow {
+            to { stroke-dashoffset: -32; }
         }
 
-        .tm-scene iframe {
-            width: 140%;
-            height: 140%;
-            border: none;
-            pointer-events: auto;
-            background: transparent;
-            margin-left: -20%;
-            margin-top: -20%;
+        /* Waypoint markers */
+        .tm-waypoint {
+            animation: tmWaypointPulse 2.5s ease-in-out infinite;
+        }
+        .tm-waypoint:nth-child(2) { animation-delay: -0.8s; }
+        .tm-waypoint:nth-child(3) { animation-delay: -1.6s; }
+        @keyframes tmWaypointPulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.3); }
+        }
+        .tm-waypoint-ring {
+            animation: tmRingPulse 2.5s ease-in-out infinite;
+        }
+        .tm-waypoint-ring:nth-of-type(2) { animation-delay: -0.8s; }
+        .tm-waypoint-ring:nth-of-type(3) { animation-delay: -1.6s; }
+        @keyframes tmRingPulse {
+            0%, 100% { r: 6; opacity: 0.3; }
+            50% { r: 10; opacity: 0; }
         }
 
-        /* Soft glow halo behind globe */
-        .tm-scene::after {
+        /* Truck icons traveling along path */
+        .tm-truck {
+            animation: tmTruckMove 6s linear infinite;
+            filter: drop-shadow(0 0 4px rgba(79,143,255,0.6));
+        }
+        .tm-truck:nth-of-type(2) { animation-delay: -2s; }
+        .tm-truck:nth-of-type(3) { animation-delay: -4s; }
+        @keyframes tmTruckMove {
+            0% { offset-distance: 0%; opacity: 0; }
+            5% { opacity: 1; }
+            95% { opacity: 1; }
+            100% { offset-distance: 100%; opacity: 0; }
+        }
+
+        /* Soft radial glow behind route */
+        .tm-route-scene::after {
             content: '';
             position: absolute;
-            inset: -20px;
+            inset: -40px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(79,143,255,0.12) 0%, rgba(168,85,247,0.06) 40%, transparent 70%);
+            background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(79,143,255,0.08) 0%, rgba(168,85,247,0.04) 50%, transparent 80%);
             filter: blur(20px);
             z-index: -1;
             animation: tmGlowBreathe 3s ease-in-out infinite alternate;
@@ -4026,7 +4078,7 @@
             .tm-hero { padding: 8px 16px 16px; min-height: auto; }
             .tm-hero-headline { font-size: 24px; }
             .tm-hero-sub { font-size: 14px; }
-            .tm-scene { width: 200px; height: 200px; }
+            .tm-route-scene { width: 280px; height: 160px; }
             .tm-suggestions { grid-template-columns: 1fr; gap: 10px; max-width: 100%; }
             .tm-sug-card { padding: 14px; }
             .tm-stats { gap: 10px; flex-wrap: wrap; justify-content: center; }
@@ -5430,9 +5482,31 @@
             }
 
             function _buildScene() {
-                return '<div class="tm-scene" id="tmScene">' +
-                    '<iframe src="https://my.spline.design/holographicearthwithdynamiclines-J7ZPtkEbKYSvJazew1s6Ac0v/" loading="lazy" allow="autoplay"></iframe>' +
-                '</div>';
+                var path = 'M30,140 C80,140 100,40 190,50 C280,60 260,160 310,130 C360,100 350,50 350,50';
+                var wp = [[30,140],[190,50],[310,130]];
+                var truck = '<polygon points="-2,-5 10,-5 13,-2.5 13,2.5 10,5 -2,5" fill="#4f8fff" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/><circle cx="3" cy="5" r="1.8" fill="#1a1a3e" stroke="#4f8fff" stroke-width="0.5"/><circle cx="10" cy="5" r="1.8" fill="#1a1a3e" stroke="#4f8fff" stroke-width="0.5"/>';
+                var svg = '<svg viewBox="0 0 380 190" xmlns="http://www.w3.org/2000/svg">' +
+                    '<defs>' +
+                        '<linearGradient id="tmRouteGrad" x1="0%" y1="0%" x2="100%" y2="0%">' +
+                            '<stop offset="0%" stop-color="#4f8fff"/>' +
+                            '<stop offset="50%" stop-color="#a855f7"/>' +
+                            '<stop offset="100%" stop-color="#00d4ff"/>' +
+                        '</linearGradient>' +
+                    '</defs>' +
+                    '<path class="tm-route-path-glow" d="' + path + '"/>' +
+                    '<path class="tm-route-path" d="' + path + '"/>' +
+                    '<path class="tm-route-flow" d="' + path + '"/>';
+                wp.forEach(function(p, i) {
+                    var colors = ['#4f8fff','#a855f7','#00d4ff'];
+                    svg += '<circle class="tm-waypoint-ring" cx="'+p[0]+'" cy="'+p[1]+'" r="6" fill="none" stroke="'+colors[i]+'" stroke-width="1" style="animation-delay:'+(i*-0.8)+'s;transform-origin:'+p[0]+'px '+p[1]+'px"/>';
+                    svg += '<circle class="tm-waypoint" cx="'+p[0]+'" cy="'+p[1]+'" r="4" fill="'+colors[i]+'" style="animation-delay:'+(i*-0.8)+'s;transform-origin:'+p[0]+'px '+p[1]+'px"/>';
+                    svg += '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="2" fill="white" opacity="0.8"/>';
+                });
+                for (var t = 0; t < 3; t++) {
+                    svg += '<g class="tm-truck" style="offset-path:path(\''+path+'\');offset-rotate:auto;animation-delay:'+(t*-2)+'s">' + truck + '</g>';
+                }
+                svg += '</svg>';
+                return '<div class="tm-route-scene">' + svg + '</div>';
             }
 
             function buildHTML() {
