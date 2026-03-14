@@ -2718,118 +2718,39 @@
             min-height: calc(100vh - 120px);
         }
 
-        /* Infinite side-scroller scene */
+        /* 3D Spline scene */
         .tm-scene {
             position: relative;
-            width: 480px;
-            height: 160px;
+            width: 240px;
+            height: 240px;
             z-index: 2;
+            border-radius: 50%;
             overflow: hidden;
-            border-radius: 20px;
             opacity: 0;
             animation: tmIconEntrance 0.8s cubic-bezier(0.16,1,0.3,1) forwards;
+            margin-bottom: -10px;
         }
 
-        /* Scrolling layer base */
-        .tm-layer {
-            position: absolute;
-            left: 0;
-            top: 0;
+        .tm-scene iframe {
+            width: 100%;
             height: 100%;
-            display: flex;
-            will-change: transform;
+            border: none;
+            pointer-events: auto;
+            background: transparent;
         }
 
-        .tm-layer svg {
-            flex-shrink: 0;
-            height: 100%;
-        }
-
-        /* Parallax speeds */
-        .tm-layer-sky { width: 200%; animation: tmScrollSky 40s linear infinite; }
-        .tm-layer-mountains { width: 200%; animation: tmScrollMtn 25s linear infinite; }
-        .tm-layer-trees { width: 200%; animation: tmScrollTree 12s linear infinite; }
-        .tm-layer-road { width: 200%; animation: tmScrollRoad 6s linear infinite; }
-
-        @keyframes tmScrollSky { to { transform: translateX(-50%); } }
-        @keyframes tmScrollMtn { to { transform: translateX(-50%); } }
-        @keyframes tmScrollTree { to { transform: translateX(-50%); } }
-        @keyframes tmScrollRoad { to { transform: translateX(-50%); } }
-
-        /* The truck — stays fixed in the scene */
-        .tm-truck {
+        /* Glow ring around the globe */
+        .tm-scene::after {
+            content: '';
             position: absolute;
-            left: 15%;
-            bottom: 26px;
-            width: 64px;
-            height: 36px;
-            z-index: 10;
-            filter: drop-shadow(0 0 12px rgba(79,143,255,0.4));
-            animation: tmTruckBounce 0.4s ease-in-out infinite alternate;
-        }
-
-        @keyframes tmTruckBounce {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-2px); }
-        }
-
-        /* Headlight beam */
-        .tm-headlight {
-            position: absolute;
-            right: -40px;
-            top: 8px;
-            width: 50px;
-            height: 20px;
-            background: linear-gradient(90deg, rgba(255,220,120,0.15), transparent);
-            border-radius: 0 50% 50% 0;
-            filter: blur(4px);
-            pointer-events: none;
-        }
-
-        /* Exhaust particles */
-        .tm-exhaust {
-            position: absolute;
-            left: -4px;
-            bottom: 6px;
-            width: 6px;
-            height: 6px;
+            inset: -4px;
             border-radius: 50%;
-            background: rgba(168,85,247,0.3);
-            filter: blur(2px);
-            pointer-events: none;
+            background: conic-gradient(from 0deg, rgba(79,143,255,0.15), rgba(168,85,247,0.1), rgba(0,212,255,0.12), rgba(79,143,255,0.15));
+            filter: blur(12px);
+            z-index: -1;
+            animation: tmGlobeRing 8s linear infinite;
         }
-        .tm-exhaust:nth-child(1) { animation: tmExhaust 1.2s ease-out 0s infinite; }
-        .tm-exhaust:nth-child(2) { animation: tmExhaust 1.2s ease-out 0.4s infinite; }
-        .tm-exhaust:nth-child(3) { animation: tmExhaust 1.2s ease-out 0.8s infinite; }
-
-        @keyframes tmExhaust {
-            0% { opacity: 0.5; transform: translate(0, 0) scale(1); }
-            100% { opacity: 0; transform: translate(-30px, -8px) scale(2.5); }
-        }
-
-        /* Road glow under truck */
-        .tm-road-glow {
-            position: absolute;
-            left: 10%;
-            bottom: 14px;
-            width: 100px;
-            height: 16px;
-            background: radial-gradient(ellipse, rgba(79,143,255,0.15), transparent 70%);
-            filter: blur(8px);
-            pointer-events: none;
-            z-index: 9;
-        }
-
-        /* Stars twinkling in sky area */
-        .tm-star {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.5);
-            animation: tmTwinkle 3s ease-in-out infinite alternate;
-        }
-        @keyframes tmTwinkle { 0% { opacity: 0.2; } 100% { opacity: 0.8; } }
+        @keyframes tmGlobeRing { to { transform: rotate(360deg); } }
 
         @keyframes tmIconEntrance { 0% { opacity: 0; transform: translateY(20px) scale(0.9); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
 
@@ -4101,8 +4022,7 @@
             .tm-hero { padding: 8px 16px 16px; min-height: auto; }
             .tm-hero-headline { font-size: 24px; }
             .tm-hero-sub { font-size: 14px; }
-            .tm-scene { width: 100%; max-width: 340px; height: 120px; }
-            .tm-truck { width: 48px; height: 28px; }
+            .tm-scene { width: 160px; height: 160px; }
             .tm-suggestions { grid-template-columns: 1fr; gap: 10px; max-width: 100%; }
             .tm-sug-card { padding: 14px; }
             .tm-stats { gap: 10px; flex-wrap: wrap; justify-content: center; }
@@ -5523,108 +5443,8 @@
             }
 
             function _buildScene() {
-                // Stars
-                var stars = '';
-                for (var i = 0; i < 8; i++) {
-                    stars += '<div class="tm-star" style="left:'+( 5+Math.random()*90)+'%;top:'+(5+Math.random()*30)+'%;animation-delay:'+(Math.random()*3)+'s;animation-duration:'+(2+Math.random()*3)+'s"></div>';
-                }
-
-                // Repeated scenery tile for each parallax layer (drawn twice for seamless loop)
-                // Mountains (far, slow) — wide gentle peaks
-                var mtnW = 960; // 2x 480
-                var mtn = '<svg viewBox="0 0 480 160" preserveAspectRatio="none" width="480" xmlns="http://www.w3.org/2000/svg">' +
-                    '<path d="M0 130 L40 90 L80 110 L140 60 L190 100 L230 70 L280 95 L340 50 L390 85 L430 65 L480 130 L480 160 L0 160Z" fill="rgba(30,40,70,0.6)"/>' +
-                    '<path d="M0 140 L60 105 L110 125 L170 80 L220 115 L270 90 L330 110 L400 75 L450 100 L480 140 L480 160 L0 160Z" fill="rgba(20,28,50,0.5)"/></svg>';
-
-                // Trees (mid, medium) — stylized pines + buildings
-                var tree = '<svg viewBox="0 0 480 160" preserveAspectRatio="none" width="480" xmlns="http://www.w3.org/2000/svg">' +
-                    // Pine trees
-                    '<polygon points="30,120 38,80 46,120" fill="rgba(40,70,60,0.7)"/>' +
-                    '<polygon points="34,90 38,65 42,90" fill="rgba(50,80,65,0.6)"/>' +
-                    '<rect x="36" y="120" width="4" height="8" fill="rgba(60,40,30,0.5)"/>' +
-
-                    '<polygon points="100,115 110,70 120,115" fill="rgba(35,65,55,0.7)"/>' +
-                    '<polygon points="105,82 110,55 115,82" fill="rgba(45,75,60,0.6)"/>' +
-                    '<rect x="108" y="115" width="4" height="8" fill="rgba(60,40,30,0.5)"/>' +
-
-                    // Small building
-                    '<rect x="160" y="100" width="24" height="28" rx="2" fill="rgba(40,45,65,0.6)"/>' +
-                    '<rect x="164" y="106" width="6" height="6" rx="1" fill="rgba(79,143,255,0.2)"/>' +
-                    '<rect x="174" y="106" width="6" height="6" rx="1" fill="rgba(168,85,247,0.15)"/>' +
-                    '<rect x="164" y="116" width="6" height="6" rx="1" fill="rgba(79,143,255,0.15)"/>' +
-
-                    '<polygon points="220,118 228,78 236,118" fill="rgba(38,68,58,0.7)"/>' +
-                    '<rect x="226" y="118" width="4" height="8" fill="rgba(60,40,30,0.5)"/>' +
-
-                    // Taller building
-                    '<rect x="280" y="85" width="20" height="43" rx="2" fill="rgba(35,40,60,0.6)"/>' +
-                    '<rect x="284" y="91" width="5" height="5" rx="1" fill="rgba(255,220,100,0.15)"/>' +
-                    '<rect x="291" y="91" width="5" height="5" rx="1" fill="rgba(79,143,255,0.2)"/>' +
-                    '<rect x="284" y="100" width="5" height="5" rx="1" fill="rgba(79,143,255,0.12)"/>' +
-                    '<rect x="291" y="100" width="5" height="5" rx="1" fill="rgba(255,220,100,0.1)"/>' +
-                    '<rect x="284" y="109" width="5" height="5" rx="1" fill="rgba(168,85,247,0.15)"/>' +
-
-                    '<polygon points="350,120 358,82 366,120" fill="rgba(42,72,62,0.7)"/>' +
-                    '<polygon points="354,92 358,70 362,92" fill="rgba(50,80,65,0.5)"/>' +
-                    '<rect x="356" y="120" width="4" height="8" fill="rgba(60,40,30,0.5)"/>' +
-
-                    '<polygon points="420,117 430,72 440,117" fill="rgba(36,66,56,0.7)"/>' +
-                    '<polygon points="425,85 430,58 435,85" fill="rgba(46,76,61,0.6)"/>' +
-                    '<rect x="428" y="117" width="4" height="8" fill="rgba(60,40,30,0.5)"/>' +
-                '</svg>';
-
-                // Road markings (near, fast) — dashes
-                var roadH = 32;
-                var road = '<svg viewBox="0 0 480 '+roadH+'" preserveAspectRatio="none" width="480" xmlns="http://www.w3.org/2000/svg">' +
-                    '<rect x="0" y="0" width="480" height="'+roadH+'" fill="rgba(25,30,45,0.8)"/>' +
-                    '<line x1="0" y1="1" x2="480" y2="1" stroke="rgba(79,143,255,0.15)" stroke-width="1"/>';
-                for (var d = 0; d < 480; d += 40) {
-                    road += '<rect x="'+(d+5)+'" y="14" width="20" height="2" rx="1" fill="rgba(255,255,255,0.08)"/>';
-                }
-                road += '</svg>';
-
-                // Truck SVG — more detailed commercial truck
-                var truck = '<svg class="tm-truck" viewBox="0 0 64 36" fill="none" xmlns="http://www.w3.org/2000/svg">' +
-                    // Cargo body
-                    '<rect x="2" y="6" width="36" height="22" rx="3" fill="rgba(50,60,90,0.9)" stroke="rgba(79,143,255,0.4)" stroke-width="0.8"/>' +
-                    // Cargo body accent stripe
-                    '<rect x="2" y="22" width="36" height="3" rx="0" fill="rgba(79,143,255,0.15)"/>' +
-                    // Cab
-                    '<path d="M38 10 L38 28 L56 28 L56 16 L50 10 Z" fill="rgba(60,70,100,0.9)" stroke="rgba(79,143,255,0.3)" stroke-width="0.8"/>' +
-                    // Windshield
-                    '<path d="M50 12 L44 12 L42 18 L52 18 Z" fill="rgba(79,143,255,0.25)" stroke="rgba(120,180,255,0.3)" stroke-width="0.5"/>' +
-                    // Bumper
-                    '<rect x="54" y="20" width="4" height="8" rx="1" fill="rgba(70,80,110,0.8)"/>' +
-                    // Headlight
-                    '<rect x="56" y="21" width="3" height="3" rx="1" fill="rgba(255,220,100,0.5)"/>' +
-                    // Rear lights
-                    '<rect x="2" y="24" width="2" height="3" rx="0.5" fill="rgba(255,80,80,0.4)"/>' +
-                    // Wheels
-                    '<circle cx="14" cy="30" r="5" fill="rgba(20,25,40,0.9)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>' +
-                    '<circle cx="14" cy="30" r="2" fill="rgba(60,70,90,0.6)"/>' +
-                    '<circle cx="46" cy="30" r="5" fill="rgba(20,25,40,0.9)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>' +
-                    '<circle cx="46" cy="30" r="2" fill="rgba(60,70,90,0.6)"/>' +
-                    // Wheel well shadow
-                    '<path d="M8 28 Q14 24 20 28" fill="rgba(0,0,0,0.2)"/>' +
-                    '<path d="M40 28 Q46 24 52 28" fill="rgba(0,0,0,0.2)"/>' +
-                '</svg>';
-
                 return '<div class="tm-scene" id="tmScene">' +
-                    stars +
-                    // Mountain layer (slowest)
-                    '<div class="tm-layer tm-layer-mountains"><div style="display:flex">' + mtn + mtn + '</div></div>' +
-                    // Tree/building layer (medium)
-                    '<div class="tm-layer tm-layer-trees" style="bottom:'+roadH+'px;top:auto;height:auto">' + tree + tree + '</div>' +
-                    // Road layer (fastest)
-                    '<div class="tm-layer tm-layer-road" style="bottom:0;top:auto;height:'+roadH+'px">' + road + road + '</div>' +
-                    // Road glow
-                    '<div class="tm-road-glow"></div>' +
-                    // Truck (fixed position)
-                    truck +
-                    '<div class="tm-headlight"></div>' +
-                    '<div class="tm-exhaust"></div>' +
-                    '<div class="tm-exhaust"></div>' +
-                    '<div class="tm-exhaust"></div>' +
+                    '<iframe src="https://my.spline.design/holographicearthwithdynamiclines-J7ZPtkEbKYSvJazew1s6Ac0v/" loading="lazy" allow="autoplay"></iframe>' +
                 '</div>';
             }
 
