@@ -2723,8 +2723,8 @@
         /* Liquid route scene */
         .tm-route-scene {
             position: relative;
-            width: min(600px, 90vw);
-            height: 240px;
+            width: min(650px, 92vw);
+            height: 200px;
             z-index: 2;
             overflow: visible;
             opacity: 0;
@@ -5474,22 +5474,28 @@
             }
 
             function _buildScene() {
-                /* Comvoy logo traced as edge paths — left swoosh & right swoosh */
-                /* Left swoosh: thin tip upper-left → sweeps down into thick belly → tapers right */
-                var leftTop =    'M10,95 C30,90 60,70 100,85 C150,105 180,145 220,155 C270,168 320,155 370,130 C400,118 420,110 440,108';
-                var leftBottom = 'M10,100 C30,105 55,115 90,140 C130,168 175,190 230,188 C290,185 340,165 390,138 C410,127 430,115 440,108';
-                /* Right swoosh: starts center, rises right, forked tail */
-                var rightTop =    'M230,120 C280,108 320,75 370,60 C420,46 460,42 500,55 C530,64 550,58 570,45';
-                var rightBottom = 'M230,130 C275,125 310,105 360,88 C410,72 450,68 495,72 C525,76 548,68 570,52';
-                /* Forked tail tip */
-                var rightFork =   'M530,64 C545,52 558,38 575,30';
+                /*
+                 * FBI flame logo: viewBox 570x142 (1141x285 / 2)
+                 * Reference image placed faintly, paths traced on top.
+                 * Left swoosh: tip top-left ~(0,48) → belly bottom-center ~(170,130) → taper to ~(310,78)
+                 * Right swoosh: starts ~(220,82) → rises to ~(360,15) → forked tail to ~(555,8) and ~(555,38)
+                 */
+
+                /* Left swoosh edges — traced from FBI flame logo */
+                var leftTop =    'M0,52 C20,42 60,18 120,10 C180,3 225,25 265,52 C295,72 312,80 325,78';
+                var leftBottom = 'M0,58 C10,66 28,85 60,108 C105,132 160,145 220,140 C265,134 295,112 325,78';
+                /* Right swoosh edges */
+                var rightTop =    'M225,82 C265,70 300,42 350,24 C400,8 445,2 485,10 C510,16 535,6 560,-2';
+                var rightBottom = 'M225,95 C260,90 295,70 345,52 C390,36 435,30 475,36 C505,42 530,30 555,16';
+                /* Lower fork of right tail */
+                var rightFork =   'M475,36 C492,46 515,50 545,40';
 
                 var paths = [
-                    { id: 'L', top: leftTop, bottom: leftBottom, grad: 'tmGradL', color1: '#4f8fff', color2: '#a855f7', orbCount: 3, flowDur: 5, orbDur: 7 },
-                    { id: 'R', top: rightTop, bottom: rightBottom, grad: 'tmGradR', color1: '#a855f7', color2: '#00d4ff', orbCount: 3, flowDur: 4, orbDur: 6 }
+                    { id: 'L', top: leftTop, bottom: leftBottom, grad: 'tmGradL', orbCount: 3, flowDur: 5, orbDur: 7 },
+                    { id: 'R', top: rightTop, bottom: rightBottom, grad: 'tmGradR', orbCount: 3, flowDur: 4, orbDur: 6 }
                 ];
 
-                var svg = '<svg viewBox="0 0 580 220" xmlns="http://www.w3.org/2000/svg">' +
+                var svg = '<svg viewBox="-5 -10 570 160" xmlns="http://www.w3.org/2000/svg">' +
                     '<defs>' +
                         '<linearGradient id="tmGradL" x1="0%" y1="0%" x2="100%" y2="0%">' +
                             '<stop offset="0%" stop-color="#4f8fff"/>' +
@@ -5510,37 +5516,34 @@
                         '<radialGradient id="tmOrbGrad2"><stop offset="0%" stop-color="#fff"/><stop offset="30%" stop-color="#a855f7"/><stop offset="100%" stop-color="#a855f7" stop-opacity="0"/></radialGradient>' +
                     '</defs>';
 
-                /* Filled swoosh shapes — closed path combining top + reversed bottom */
-                var leftFill = leftTop + ' L440,108 ' + 'C430,115 410,127 390,138 C340,165 290,185 230,188 C175,190 130,168 90,140 C55,115 30,105 10,100 Z';
-                var rightFill = rightTop + ' L570,45 ' + 'L570,52 C548,68 525,76 495,72 C450,68 410,72 360,88 C310,105 275,125 230,130 Z';
+                /* Faint reference logo image — remove after tracing is dialed in */
+                svg += '<image href="logo-flame.png" x="0" y="0" width="570" height="142" opacity="0.15"/>';
+
+                /* Filled swoosh silhouettes */
+                var leftFill = leftTop + ' L325,78 ' +
+                    'C295,112 265,134 220,140 C160,145 105,132 60,108 C28,85 10,66 0,58 Z';
+                var rightFill = rightTop + ' L560,-2 L560,6 ' +
+                    'L555,16 C530,30 505,42 475,36 C435,30 390,36 345,52 C295,70 260,90 225,95 Z';
                 svg += '<path class="tm-swoosh-fill" d="' + leftFill + '" fill="url(#tmGradL)"/>';
                 svg += '<path class="tm-swoosh-fill" d="' + rightFill + '" fill="url(#tmGradR)"/>';
 
-                /* Render each swoosh */
+                /* Render each swoosh edge with glow layers + orbs */
                 paths.forEach(function(p) {
-                    /* Outer glow — top edge */
                     svg += '<path class="tm-route-outer" d="' + p.top + '" stroke="url(#' + p.grad + ')"/>';
-                    /* Outer glow — bottom edge */
                     svg += '<path class="tm-route-outer" d="' + p.bottom + '" stroke="url(#' + p.grad + ')"/>';
-                    /* Mid glow */
                     svg += '<path class="tm-route-mid" d="' + p.top + '" stroke="url(#' + p.grad + ')"/>';
                     svg += '<path class="tm-route-mid" d="' + p.bottom + '" stroke="url(#' + p.grad + ')"/>';
-                    /* Core line */
                     svg += '<path class="tm-route-core" d="' + p.top + '" stroke="url(#' + p.grad + ')"/>';
                     svg += '<path class="tm-route-core" d="' + p.bottom + '" stroke="url(#' + p.grad + ')"/>';
-                    /* Energy flow — top edge */
                     svg += '<path class="tm-flow" d="' + p.top + '" style="animation-duration:' + p.flowDur + 's"/>';
-                    /* Energy flow — bottom edge (reverse) */
                     svg += '<path class="tm-flow-2" d="' + p.bottom + '" style="animation-duration:' + (p.flowDur + 1.5) + 's"/>';
 
-                    /* Orbs on top edge */
                     var orbGrad = p.id === 'L' ? 'tmOrbGrad' : 'tmOrbGrad2';
                     for (var o = 0; o < p.orbCount; o++) {
                         var r = 2 + Math.random() * 2;
                         var delay = -(o * (p.orbDur / p.orbCount));
                         svg += '<circle class="tm-orb" r="'+r.toFixed(1)+'" fill="url(#'+orbGrad+')" style="offset-path:path(\''+p.top+'\');animation-duration:'+p.orbDur+'s;animation-delay:'+delay.toFixed(1)+'s"/>';
                     }
-                    /* Orbs on bottom edge */
                     for (var o2 = 0; o2 < 2; o2++) {
                         var r2 = 1.5 + Math.random() * 1.5;
                         var delay2 = -(o2 * (p.orbDur / 2));
@@ -5548,15 +5551,15 @@
                     }
                 });
 
-                /* Right swoosh fork tail */
+                /* Right swoosh fork */
                 svg += '<path class="tm-route-mid" d="' + rightFork + '" stroke="url(#tmGradR)"/>';
                 svg += '<path class="tm-route-core" d="' + rightFork + '" stroke="url(#tmGradR)"/>';
 
-                /* Node glow at key junctions */
-                var junctions = [[10,97,'#4f8fff'], [440,108,'#a855f7'], [230,125,'#a855f7'], [570,48,'#00d4ff']];
+                /* Node glow at tips and junctions */
+                var junctions = [[0,55,'#4f8fff'], [325,78,'#a855f7'], [225,88,'#a855f7'], [560,2,'#00d4ff'], [545,40,'#00d4ff']];
                 junctions.forEach(function(n, i) {
                     svg += '<g class="tm-node" style="--node-color:' + n[2] + '">' +
-                        '<circle class="tm-node-ring" cx="'+n[0]+'" cy="'+n[1]+'" r="4" style="animation-delay:'+(i*-0.9)+'s"/>' +
+                        '<circle class="tm-node-ring" cx="'+n[0]+'" cy="'+n[1]+'" r="4" style="animation-delay:'+(i*-0.7)+'s"/>' +
                         '<circle cx="'+n[0]+'" cy="'+n[1]+'" r="3" fill="' + n[2] + '" opacity="0.25"/>' +
                         '<circle cx="'+n[0]+'" cy="'+n[1]+'" r="1.5" fill="' + n[2] + '"/>' +
                         '<circle cx="'+n[0]+'" cy="'+n[1]+'" r="0.8" fill="white" opacity="0.9"/>' +
