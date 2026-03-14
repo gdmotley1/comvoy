@@ -814,25 +814,17 @@
             50% { opacity: 0.8; transform: translateX(-50%) scaleX(1.1); }
         }
 
-        /* Spline 3D robot — replaces SVG eye */
+        /* Spline 3D robot via web component */
         .otto-spline {
-            width: 260%;
-            height: 260%;
-            border: none;
+            width: 220px;
+            height: 220px;
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             pointer-events: auto;
-            background: transparent;
             border-radius: 50%;
-            -webkit-mask-image: radial-gradient(ellipse 38% 38% at 50% 50%, black 50%, transparent 100%);
-            mask-image: radial-gradient(ellipse 38% 38% at 50% 50%, black 50%, transparent 100%);
-            opacity: 0;
-            transition: opacity 0.8s ease;
-        }
-        .otto-spline.loaded {
-            opacity: 1;
+            --spline-viewer-background: transparent;
         }
 
         .chat-greeting-eye .otto-eye {
@@ -4075,6 +4067,7 @@
             .wordmark-text { font-size: 20px; }
         }
     </style>
+    <script type="module" src="https://unpkg.com/@splinetool/viewer@1.12.69/build/spline-viewer.js"></script>
 </head>
 <body>
 
@@ -5003,7 +4996,7 @@
                     ${particles}
                     <div class="chat-greeting-eye">
                         <div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
-                        ${eye}
+                        <spline-viewer class="otto-spline" url="https://prod.spline.design/JxiZP6DroaqUcYAU/scene.splinecode" loading-anim-type="none" background="transparent"></spline-viewer>
                         <div class="greet-reflection"></div>
                     </div>
                     <div class="chat-greeting-text">${greet}</div>
