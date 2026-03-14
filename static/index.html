@@ -2723,8 +2723,8 @@
         /* Liquid route scene */
         .tm-route-scene {
             position: relative;
-            width: min(650px, 92vw);
-            height: 200px;
+            width: min(520px, 90vw);
+            height: 260px;
             z-index: 2;
             overflow: visible;
             opacity: 0;
@@ -2733,31 +2733,39 @@
         }
         .tm-route-scene svg { width: 100%; height: 100%; overflow: visible; }
 
-        /* Logo swoosh fill — subtle shape between edges */
-        .tm-swoosh-fill {
-            opacity: 0.06;
-            filter: blur(2px);
-        }
         /* Primary route — thick liquid glow */
         .tm-route-outer {
             fill: none;
-            stroke-width: 18;
+            stroke: url(#tmRouteGrad);
+            stroke-width: 16;
             stroke-linecap: round;
-            opacity: 0.08;
-            filter: blur(10px);
+            opacity: 0.06;
+            filter: blur(8px);
         }
         .tm-route-mid {
             fill: none;
+            stroke: url(#tmRouteGrad);
             stroke-width: 4;
             stroke-linecap: round;
-            opacity: 0.4;
-            filter: blur(1.5px);
+            opacity: 0.5;
+            filter: blur(1px);
         }
         .tm-route-core {
             fill: none;
-            stroke-width: 1.5;
+            stroke: url(#tmRouteGrad);
+            stroke-width: 2;
             stroke-linecap: round;
-            filter: drop-shadow(0 0 6px rgba(79,143,255,0.6)) drop-shadow(0 0 16px rgba(168,85,247,0.3));
+            filter: drop-shadow(0 0 8px rgba(79,143,255,0.5)) drop-shadow(0 0 20px rgba(168,85,247,0.2));
+        }
+        /* Secondary route — fainter */
+        .tm-route-secondary {
+            fill: none;
+            stroke: url(#tmRouteGrad2);
+            stroke-width: 1;
+            stroke-linecap: round;
+            opacity: 0.2;
+            stroke-dasharray: 4 8;
+            filter: drop-shadow(0 0 4px rgba(0,212,255,0.2));
         }
 
         /* Flowing energy pulses along path */
@@ -5474,97 +5482,56 @@
             }
 
             function _buildScene() {
-                /*
-                 * FBI flame logo: viewBox 570x142 (1141x285 / 2)
-                 * Reference image placed faintly, paths traced on top.
-                 * Left swoosh: tip top-left ~(0,48) → belly bottom-center ~(170,130) → taper to ~(310,78)
-                 * Right swoosh: starts ~(220,82) → rises to ~(360,15) → forked tail to ~(555,8) and ~(555,38)
-                 */
+                var main = 'M20,180 C60,180 80,60 160,50 C240,40 220,160 300,140 C380,120 420,30 480,40 C520,48 500,120 500,140';
+                var sec1 = 'M60,200 C120,170 180,100 260,110 C340,120 380,80 440,60';
+                var sec2 = 'M100,30 C160,50 200,130 320,100 C380,85 420,130 460,160';
+                var nodes = [[20,180,'#4f8fff'],[160,50,'#a855f7'],[300,140,'#00d4ff'],[480,40,'#4f8fff']];
 
-                /* Left swoosh edges — traced from FBI flame logo */
-                var leftTop =    'M0,52 C20,42 60,18 120,10 C180,3 225,25 265,52 C295,72 312,80 325,78';
-                var leftBottom = 'M0,58 C10,66 28,85 60,108 C105,132 160,145 220,140 C265,134 295,112 325,78';
-                /* Right swoosh edges */
-                var rightTop =    'M225,82 C265,70 300,42 350,24 C400,8 445,2 485,10 C510,16 535,6 560,-2';
-                var rightBottom = 'M225,95 C260,90 295,70 345,52 C390,36 435,30 475,36 C505,42 530,30 555,16';
-                /* Lower fork of right tail */
-                var rightFork =   'M475,36 C492,46 515,50 545,40';
-
-                var paths = [
-                    { id: 'L', top: leftTop, bottom: leftBottom, grad: 'tmGradL', orbCount: 3, flowDur: 5, orbDur: 7 },
-                    { id: 'R', top: rightTop, bottom: rightBottom, grad: 'tmGradR', orbCount: 3, flowDur: 4, orbDur: 6 }
-                ];
-
-                var svg = '<svg viewBox="-5 -10 570 160" xmlns="http://www.w3.org/2000/svg">' +
+                var svg = '<svg viewBox="0 0 520 220" xmlns="http://www.w3.org/2000/svg">' +
                     '<defs>' +
-                        '<linearGradient id="tmGradL" x1="0%" y1="0%" x2="100%" y2="0%">' +
+                        '<linearGradient id="tmRouteGrad" x1="0%" y1="0%" x2="100%" y2="0%">' +
                             '<stop offset="0%" stop-color="#4f8fff"/>' +
-                            '<stop offset="60%" stop-color="#a855f7"/>' +
-                            '<stop offset="100%" stop-color="#a855f7" stop-opacity="0.3"/>' +
-                        '</linearGradient>' +
-                        '<linearGradient id="tmGradR" x1="0%" y1="0%" x2="100%" y2="0%">' +
-                            '<stop offset="0%" stop-color="#a855f7" stop-opacity="0.3"/>' +
                             '<stop offset="40%" stop-color="#a855f7"/>' +
                             '<stop offset="100%" stop-color="#00d4ff"/>' +
                         '</linearGradient>' +
-                        '<linearGradient id="tmFlowGrad" x1="0%" y1="0%" x2="100%" y2="0%">' +
-                            '<stop offset="0%" stop-color="#fff" stop-opacity="0"/>' +
-                            '<stop offset="50%" stop-color="#fff" stop-opacity="0.9"/>' +
-                            '<stop offset="100%" stop-color="#fff" stop-opacity="0"/>' +
+                        '<linearGradient id="tmRouteGrad2" x1="0%" y1="0%" x2="100%" y2="0%">' +
+                            '<stop offset="0%" stop-color="#00d4ff" stop-opacity="0.3"/>' +
+                            '<stop offset="100%" stop-color="#a855f7" stop-opacity="0.1"/>' +
                         '</linearGradient>' +
-                        '<radialGradient id="tmOrbGrad"><stop offset="0%" stop-color="#fff"/><stop offset="30%" stop-color="#4f8fff"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient>' +
-                        '<radialGradient id="tmOrbGrad2"><stop offset="0%" stop-color="#fff"/><stop offset="30%" stop-color="#a855f7"/><stop offset="100%" stop-color="#a855f7" stop-opacity="0"/></radialGradient>' +
-                    '</defs>';
+                        '<linearGradient id="tmFlowGrad" x1="0%" y1="0%" x2="100%" y2="0%">' +
+                            '<stop offset="0%" stop-color="#4f8fff" stop-opacity="0"/>' +
+                            '<stop offset="50%" stop-color="#fff" stop-opacity="0.8"/>' +
+                            '<stop offset="100%" stop-color="#00d4ff" stop-opacity="0"/>' +
+                        '</linearGradient>' +
+                        '<radialGradient id="tmOrbGrad"><stop offset="0%" stop-color="#fff"/><stop offset="40%" stop-color="#4f8fff"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient>' +
+                    '</defs>' +
 
-                /* Faint reference logo image — remove after tracing is dialed in */
-                svg += '<image href="logo-flame.png" x="0" y="0" width="570" height="142" opacity="0.15"/>';
+                    /* secondary routes (faint) */
+                    '<path class="tm-route-secondary" d="' + sec1 + '"/>' +
+                    '<path class="tm-route-secondary" d="' + sec2 + '" style="animation-delay:-2s;opacity:0.12"/>' +
 
-                /* Filled swoosh silhouettes */
-                var leftFill = leftTop + ' L325,78 ' +
-                    'C295,112 265,134 220,140 C160,145 105,132 60,108 C28,85 10,66 0,58 Z';
-                var rightFill = rightTop + ' L560,-2 L560,6 ' +
-                    'L555,16 C530,30 505,42 475,36 C435,30 390,36 345,52 C295,70 260,90 225,95 Z';
-                svg += '<path class="tm-swoosh-fill" d="' + leftFill + '" fill="url(#tmGradL)"/>';
-                svg += '<path class="tm-swoosh-fill" d="' + rightFill + '" fill="url(#tmGradR)"/>';
+                    /* main route layers: outer glow → mid → core → flow */
+                    '<path class="tm-route-outer" d="' + main + '"/>' +
+                    '<path class="tm-route-mid" d="' + main + '"/>' +
+                    '<path class="tm-route-core" d="' + main + '"/>' +
+                    '<path class="tm-flow" d="' + main + '"/>' +
+                    '<path class="tm-flow-2" d="' + main + '"/>';
 
-                /* Render each swoosh edge with glow layers + orbs */
-                paths.forEach(function(p) {
-                    svg += '<path class="tm-route-outer" d="' + p.top + '" stroke="url(#' + p.grad + ')"/>';
-                    svg += '<path class="tm-route-outer" d="' + p.bottom + '" stroke="url(#' + p.grad + ')"/>';
-                    svg += '<path class="tm-route-mid" d="' + p.top + '" stroke="url(#' + p.grad + ')"/>';
-                    svg += '<path class="tm-route-mid" d="' + p.bottom + '" stroke="url(#' + p.grad + ')"/>';
-                    svg += '<path class="tm-route-core" d="' + p.top + '" stroke="url(#' + p.grad + ')"/>';
-                    svg += '<path class="tm-route-core" d="' + p.bottom + '" stroke="url(#' + p.grad + ')"/>';
-                    svg += '<path class="tm-flow" d="' + p.top + '" style="animation-duration:' + p.flowDur + 's"/>';
-                    svg += '<path class="tm-flow-2" d="' + p.bottom + '" style="animation-duration:' + (p.flowDur + 1.5) + 's"/>';
-
-                    var orbGrad = p.id === 'L' ? 'tmOrbGrad' : 'tmOrbGrad2';
-                    for (var o = 0; o < p.orbCount; o++) {
-                        var r = 2 + Math.random() * 2;
-                        var delay = -(o * (p.orbDur / p.orbCount));
-                        svg += '<circle class="tm-orb" r="'+r.toFixed(1)+'" fill="url(#'+orbGrad+')" style="offset-path:path(\''+p.top+'\');animation-duration:'+p.orbDur+'s;animation-delay:'+delay.toFixed(1)+'s"/>';
-                    }
-                    for (var o2 = 0; o2 < 2; o2++) {
-                        var r2 = 1.5 + Math.random() * 1.5;
-                        var delay2 = -(o2 * (p.orbDur / 2));
-                        svg += '<circle class="tm-orb" r="'+r2.toFixed(1)+'" fill="url(#'+orbGrad+')" style="offset-path:path(\''+p.bottom+'\');animation-duration:'+(p.orbDur+2)+'s;animation-delay:'+delay2.toFixed(1)+'s"/>';
-                    }
-                });
-
-                /* Right swoosh fork */
-                svg += '<path class="tm-route-mid" d="' + rightFork + '" stroke="url(#tmGradR)"/>';
-                svg += '<path class="tm-route-core" d="' + rightFork + '" stroke="url(#tmGradR)"/>';
-
-                /* Node glow at tips and junctions */
-                var junctions = [[0,55,'#4f8fff'], [325,78,'#a855f7'], [225,88,'#a855f7'], [560,2,'#00d4ff'], [545,40,'#00d4ff']];
-                junctions.forEach(function(n, i) {
+                /* waypoint nodes */
+                nodes.forEach(function(n, i) {
                     svg += '<g class="tm-node" style="--node-color:' + n[2] + '">' +
                         '<circle class="tm-node-ring" cx="'+n[0]+'" cy="'+n[1]+'" r="4" style="animation-delay:'+(i*-0.7)+'s"/>' +
-                        '<circle cx="'+n[0]+'" cy="'+n[1]+'" r="3" fill="' + n[2] + '" opacity="0.25"/>' +
-                        '<circle cx="'+n[0]+'" cy="'+n[1]+'" r="1.5" fill="' + n[2] + '"/>' +
-                        '<circle cx="'+n[0]+'" cy="'+n[1]+'" r="0.8" fill="white" opacity="0.9"/>' +
+                        '<circle cx="'+n[0]+'" cy="'+n[1]+'" r="3.5" fill="' + n[2] + '" opacity="0.3"/>' +
+                        '<circle cx="'+n[0]+'" cy="'+n[1]+'" r="2" fill="' + n[2] + '"/>' +
+                        '<circle cx="'+n[0]+'" cy="'+n[1]+'" r="1" fill="white" opacity="0.9"/>' +
                     '</g>';
                 });
+
+                /* traveling orbs — smooth glowing dots */
+                for (var t = 0; t < 4; t++) {
+                    var sizes = [3.5, 2.5, 3, 2];
+                    svg += '<circle class="tm-orb" r="'+sizes[t]+'" fill="url(#tmOrbGrad)" style="offset-path:path(\''+main+'\')" />';
+                }
 
                 svg += '</svg>';
                 return '<div class="tm-route-scene">' + svg + '</div>';
