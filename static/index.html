@@ -2721,36 +2721,38 @@
         /* 3D Spline scene */
         .tm-scene {
             position: relative;
-            width: 240px;
-            height: 240px;
+            width: 320px;
+            height: 320px;
             z-index: 2;
-            border-radius: 50%;
             overflow: hidden;
             opacity: 0;
             animation: tmIconEntrance 0.8s cubic-bezier(0.16,1,0.3,1) forwards;
-            margin-bottom: -10px;
+            margin-bottom: -20px;
+            -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 40%, transparent 70%);
+            mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 40%, transparent 70%);
         }
 
         .tm-scene iframe {
-            width: 100%;
-            height: 100%;
+            width: 140%;
+            height: 140%;
             border: none;
             pointer-events: auto;
             background: transparent;
+            margin-left: -20%;
+            margin-top: -20%;
         }
 
-        /* Glow ring around the globe */
+        /* Soft glow halo behind globe */
         .tm-scene::after {
             content: '';
             position: absolute;
-            inset: -4px;
+            inset: -20px;
             border-radius: 50%;
-            background: conic-gradient(from 0deg, rgba(79,143,255,0.15), rgba(168,85,247,0.1), rgba(0,212,255,0.12), rgba(79,143,255,0.15));
-            filter: blur(12px);
+            background: radial-gradient(circle, rgba(79,143,255,0.12) 0%, rgba(168,85,247,0.06) 40%, transparent 70%);
+            filter: blur(20px);
             z-index: -1;
-            animation: tmGlobeRing 8s linear infinite;
+            animation: tmGlowBreathe 3s ease-in-out infinite alternate;
         }
-        @keyframes tmGlobeRing { to { transform: rotate(360deg); } }
 
         @keyframes tmIconEntrance { 0% { opacity: 0; transform: translateY(20px) scale(0.9); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
 
@@ -4022,7 +4024,7 @@
             .tm-hero { padding: 8px 16px 16px; min-height: auto; }
             .tm-hero-headline { font-size: 24px; }
             .tm-hero-sub { font-size: 14px; }
-            .tm-scene { width: 160px; height: 160px; }
+            .tm-scene { width: 200px; height: 200px; }
             .tm-suggestions { grid-template-columns: 1fr; gap: 10px; max-width: 100%; }
             .tm-sug-card { padding: 14px; }
             .tm-stats { gap: 10px; flex-wrap: wrap; justify-content: center; }
