@@ -814,21 +814,7 @@
             50% { opacity: 0.8; transform: translateX(-50%) scaleX(1.1); }
         }
 
-        /* Spline 3D robot via web component */
-        .otto-spline {
-            display: block;
-            width: 220px;
-            height: 220px;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: auto;
-            z-index: 1;
-        }
-        .otto-spline canvas {
-            border-radius: 50%;
-        }
+        /* (spline removed — SVG eye restored) */
 
         .chat-greeting-eye .otto-eye {
             width: 100%; height: 100%;
@@ -4070,7 +4056,6 @@
             .wordmark-text { font-size: 20px; }
         }
     </style>
-    <script type="module" src="https://unpkg.com/@splinetool/viewer@1.12.69/build/spline-viewer.js"></script>
 </head>
 <body>
 
@@ -4999,7 +4984,7 @@
                     ${particles}
                     <div class="chat-greeting-eye">
                         <div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
-                        <spline-viewer class="otto-spline" url="https://prod.spline.design/JxiZP6DroaqUcYAU/scene.splinecode"></spline-viewer>
+                        ${eye}
                         <div class="greet-reflection"></div>
                     </div>
                     <div class="chat-greeting-text">${greet}</div>
@@ -5014,7 +4999,11 @@
                 const container = document.querySelector('.chat-greeting-eye');
                 if (!container) return;
 
-                /* Magnetic drift toward cursor */
+                /* Pupil tracking + magnetic drift toward cursor */
+                const pupil = container.querySelector('.otto-pupil');
+                const glow = container.querySelector('.pupil-glow');
+                const spec1 = container.querySelector('.specular-1');
+                const spec2 = container.querySelector('.specular-2');
                 let _magX = 0, _magY = 0, _curMagX = 0, _curMagY = 0, _rafId = null;
                 const onMove = e => {
                     if (!document.contains(container)) return;
@@ -5026,6 +5015,14 @@
                     const dx = clientX - cx, dy = clientY - cy;
                     const dist = Math.sqrt(dx * dx + dy * dy);
                     const angle = Math.atan2(dy, dx);
+                    const maxShift = 4;
+                    const shift = Math.min(maxShift, dist / 40);
+                    const px = 30 + Math.cos(angle) * shift;
+                    const py = 30 + Math.sin(angle) * shift;
+                    if (pupil) { pupil.setAttribute('cx', px); pupil.setAttribute('cy', py); }
+                    if (glow)  { glow.setAttribute('cx', px); glow.setAttribute('cy', py); }
+                    if (spec1) { spec1.setAttribute('cx', 23 + Math.cos(angle) * shift * 0.5); spec1.setAttribute('cy', 23 + Math.sin(angle) * shift * 0.5); }
+                    if (spec2) { spec2.setAttribute('cx', 25 + Math.cos(angle) * shift * 0.5); spec2.setAttribute('cy', 25 + Math.sin(angle) * shift * 0.5); }
                     const magnetRange = 300;
                     if (dist < magnetRange) {
                         const strength = (1 - dist / magnetRange) * 8;
