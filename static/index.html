@@ -826,12 +826,18 @@
             pointer-events: auto;
             background: transparent;
             border-radius: 50%;
-            -webkit-mask-image: radial-gradient(ellipse 42% 42% at 50% 50%, black 60%, transparent 100%);
-            mask-image: radial-gradient(ellipse 42% 42% at 50% 50%, black 60%, transparent 100%);
+            -webkit-mask-image: radial-gradient(ellipse 38% 38% at 50% 50%, black 50%, transparent 100%);
+            mask-image: radial-gradient(ellipse 38% 38% at 50% 50%, black 50%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+        .otto-spline.loaded {
+            opacity: 1;
         }
 
         .chat-greeting-eye .otto-eye {
             width: 100%; height: 100%;
+            transition: opacity 0.6s ease;
             filter:
                 drop-shadow(0 0 20px rgba(79,143,255,0.55))
                 drop-shadow(0 0 50px rgba(79,143,255,0.35))
@@ -4997,7 +5003,8 @@
                     ${particles}
                     <div class="chat-greeting-eye">
                         <div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
-                        <iframe class="otto-spline" src="https://my.spline.design/robo-yG5GWfQq3fZapw3pG9hovu8Q/" loading="lazy" allow="autoplay"></iframe>
+                        ${eye}
+                        <iframe class="otto-spline" src="https://my.spline.design/robo-yG5GWfQq3fZapw3pG9hovu8Q/" loading="lazy" allow="autoplay" onload="var f=this;setTimeout(function(){f.classList.add('loaded');var sv=f.parentElement.querySelector('.otto-eye');if(sv)sv.style.opacity='0'},3500)"></iframe>
                         <div class="greet-reflection"></div>
                     </div>
                     <div class="chat-greeting-text">${greet}</div>
