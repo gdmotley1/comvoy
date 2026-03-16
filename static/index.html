@@ -2738,112 +2738,110 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            padding: 16px 20px 16px;
+            padding: 20px 20px 12px;
             overflow: visible;
-            max-height: 240px;
+            max-height: 380px;
         }
 
         /* Liquid route scene */
+        /* Mini Motorways-inspired road network */
         .tm-route-scene {
             position: relative;
-            width: min(420px, 85vw);
-            height: 160px;
+            width: 100%;
+            max-width: 700px;
+            height: 260px;
             z-index: 2;
             overflow: visible;
             opacity: 0;
             animation: tmIconEntrance 1s cubic-bezier(0.16,1,0.3,1) forwards;
-            margin-bottom: 4px;
+            margin: 0 auto 8px;
         }
         .tm-route-scene svg { width: 100%; height: 100%; overflow: visible; }
 
-        /* Primary route — thick liquid glow */
-        .tm-route-outer {
-            fill: none;
-            stroke: url(#tmRouteGrad);
-            stroke-width: 16;
-            stroke-linecap: round;
-            opacity: 0.06;
-            filter: blur(8px);
-        }
-        .tm-route-mid {
-            fill: none;
-            stroke: url(#tmRouteGrad);
-            stroke-width: 4;
-            stroke-linecap: round;
-            opacity: 0.5;
-            filter: blur(1px);
-        }
-        .tm-route-core {
-            fill: none;
-            stroke: url(#tmRouteGrad);
-            stroke-width: 2;
-            stroke-linecap: round;
-            filter: drop-shadow(0 0 8px rgba(79,143,255,0.5)) drop-shadow(0 0 20px rgba(168,85,247,0.2));
-        }
-        /* Secondary route — fainter */
-        .tm-route-secondary {
-            fill: none;
-            stroke: url(#tmRouteGrad2);
-            stroke-width: 1;
-            stroke-linecap: round;
-            opacity: 0.2;
-            stroke-dasharray: 4 8;
-            filter: drop-shadow(0 0 4px rgba(0,212,255,0.2));
+        /* Subtle grid background */
+        .tm-grid {
+            stroke: rgba(255,255,255,0.03);
+            stroke-width: 0.5;
         }
 
-        /* Flowing energy pulses along path */
-        .tm-flow {
+        /* Road segments — flat colored, rounded ends */
+        .tm-road {
             fill: none;
-            stroke: url(#tmFlowGrad);
-            stroke-width: 3;
+            stroke-width: 7;
             stroke-linecap: round;
-            stroke-dasharray: 20 60;
-            animation: tmFlow 4s linear infinite;
+            stroke-linejoin: round;
+            opacity: 0.9;
         }
-        .tm-flow-2 {
+        .tm-road-bg {
             fill: none;
-            stroke: url(#tmFlowGrad);
-            stroke-width: 2;
+            stroke: rgba(255,255,255,0.05);
+            stroke-width: 20;
             stroke-linecap: round;
-            stroke-dasharray: 12 80;
-            animation: tmFlow 5s linear infinite reverse;
-            opacity: 0.5;
+            stroke-linejoin: round;
         }
-        @keyframes tmFlow { to { stroke-dashoffset: -80; } }
+        .tm-road-glow {
+            fill: none;
+            stroke-width: 12;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            opacity: 0.15;
+            filter: blur(4px);
+        }
 
-        /* Waypoints — breathing glow nodes */
-        .tm-node {
-            filter: drop-shadow(0 0 6px var(--node-color, #4f8fff));
-        }
-        .tm-node-ring {
-            fill: none;
-            stroke: var(--node-color, #4f8fff);
-            stroke-width: 1;
+        /* Building pins — simple geometric shapes */
+        .tm-pin {
             opacity: 0;
-            animation: tmNodeRing 3s ease-out infinite;
+            animation: tmPinPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
         }
-        @keyframes tmNodeRing {
-            0% { r: 4; opacity: 0.5; stroke-width: 1.5; }
-            100% { r: 16; opacity: 0; stroke-width: 0.5; }
+        .tm-pin-pulse {
+            animation: tmPinPulse 2.5s ease-in-out infinite;
+        }
+        @keyframes tmPinPop {
+            0% { opacity: 0; transform: scale(0); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes tmPinPulse {
+            0%, 100% { opacity: 0.25; }
+            50% { opacity: 0.5; }
         }
 
-        /* Orbs traveling along path */
-        .tm-orb {
-            offset-rotate: 0deg;
-            animation: tmOrbMove 7s cubic-bezier(0.4,0,0.6,1) infinite;
+        /* Cars — small rectangles moving along roads */
+        .tm-car {
+            offset-rotate: auto;
+            animation: tmCarDrive linear infinite;
+            filter: drop-shadow(0 0 4px var(--car-color, #fff));
         }
-        .tm-orb:nth-of-type(2) { animation-delay: -2.3s; animation-duration: 8s; }
-        .tm-orb:nth-of-type(3) { animation-delay: -4.6s; animation-duration: 6s; }
-        .tm-orb:nth-of-type(4) { animation-delay: -1.5s; animation-duration: 9s; }
-        @keyframes tmOrbMove {
+        @keyframes tmCarDrive {
             0% { offset-distance: 0%; opacity: 0; }
-            8% { opacity: 1; }
-            92% { opacity: 1; }
+            5% { opacity: 1; }
+            95% { opacity: 1; }
             100% { offset-distance: 100%; opacity: 0; }
         }
 
-        /* Ambient glow behind scene */
-        .tm-route-scene::before { display: none; }
+        /* Hub node — central starting point */
+        .tm-hub {
+            filter: drop-shadow(0 0 12px rgba(255,255,255,0.4));
+        }
+        .tm-hub-ring {
+            fill: none;
+            stroke: rgba(255,255,255,0.2);
+            stroke-width: 1.5;
+            animation: tmHubPulse 3s ease-in-out infinite;
+        }
+        .tm-hub-ring-2 {
+            fill: none;
+            stroke: rgba(255,255,255,0.08);
+            stroke-width: 1;
+            animation: tmHubPulse2 4s ease-in-out infinite;
+        }
+        @keyframes tmHubPulse {
+            0%, 100% { r: 14; opacity: 0.2; }
+            50% { r: 20; opacity: 0.05; }
+        }
+        @keyframes tmHubPulse2 {
+            0%, 100% { r: 22; opacity: 0.08; }
+            50% { r: 30; opacity: 0; }
+        }
 
         @keyframes tmIconEntrance { 0% { opacity: 0; transform: translateY(20px) scale(0.9); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
 
@@ -5617,56 +5615,99 @@
             }
 
             function _buildScene() {
-                var main = 'M20,180 C60,180 80,60 160,50 C240,40 220,160 300,140 C380,120 420,30 480,40 C520,48 500,120 500,140';
-                var sec1 = 'M60,200 C120,170 180,100 260,110 C340,120 380,80 440,60';
-                var sec2 = 'M100,30 C160,50 200,130 320,100 C380,85 420,130 460,160';
-                var nodes = [[20,180,'#4f8fff'],[160,50,'#a855f7'],[300,140,'#00d4ff'],[480,40,'#4f8fff']];
+                /* Mini Motorways-style road network — dense, full-width
+                   8 colored routes branch from a central hub across the full canvas.
+                   3 cars per major route, 2 per minor. Buildings at every endpoint. */
+                var routes = [
+                    /* major routes — longer, bolder */
+                    { path: 'M350,150 C300,140 240,80 160,55 L60,30', color: '#4f8fff', end: [52,27], dur: 5.0, major: true },
+                    { path: 'M350,150 C400,100 460,50 560,25 L640,20', color: '#a855f7', end: [648,17], dur: 5.5, major: true },
+                    { path: 'M350,150 C380,180 440,220 540,240 L650,260', color: '#00d4ff', end: [658,262], dur: 6.0, major: true },
+                    { path: 'M350,150 C290,180 200,220 100,250 L30,268', color: '#f59e0b', end: [22,270], dur: 5.2, major: true },
+                    { path: 'M350,150 C420,150 520,145 620,140 L690,138', color: '#34d399', end: [698,136], dur: 5.8, major: true },
+                    /* minor routes — shorter branches */
+                    { path: 'M350,150 C310,120 260,100 180,120 L100,140', color: '#f472b6', end: [92,142], dur: 4.2, major: false },
+                    { path: 'M350,150 C380,130 430,100 500,120 L560,135', color: '#fbbf24', end: [568,137], dur: 4.5, major: false },
+                    { path: 'M350,150 C330,190 280,230 200,200 L140,185', color: '#818cf8', end: [132,183], dur: 4.8, major: false }
+                ];
 
-                var svg = '<svg viewBox="0 0 520 220" xmlns="http://www.w3.org/2000/svg">' +
-                    '<defs>' +
-                        '<linearGradient id="tmRouteGrad" x1="0%" y1="0%" x2="100%" y2="0%">' +
-                            '<stop offset="0%" stop-color="#4f8fff"/>' +
-                            '<stop offset="40%" stop-color="#a855f7"/>' +
-                            '<stop offset="100%" stop-color="#00d4ff"/>' +
-                        '</linearGradient>' +
-                        '<linearGradient id="tmRouteGrad2" x1="0%" y1="0%" x2="100%" y2="0%">' +
-                            '<stop offset="0%" stop-color="#00d4ff" stop-opacity="0.3"/>' +
-                            '<stop offset="100%" stop-color="#a855f7" stop-opacity="0.1"/>' +
-                        '</linearGradient>' +
-                        '<linearGradient id="tmFlowGrad" x1="0%" y1="0%" x2="100%" y2="0%">' +
-                            '<stop offset="0%" stop-color="#4f8fff" stop-opacity="0"/>' +
-                            '<stop offset="50%" stop-color="#fff" stop-opacity="0.8"/>' +
-                            '<stop offset="100%" stop-color="#00d4ff" stop-opacity="0"/>' +
-                        '</linearGradient>' +
-                        '<radialGradient id="tmOrbGrad"><stop offset="0%" stop-color="#fff"/><stop offset="40%" stop-color="#4f8fff"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient>' +
-                    '</defs>' +
+                var svg = '<svg viewBox="0 0 700 290" xmlns="http://www.w3.org/2000/svg">';
 
-                    /* secondary routes (faint) */
-                    '<path class="tm-route-secondary" d="' + sec1 + '"/>' +
-                    '<path class="tm-route-secondary" d="' + sec2 + '" style="animation-delay:-2s;opacity:0.12"/>' +
+                /* subtle dot grid */
+                for (var gx = 30; gx < 700; gx += 40) {
+                    for (var gy = 20; gy < 290; gy += 40) {
+                        svg += '<circle cx="'+gx+'" cy="'+gy+'" r="0.6" fill="rgba(255,255,255,0.04)"/>';
+                    }
+                }
 
-                    /* main route layers: outer glow → mid → core → flow */
-                    '<path class="tm-route-outer" d="' + main + '"/>' +
-                    '<path class="tm-route-mid" d="' + main + '"/>' +
-                    '<path class="tm-route-core" d="' + main + '"/>' +
-                    '<path class="tm-flow" d="' + main + '"/>' +
-                    '<path class="tm-flow-2" d="' + main + '"/>';
-
-                /* waypoint nodes */
-                nodes.forEach(function(n, i) {
-                    svg += '<g class="tm-node" style="--node-color:' + n[2] + '">' +
-                        '<circle class="tm-node-ring" cx="'+n[0]+'" cy="'+n[1]+'" r="4" style="animation-delay:'+(i*-0.7)+'s"/>' +
-                        '<circle cx="'+n[0]+'" cy="'+n[1]+'" r="3.5" fill="' + n[2] + '" opacity="0.3"/>' +
-                        '<circle cx="'+n[0]+'" cy="'+n[1]+'" r="2" fill="' + n[2] + '"/>' +
-                        '<circle cx="'+n[0]+'" cy="'+n[1]+'" r="1" fill="white" opacity="0.9"/>' +
-                    '</g>';
+                /* road glow layer (soft colored blur behind roads) */
+                routes.forEach(function(r) {
+                    if (r.major) svg += '<path class="tm-road-glow" d="' + r.path + '" stroke="' + r.color + '"/>';
                 });
 
-                /* traveling orbs — smooth glowing dots */
-                for (var t = 0; t < 4; t++) {
-                    var sizes = [3.5, 2.5, 3, 2];
-                    svg += '<circle class="tm-orb" r="'+sizes[t]+'" fill="url(#tmOrbGrad)" style="offset-path:path(\''+main+'\')" />';
-                }
+                /* road backgrounds (wide, faint — road bed) */
+                routes.forEach(function(r) {
+                    svg += '<path class="tm-road-bg" d="' + r.path + '"/>';
+                });
+
+                /* colored road lines */
+                routes.forEach(function(r) {
+                    var w = r.major ? 7 : 4;
+                    svg += '<path class="tm-road" d="' + r.path + '" stroke="' + r.color + '" stroke-width="' + w + '"/>';
+                });
+
+                /* destination buildings */
+                routes.forEach(function(r, i) {
+                    var x = r.end[0], y = r.end[1];
+                    var delay = (0.3 + i * 0.12).toFixed(2);
+                    var s = r.major ? 1 : 0.75;
+                    /* pulsing halo */
+                    svg += '<circle class="tm-pin-pulse" cx="'+x+'" cy="'+y+'" r="'+(14*s)+'" fill="'+r.color+'" style="animation-delay:'+(i*-0.6)+'s"/>';
+
+                    if (i % 3 === 0) {
+                        /* tall building */
+                        svg += '<g class="tm-pin" style="animation-delay:'+delay+'s;transform-origin:'+x+'px '+y+'px">' +
+                            '<rect x="'+(x-6*s)+'" y="'+(y-10*s)+'" width="'+(12*s)+'" height="'+(20*s)+'" rx="2" fill="'+r.color+'" opacity="0.9"/>' +
+                            '<rect x="'+(x-3*s)+'" y="'+(y-7*s)+'" width="'+(6*s)+'" height="'+(5*s)+'" rx="1" fill="rgba(255,255,255,0.45)"/>' +
+                            '<rect x="'+(x-3*s)+'" y="'+(y+1*s)+'" width="'+(6*s)+'" height="'+(4*s)+'" rx="1" fill="rgba(255,255,255,0.3)"/>' +
+                        '</g>';
+                    } else if (i % 3 === 1) {
+                        /* house with roof */
+                        svg += '<g class="tm-pin" style="animation-delay:'+delay+'s;transform-origin:'+x+'px '+y+'px">' +
+                            '<rect x="'+(x-7*s)+'" y="'+(y-3*s)+'" width="'+(14*s)+'" height="'+(12*s)+'" rx="1.5" fill="'+r.color+'" opacity="0.9"/>' +
+                            '<polygon points="'+x+','+(y-10*s)+' '+(x-8*s)+','+(y-3*s)+' '+(x+8*s)+','+(y-3*s)+'" fill="'+r.color+'"/>' +
+                            '<rect x="'+(x-2*s)+'" y="'+(y+2*s)+'" width="'+(4*s)+'" height="'+(6*s)+'" rx="0.5" fill="rgba(255,255,255,0.4)"/>' +
+                        '</g>';
+                    } else {
+                        /* warehouse / wide building */
+                        svg += '<g class="tm-pin" style="animation-delay:'+delay+'s;transform-origin:'+x+'px '+y+'px">' +
+                            '<rect x="'+(x-9*s)+'" y="'+(y-5*s)+'" width="'+(18*s)+'" height="'+(10*s)+'" rx="2" fill="'+r.color+'" opacity="0.9"/>' +
+                            '<rect x="'+(x-6*s)+'" y="'+(y-3*s)+'" width="'+(4*s)+'" height="'+(4*s)+'" rx="0.5" fill="rgba(255,255,255,0.35)"/>' +
+                            '<rect x="'+(x+2*s)+'" y="'+(y-3*s)+'" width="'+(4*s)+'" height="'+(4*s)+'" rx="0.5" fill="rgba(255,255,255,0.35)"/>' +
+                        '</g>';
+                    }
+                });
+
+                /* central hub (Smyrna HQ) — bigger, more prominent */
+                svg += '<g class="tm-hub">' +
+                    '<circle class="tm-hub-ring-2" cx="350" cy="150" r="22"/>' +
+                    '<circle class="tm-hub-ring" cx="350" cy="150" r="14"/>' +
+                    '<circle cx="350" cy="150" r="8" fill="rgba(255,255,255,0.1)"/>' +
+                    '<circle cx="350" cy="150" r="5" fill="white" opacity="0.95"/>' +
+                    '<circle cx="350" cy="150" r="2" fill="rgba(79,143,255,0.8)"/>' +
+                '</g>';
+
+                /* traveling cars — rounded rects along each route */
+                routes.forEach(function(r) {
+                    var count = r.major ? 3 : 2;
+                    var carW = r.major ? 8 : 6;
+                    var carH = r.major ? 4 : 3;
+                    for (var c = 0; c < count; c++) {
+                        var d = (c * r.dur / count).toFixed(1);
+                        svg += '<rect class="tm-car" width="'+carW+'" height="'+carH+'" rx="'+carH/2+'" fill="'+r.color+'" ' +
+                            'style="--car-color:'+r.color+';offset-path:path(\''+r.path+'\');animation-duration:'+r.dur+'s;animation-delay:-'+d+'s"/>';
+                    }
+                });
 
                 svg += '</svg>';
                 return '<div class="tm-route-scene">' + svg + '</div>';
@@ -5744,7 +5785,7 @@
                     if (!sel) return;
                     sel.innerHTML = '<option value="">Select rep...</option>' +
                         _reps.map(function(r) {
-                            return '<option value="' + r.id + '">' + esc(r.name) + ' (' + (r.territory_states || []).join(', ') + ')</option>';
+                            return '<option value="' + r.id + '">' + esc(r.name) + '</option>';
                         }).join('');
                     if (_selectedRepId) {
                         sel.value = _selectedRepId;
@@ -7357,7 +7398,6 @@
             menu.innerHTML = _routeReps.map(r =>
                 `<div class="route-dropdown-item" data-id="${r.id}" onclick="selectRouteRep('${r.id}','${esc(r.name)}')">
                     ${esc(r.name)}
-                    <div class="route-dropdown-item-sub">${(r.territory_states || []).join(', ')}</div>
                 </div>`
             ).join('');
         }
