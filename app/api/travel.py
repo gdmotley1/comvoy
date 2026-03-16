@@ -17,7 +17,10 @@ import logging
 import math
 from datetime import date
 
+from typing import Optional
+
 from fastapi import APIRouter, Query, HTTPException
+from pydantic import BaseModel
 
 from app.database import get_service_client
 from app.etl.geocoder import geocode_single
@@ -45,6 +48,31 @@ def list_reps():
         "is_active", True
     ).execute()
     return result.data
+
+
+class RepCreate(BaseModel):
+    name: str
+    email: str
+    territory_states: Optional[list[str]] = None
+    focus_body_types: Optional[list[str]] = None
+
+
+@router.post("/reps")
+def create_rep(body: RepCreate):
+    """Create a new sales rep."""
+    db = get_service_client()
+    row = {
+        "name": body.name,
+        "email": body.email,
+        "territory_states": body.territory_states or [],
+        "is_active": True,
+    }
+    if body.focus_body_types:
+        row["focus_body_types"] = body.focus_body_types
+    result = db.table("reps").insert(row).execute()
+    if not result.data:
+        raise HTTPException(500, "Failed to create rep")
+    return {"status": "created", "rep": result.data[0]}
 
 
 @router.get("/geocode")

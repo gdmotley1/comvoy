@@ -2727,23 +2727,23 @@
 
         .tm-rep-select:focus { border-color: var(--accent-blue); }
 
-        /* TM cinematic empty state */
+        /* TM compact hero */
         .tm-hero {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
-            padding: 16px 20px 20px;
+            padding: 16px 20px 12px;
             overflow: visible;
-            min-height: calc(100vh - 120px);
+            max-height: 240px;
         }
 
         /* Liquid route scene */
         .tm-route-scene {
             position: relative;
-            width: min(520px, 90vw);
-            height: 260px;
+            width: min(420px, 85vw);
+            height: 160px;
             z-index: 2;
             overflow: visible;
             opacity: 0;
@@ -2839,19 +2839,7 @@
         }
 
         /* Ambient glow behind scene */
-        .tm-route-scene::before {
-            content: '';
-            position: absolute;
-            width: 120%;
-            height: 160%;
-            top: -30%;
-            left: -10%;
-            border-radius: 50%;
-            background: radial-gradient(ellipse at 50% 50%, rgba(79,143,255,0.06) 0%, rgba(168,85,247,0.03) 40%, transparent 70%);
-            filter: blur(30px);
-            z-index: -1;
-            animation: tmGlowBreathe 4s ease-in-out infinite alternate;
-        }
+        .tm-route-scene::before { display: none; }
 
         @keyframes tmIconEntrance { 0% { opacity: 0; transform: translateY(20px) scale(0.9); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
 
@@ -2922,6 +2910,294 @@
         .tm-stat-sep {
             color: rgba(79,143,255,0.4);
         }
+
+        /* Trip management body */
+        .tm-body {
+            padding: 0 20px 140px;
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        .tm-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .tm-tab-bar {
+            display: flex;
+            background: var(--glass);
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+        }
+
+        .tm-tab {
+            padding: 7px 16px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+            font-family: inherit;
+        }
+
+        .tm-tab.active {
+            color: var(--text-primary);
+            background: rgba(79,143,255,0.12);
+        }
+
+        .tm-add-btn {
+            margin-left: auto;
+            padding: 7px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(79,143,255,0.3);
+            background: rgba(79,143,255,0.08);
+            color: var(--accent-blue);
+            font-size: 12px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tm-add-btn:hover { background: rgba(79,143,255,0.18); }
+
+        .tm-trips-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .tm-trip-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 14px 16px;
+            position: relative;
+            transition: all 0.2s;
+            animation: tmFadeIn 0.3s ease;
+        }
+        .tm-trip-card:hover { border-color: rgba(79,143,255,0.25); background: rgba(255,255,255,0.04); }
+
+        .tm-trip-top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .tm-card-badge {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+        .tm-card-badge.today { background: rgba(34,197,94,0.15); color: #22c55e; }
+        .tm-card-badge.upcoming { background: rgba(79,143,255,0.15); color: #4f8fff; }
+        .tm-card-badge.past { background: rgba(255,255,255,0.06); color: var(--text-tertiary); }
+
+        .tm-card-date {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .tm-card-route {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tm-card-route svg { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.5; }
+
+        .tm-card-notes {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+
+        .tm-card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tm-card-act {
+            font-size: 11px;
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            background: rgba(255,255,255,0.04);
+            color: var(--text-tertiary);
+        }
+        .tm-card-act:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+        .tm-card-act.primary { background: rgba(79,143,255,0.1); color: var(--accent-blue); }
+        .tm-card-act.primary:hover { background: rgba(79,143,255,0.2); }
+        .tm-card-act.danger:hover { color: #f87171; background: rgba(248,113,113,0.1); }
+
+        .tm-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-tertiary);
+            font-size: 14px;
+        }
+        .tm-empty-icon { font-size: 32px; margin-bottom: 8px; opacity: 0.3; }
+
+        /* Dealer accordion */
+        .tm-dealers {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--glass-border);
+            animation: tmFadeIn 0.2s ease;
+        }
+
+        .tm-dealer-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .tm-dealer-row + .tm-dealer-row { border-top: 1px solid rgba(255,255,255,0.03); }
+
+        .tm-dealer-score {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            min-width: 24px;
+            text-align: center;
+        }
+        .tm-dealer-score.hot { background: rgba(249,115,22,0.15); color: #f97316; }
+        .tm-dealer-score.warm { background: rgba(234,179,8,0.15); color: #eab308; }
+        .tm-dealer-score.cold { background: rgba(255,255,255,0.06); color: var(--text-tertiary); }
+
+        .tm-dealer-name { font-weight: 500; color: var(--text-primary); flex: 1; }
+        .tm-dealer-dist { color: var(--text-tertiary); font-size: 11px; white-space: nowrap; }
+
+        /* Inline chat at bottom */
+        .tm-chat-wrap {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            background: rgba(10,10,20,0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            display: none;
+        }
+        body.trip-manager .tm-chat-wrap { display: block; }
+
+        .tm-chat-messages {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 12px 20px 0;
+            max-width: 680px;
+            margin: 0 auto;
+            display: none;
+        }
+        .tm-chat-messages.has-msgs { display: block; }
+
+        .tm-chat-msg {
+            margin-bottom: 10px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .tm-chat-msg.user { color: var(--text-primary); text-align: right; }
+        .tm-chat-msg.user span { background: rgba(79,143,255,0.12); padding: 6px 12px; border-radius: 12px 12px 2px 12px; display: inline-block; }
+        .tm-chat-msg.bot { color: var(--text-secondary); }
+        .tm-chat-msg.bot .tm-chat-bubble { background: var(--glass); border: 1px solid var(--glass-border); padding: 10px 14px; border-radius: 2px 12px 12px 12px; }
+
+        .tm-chat-input-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px 14px;
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        .tm-chat-input {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .tm-chat-input:focus { border-color: var(--accent-blue); }
+        .tm-chat-input::placeholder { color: var(--text-tertiary); }
+
+        .tm-chat-send {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: none;
+            background: var(--accent-blue);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .tm-chat-send:hover { filter: brightness(1.15); }
+        .tm-chat-send:disabled { opacity: 0.4; cursor: default; }
+
+        .tm-chat-chips {
+            display: flex;
+            gap: 6px;
+            padding: 0 20px 8px;
+            max-width: 680px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+
+        .tm-chat-chip {
+            font-size: 11px;
+            padding: 5px 12px;
+            border-radius: 100px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            color: var(--text-tertiary);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .tm-chat-chip:hover { color: var(--text-primary); border-color: rgba(79,143,255,0.3); background: rgba(79,143,255,0.06); }
+
+        /* Add rep modal */
+        .tm-add-rep-fields { display: flex; flex-direction: column; gap: 12px; }
+        .tm-add-rep-row { display: flex; gap: 10px; }
+        .tm-add-rep-row > .tm-field { flex: 1; }
+        .tm-tags-input { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 10px; min-height: 38px; align-items: center; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 10px; cursor: text; transition: border-color 0.2s; }
+        .tm-tags-input:focus-within { border-color: var(--accent-blue); }
+        .tm-tags-input input { background: none; border: none; outline: none; color: var(--text-primary); font-family: inherit; font-size: 13px; flex: 1; min-width: 60px; }
+        .tm-tags-input input::placeholder { color: var(--text-tertiary); }
+        .tm-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 6px; background: rgba(79,143,255,0.12); color: var(--accent-blue); font-size: 12px; font-weight: 500; }
+        .tm-tag-x { cursor: pointer; opacity: 0.6; font-size: 14px; line-height: 1; }
+        .tm-tag-x:hover { opacity: 1; }
 
         /* Aurora blobs for TM */
         .tm-aurora {
@@ -4094,13 +4370,17 @@
             /* Mobile trip manager */
             .tm-modal { padding: 16px; margin: 8px; max-width: calc(100vw - 16px); border-radius: 16px; }
             .tm-particle { display: none; }
-            .tm-hero { padding: 8px 16px 16px; min-height: auto; }
-            .tm-hero-headline { font-size: 24px; }
-            .tm-hero-sub { font-size: 14px; }
-            .tm-route-scene { width: 90vw; height: 180px; }
-            .tm-suggestions { max-width: 100%; }
-            .tm-sug-card { font-size: 12px; padding: 8px 14px 8px 10px; }
+            .tm-hero { padding: 8px 12px 8px; max-height: 180px; }
+            .tm-hero-headline { font-size: 20px; }
+            .tm-hero-sub { font-size: 13px; }
+            .tm-route-scene { width: 90vw; height: 120px; }
             .tm-stats { gap: 10px; flex-wrap: wrap; justify-content: center; }
+            .tm-body { padding: 0 12px 140px; }
+            .tm-toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+            .tm-add-btn { margin-left: 0; }
+            .tm-chat-input-row { padding: 8px 12px 12px; }
+            .tm-chat-chips { padding: 0 12px 6px; }
+            .tm-add-rep-row { flex-direction: column; }
             /* Mobile dashboard KPIs */
             .dash-kpi-row { gap: 8px; }
             .dash-kpi-item { min-width: calc(50% - 4px); }
@@ -5483,13 +5763,19 @@
         Effects.initEyeTracking();
 
         // =====================================================================
-        // MODULE 4: TripManager — CRUD view
+        // MODULE 4: TripManager — Trip History & Planner
         // =====================================================================
         const TripManager = (function() {
-            const { API_BASE, $, fetchT, esc } = Core;
+            const { API_BASE, $, fetchT, esc, fmt, ottoEyeSvg, streamChat, tierColor } = Core;
             let _tmTrips = [];
             let _tmEditId = null;
-            let _tmSuggestions = null;
+            let _reps = [];
+            let _selectedRepId = null;
+            let _tmTab = 'upcoming';
+            let _tmChatHistory = [];
+            let _tmChatBusy = false;
+            let _tmChatSid = null;
+            let _expandedPlan = null;
 
             const ICONS = {
                 fire: '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 2c.6 0 1.14.38 1.34.94C12.46 5.84 14 7.5 14 10a4 4 0 01-8 0c0-1.3.4-2.5 1.06-3.5-.02.5.2 1 .6 1.3A5.5 5.5 0 0110 2z"/></svg>',
@@ -5504,8 +5790,11 @@
                 const w = document.getElementById('welcome');
                 if (w) w.remove();
                 Chat.setMessagesDiv(null);
+                _tmChatSid = _tmChatSid || crypto.randomUUID();
+                _tmChatHistory = [];
                 Chat.getScroll().innerHTML = buildHTML();
-                loadSuggestions();
+                loadReps();
+                loadStats();
             }
 
             function _tmParticles() {
@@ -5579,119 +5868,421 @@
             }
 
             function buildHTML() {
+                var sendIcon = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
                 return '<div class="tm-container" id="tmContainer">' +
-                    '<div id="tmContent">' +
-                        '<div class="tm-hero">' +
-                            '<div class="tm-aurora tm-aurora-1"></div>' +
-                            '<div class="tm-aurora tm-aurora-2"></div>' +
-                            '<div class="tm-aurora tm-aurora-3"></div>' +
-                            _tmParticles() +
-                            _buildScene() +
-                            '<div class="tm-hero-headline">Where should you go next?</div>' +
-                            '<div class="tm-hero-sub">AI-suggested trips based on your latest inventory data</div>' +
-                            '<div class="tm-suggestions" id="tmSuggestions">' +
-                                '<div class="tm-sug-card sug-hot" onclick="tmSuggest(\'Show me the hottest leads to visit\')"><div class="tm-sug-icon">' + ICONS.fire + '</div><div class="tm-sug-text"><div class="tm-sug-title">Visit hot leads</div></div></div>' +
-                                '<div class="tm-sug-card sug-target" onclick="tmSuggest(\'Show me all dealers near the largest market\')"><div class="tm-sug-icon">' + ICONS.target + '</div><div class="tm-sug-text"><div class="tm-sug-title">Scout top markets</div></div></div>' +
-                                '<div class="tm-sug-card sug-territory" onclick="tmSuggest(\'Help me plan an optimized route to visit dealers\')"><div class="tm-sug-icon">' + ICONS.map + '</div><div class="tm-sug-text"><div class="tm-sug-title">Build a route</div></div></div>' +
+                    /* Section A: Compact Hero */
+                    '<div class="tm-hero">' +
+                        '<div class="tm-aurora tm-aurora-1"></div>' +
+                        '<div class="tm-aurora tm-aurora-2"></div>' +
+                        '<div class="tm-aurora tm-aurora-3"></div>' +
+                        _tmParticles() +
+                        _buildScene() +
+                        '<div class="tm-hero-headline">Trip Planner</div>' +
+                        '<div class="tm-stats" id="tmStats"><span class="tm-stat">Loading...</span></div>' +
+                    '</div>' +
+
+                    /* Section B: Trip Management */
+                    '<div class="tm-body">' +
+                        '<div class="tm-toolbar">' +
+                            '<select class="tm-rep-select" id="tmRepSelect" onchange="tmRepChange(this.value)">' +
+                                '<option value="">Select rep...</option>' +
+                            '</select>' +
+                            '<div class="tm-tab-bar">' +
+                                '<button class="tm-tab active" id="tmTabUpcoming" onclick="tmSetTab(\'upcoming\')">Upcoming</button>' +
+                                '<button class="tm-tab" id="tmTabPast" onclick="tmSetTab(\'past\')">Past</button>' +
                             '</div>' +
-                            '<div class="tm-stats" id="tmStats"><span class="tm-stat">Analyzing inventory...</span></div>' +
+                            '<button class="tm-add-btn" onclick="showTripForm()">+ New Trip</button>' +
+                            '<button class="tm-add-btn" style="border-color:rgba(34,197,94,0.3);color:#22c55e;background:rgba(34,197,94,0.08)" onclick="tmShowAddRep()">+ Add Rep</button>' +
                         '</div>' +
+                        '<div class="tm-trips-list" id="tmTripsList">' +
+                            '<div class="tm-empty"><div class="tm-empty-icon">&#128218;</div>Select a rep to view their trips</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+
+                /* Section C: Inline Chat (fixed bottom) */
+                '<div class="tm-chat-wrap">' +
+                    '<div class="tm-chat-messages" id="tmChatMsgs"></div>' +
+                    '<div class="tm-chat-chips">' +
+                        '<button class="tm-chat-chip" onclick="tmChatAsk(\'Plan a 3-day route for my hottest leads\')">Plan a route</button>' +
+                        '<button class="tm-chat-chip" onclick="tmChatAsk(\'Which hot leads should I visit this week?\')">Hot leads to visit</button>' +
+                        '<button class="tm-chat-chip" onclick="tmChatAsk(\'Compare dealer activity across my territory\')">Territory overview</button>' +
+                    '</div>' +
+                    '<div class="tm-chat-input-row">' +
+                        '<input class="tm-chat-input" id="tmChatInput" placeholder="Ask Otto about trips, routes, leads..." onkeydown="if(event.key===\'Enter\')tmChatSend()">' +
+                        '<button class="tm-chat-send" id="tmChatSendBtn" onclick="tmChatSend()">' + sendIcon + '</button>' +
                     '</div>' +
                 '</div>';
             }
 
-            async function loadSuggestions() {
-                const container = document.getElementById('tmSuggestions');
-                const statsEl = document.getElementById('tmStats');
-                if (!container) return;
+            async function loadStats() {
+                var statsEl = document.getElementById('tmStats');
+                if (!statsEl) return;
                 try {
-                    const [leadsRes, alertsRes, dashRes] = await Promise.all([
+                    var [leadsRes, alertsRes, dashRes] = await Promise.all([
                         fetchT(API_BASE + '/api/scoring/leads?tier=hot&limit=10').catch(function() { return null; }),
                         fetchT(API_BASE + '/api/alerts?limit=10').catch(function() { return null; }),
                         fetchT(API_BASE + '/api/dashboard').catch(function() { return null; })
                     ]);
-
-                    const leads = leadsRes && leadsRes.ok ? await leadsRes.json() : { leads: [], total: 0 };
-                    const alerts = alertsRes && alertsRes.ok ? await alertsRes.json() : { alerts: [], total_alerts: 0 };
-                    const dash = dashRes && dashRes.ok ? await dashRes.json() : { totals: {}, by_state: [], top_dealers: [] };
-
-                    _tmSuggestions = { leads: leads, alerts: alerts, dash: dash };
-                    const cards = [];
-
-                    // Card 1: Visit hot leads
-                    if (leads.leads && leads.leads.length > 0) {
-                        var byState = {};
-                        leads.leads.forEach(function(l) { byState[l.state] = (byState[l.state] || 0) + 1; });
-                        var topState = Object.entries(byState).sort(function(a,b) { return b[1]-a[1]; })[0];
-                        var stateNames = {TX:'Texas',GA:'Georgia',FL:'Florida',TN:'Tennessee',NC:'North Carolina',SC:'South Carolina',AL:'Alabama',LA:'Louisiana',OK:'Oklahoma',AR:'Arkansas',MS:'Mississippi',VA:'Virginia'};
-                        cards.push({
-                            type: 'hot', icon: ICONS.fire,
-                            title: 'Visit hot leads in ' + (stateNames[topState[0]] || topState[0]),
-                            query: 'Plan a trip to visit hot leads in ' + topState[0]
-                        });
-                    }
-
-                    // Card 2: Inventory movers
-                    if (alerts.alerts && alerts.alerts.length > 0) {
-                        cards.push({
-                            type: 'surge', icon: ICONS.trending,
-                            title: 'Dealers with inventory changes',
-                            query: 'Which dealers had the biggest inventory changes recently?'
-                        });
-                    }
-
-                    // Card 3: Top dealer to visit
-                    if (dash.top_dealers && dash.top_dealers.length > 2) {
-                        var t1 = dash.top_dealers[0];
-                        cards.push({
-                            type: 'target', icon: ICONS.target,
-                            title: 'Scout ' + esc(t1.city) + ', ' + t1.state,
-                            query: 'Show me all dealers near ' + t1.city + ', ' + t1.state
-                        });
-                    }
-
-                    // Card 4: Build a route
-                    cards.push({
-                        type: 'territory', icon: ICONS.map,
-                        title: 'Build a multi-stop route',
-                        query: 'Help me plan an optimized route to visit dealers'
-                    });
-
-                    // Render
-                    if (cards.length === 0) {
-                        container.innerHTML = '<div class="tm-sug-card sug-target" style="grid-column:1/-1;animation-delay:0.5s"><div class="tm-sug-icon">' + ICONS.target + '</div><div class="tm-sug-text"><div class="tm-sug-title">No suggestions yet</div><div class="tm-sug-sub">Ask Otto about dealers, routes, or inventory</div></div></div>';
-                    } else {
-                        container.innerHTML = cards.map(function(c) {
-                            return '<div class="tm-sug-card sug-' + c.type + '" onclick="tmSuggest(\'' + c.query.replace(/'/g, "\\'") + '\')">' +
-                                '<div class="tm-sug-icon">' + c.icon + '</div>' +
-                                '<div class="tm-sug-text"><div class="tm-sug-title">' + c.title + '</div>' + (c.sub ? '<div class="tm-sug-sub">' + c.sub + '</div>' : '') + '</div>' +
-                            '</div>';
-                        }).join('');
-                    }
-
-                    // Update stats
-                    if (statsEl) {
-                        var hotCount = leads.total || (leads.leads ? leads.leads.length : 0);
-                        var alertCount = alerts.total_alerts || (alerts.alerts ? alerts.alerts.length : 0);
-                        var dealerCount = dash.totals ? (dash.totals.dealers || 0) : 0;
-                        statsEl.innerHTML = '<span class="tm-stat">' + hotCount + ' hot leads</span>' +
-                            '<span class="tm-stat-sep">&middot;</span>' +
-                            '<span class="tm-stat">' + alertCount + ' alerts</span>' +
-                            '<span class="tm-stat-sep">&middot;</span>' +
-                            '<span class="tm-stat">' + dealerCount.toLocaleString() + ' dealers</span>';
-                    }
+                    var leads = leadsRes && leadsRes.ok ? await leadsRes.json() : { leads: [], total: 0 };
+                    var alerts = alertsRes && alertsRes.ok ? await alertsRes.json() : { alerts: [], total_alerts: 0 };
+                    var dash = dashRes && dashRes.ok ? await dashRes.json() : { totals: {} };
+                    var hotCount = leads.total || (leads.leads ? leads.leads.length : 0);
+                    var alertCount = alerts.total_alerts || (alerts.alerts ? alerts.alerts.length : 0);
+                    var dealerCount = dash.totals ? (dash.totals.dealers || 0) : 0;
+                    statsEl.innerHTML = '<span class="tm-stat">' + hotCount + ' hot leads</span>' +
+                        '<span class="tm-stat-sep">&middot;</span>' +
+                        '<span class="tm-stat">' + alertCount + ' alerts</span>' +
+                        '<span class="tm-stat-sep">&middot;</span>' +
+                        '<span class="tm-stat">' + dealerCount.toLocaleString() + ' dealers</span>';
                 } catch(e) {
-                    console.error('Failed to load trip suggestions:', e);
-                    container.innerHTML = '<div class="tm-sug-card sug-target" style="grid-column:1/-1;animation-delay:0.5s"><div class="tm-sug-icon">' + ICONS.target + '</div><div class="tm-sug-text"><div class="tm-sug-title">Ask Otto anything</div><div class="tm-sug-sub">Dealers, routes, inventory, lead scores</div></div></div>';
+                    statsEl.innerHTML = '<span class="tm-stat">—</span>';
                 }
             }
 
-            function askSuggestion(query) {
-                document.body.classList.remove('trip-manager', 'map-view');
-                document.body.classList.add('chatting');
-                Chat.getScroll().innerHTML = '';
-                Chat.setMessagesDiv(null);
-                Chat.ask(query);
+            async function loadReps() {
+                try {
+                    var res = await fetchT(API_BASE + '/api/travel/reps');
+                    if (!res.ok) return;
+                    _reps = await res.json();
+                    var sel = document.getElementById('tmRepSelect');
+                    if (!sel) return;
+                    sel.innerHTML = '<option value="">Select rep...</option>' +
+                        _reps.map(function(r) {
+                            return '<option value="' + r.id + '">' + esc(r.name) + ' (' + (r.territory_states || []).join(', ') + ')</option>';
+                        }).join('');
+                    if (_selectedRepId) {
+                        sel.value = _selectedRepId;
+                        loadTrips();
+                    } else if (_reps.length === 1) {
+                        sel.value = _reps[0].id;
+                        onRepChange(_reps[0].id);
+                    }
+                } catch(e) { console.error('Failed to load reps:', e); }
+            }
+
+            function onRepChange(repId) {
+                _selectedRepId = repId || null;
+                _expandedPlan = null;
+                if (_selectedRepId) loadTrips();
+                else {
+                    var list = document.getElementById('tmTripsList');
+                    if (list) list.innerHTML = '<div class="tm-empty"><div class="tm-empty-icon">&#128218;</div>Select a rep to view their trips</div>';
+                }
+            }
+
+            async function loadTrips() {
+                if (!_selectedRepId) return;
+                var list = document.getElementById('tmTripsList');
+                if (list) list.innerHTML = '<div class="tm-empty">Loading trips...</div>';
+                try {
+                    var res = await fetchT(API_BASE + '/api/travel/plans/' + _selectedRepId);
+                    if (!res.ok) throw new Error('Failed');
+                    _tmTrips = await res.json();
+                    if (!Array.isArray(_tmTrips)) _tmTrips = _tmTrips.plans || _tmTrips.data || [];
+                    renderTrips();
+                } catch(e) {
+                    if (list) list.innerHTML = '<div class="tm-empty">Failed to load trips</div>';
+                }
+            }
+
+            function renderTrips() {
+                var list = document.getElementById('tmTripsList');
+                if (!list) return;
+                var today = new Date().toISOString().slice(0, 10);
+                var filtered = _tmTrips.filter(function(t) {
+                    if (_tmTab === 'upcoming') return t.travel_date >= today;
+                    return t.travel_date < today;
+                }).sort(function(a, b) {
+                    return _tmTab === 'upcoming'
+                        ? a.travel_date.localeCompare(b.travel_date)
+                        : b.travel_date.localeCompare(a.travel_date);
+                });
+
+                if (filtered.length === 0) {
+                    list.innerHTML = '<div class="tm-empty"><div class="tm-empty-icon">' +
+                        (_tmTab === 'upcoming' ? '&#128197;' : '&#128203;') + '</div>' +
+                        (_tmTab === 'upcoming' ? 'No upcoming trips. Plan one!' : 'No past trips yet.') + '</div>';
+                    return;
+                }
+
+                list.innerHTML = filtered.map(function(t) { return buildTripCard(t, today); }).join('');
+            }
+
+            function buildTripCard(trip, today) {
+                var d = trip.travel_date;
+                var isToday = d === today;
+                var isPast = d < today;
+                var badgeClass = isToday ? 'today' : (isPast ? 'past' : 'upcoming');
+                var badgeText = isToday ? 'Today' : _formatDate(d);
+                var arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+                var expanded = _expandedPlan === trip.id;
+
+                var html = '<div class="tm-trip-card" id="tmCard_' + trip.id + '">' +
+                    '<div class="tm-trip-top">' +
+                        '<span class="tm-card-badge ' + badgeClass + '">' + badgeText + '</span>' +
+                        '<span class="tm-card-date">' + (trip.start_location || '?') + '</span>' +
+                    '</div>' +
+                    '<div class="tm-card-route">' + arrow + ' ' + esc(trip.start_location || '') + '  →  ' + esc(trip.end_location || '') + '</div>' +
+                    (trip.notes ? '<div class="tm-card-notes">' + esc(trip.notes) + '</div>' : '') +
+                    '<div class="tm-card-actions">' +
+                        '<button class="tm-card-act primary" onclick="tmExpandDealers(\'' + trip.id + '\')">' + (expanded ? 'Hide Dealers' : 'View Dealers') + '</button>' +
+                        '<button class="tm-card-act primary" onclick="tmViewOnMap(\'' + trip.id + '\')">View on Map</button>' +
+                        '<button class="tm-card-act" onclick="showTripForm(\'' + trip.id + '\')">Edit</button>' +
+                        '<button class="tm-card-act danger" onclick="deleteTripPlan(\'' + trip.id + '\')">Delete</button>' +
+                    '</div>';
+
+                if (expanded) {
+                    html += '<div class="tm-dealers" id="tmDealers_' + trip.id + '"><div style="color:var(--text-tertiary);font-size:12px">Loading dealers...</div></div>';
+                }
+                html += '</div>';
+                return html;
+            }
+
+            function _formatDate(dateStr) {
+                var parts = dateStr.split('-');
+                var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                return months[parseInt(parts[1])-1] + ' ' + parseInt(parts[2]) + ', ' + parts[0];
+            }
+
+            function setTab(tab) {
+                _tmTab = tab;
+                _expandedPlan = null;
+                var u = document.getElementById('tmTabUpcoming');
+                var p = document.getElementById('tmTabPast');
+                if (u) u.classList.toggle('active', tab === 'upcoming');
+                if (p) p.classList.toggle('active', tab === 'past');
+                renderTrips();
+            }
+
+            async function expandDealers(planId) {
+                if (_expandedPlan === planId) {
+                    _expandedPlan = null;
+                    renderTrips();
+                    return;
+                }
+                _expandedPlan = planId;
+                renderTrips();
+                var container = document.getElementById('tmDealers_' + planId);
+                if (!container) return;
+                var trip = _tmTrips.find(function(t) { return t.id === planId; });
+                if (!trip) return;
+                try {
+                    var res = await fetchT(API_BASE + '/api/travel/route-dealers?rep_id=' + _selectedRepId + '&travel_date=' + trip.travel_date + '&buffer_miles=25&limit=15');
+                    if (!res.ok) throw new Error('Failed');
+                    var data = await res.json();
+                    var dealers = data.dealers || [];
+                    if (dealers.length === 0) {
+                        container.innerHTML = '<div style="color:var(--text-tertiary);font-size:12px">No dealers found along this route</div>';
+                        return;
+                    }
+                    container.innerHTML = dealers.map(function(d) {
+                        var tier = (d.lead_tier || d.tier || 'cold').toLowerCase();
+                        return '<div class="tm-dealer-row">' +
+                            '<span class="tm-dealer-score ' + tier + '">' + (d.lead_score || d.score || '—') + '</span>' +
+                            '<span class="tm-dealer-name">' + esc(d.name) + '</span>' +
+                            '<span class="tm-dealer-dist">' + (d.dist_from_route_mi != null ? d.dist_from_route_mi.toFixed(1) + ' mi' : '') + '</span>' +
+                        '</div>';
+                    }).join('');
+                } catch(e) {
+                    container.innerHTML = '<div style="color:var(--text-tertiary);font-size:12px">Failed to load dealers</div>';
+                }
+            }
+
+            function viewOnMap(planId) {
+                var trip = _tmTrips.find(function(t) { return t.id === planId; });
+                if (!trip) return;
+                DealerMap.open();
+                setTimeout(function() {
+                    var rep = _reps.find(function(r) { return r.id === _selectedRepId; });
+                    if (rep) RouteOverlay.selectRep(_selectedRepId, rep.name);
+                    setTimeout(function() { RouteOverlay.selectTrip(planId); }, 500);
+                }, 300);
+            }
+
+            /* Inline chat */
+            async function tmChatSend() {
+                var input = document.getElementById('tmChatInput');
+                var sendBtn = document.getElementById('tmChatSendBtn');
+                if (!input) return;
+                var text = input.value.trim();
+                if (!text || _tmChatBusy) return;
+                var msgsEl = document.getElementById('tmChatMsgs');
+                if (!msgsEl) return;
+                msgsEl.classList.add('has-msgs');
+
+                // User message
+                var userDiv = document.createElement('div');
+                userDiv.className = 'tm-chat-msg user';
+                userDiv.innerHTML = '<span>' + esc(text) + '</span>';
+                msgsEl.appendChild(userDiv);
+                input.value = '';
+                msgsEl.scrollTop = msgsEl.scrollHeight;
+
+                _tmChatBusy = true;
+                if (sendBtn) sendBtn.disabled = true;
+                _tmChatHistory.push({ role: 'user', content: text });
+
+                // Thinking
+                var thinkDiv = document.createElement('div');
+                thinkDiv.className = 'tm-chat-msg bot';
+                thinkDiv.innerHTML = '<div class="tm-chat-bubble" style="opacity:0.5">Thinking...</div>';
+                msgsEl.appendChild(thinkDiv);
+                msgsEl.scrollTop = msgsEl.scrollHeight;
+
+                var accumulated = '', bubbleEl = null;
+                try {
+                    await streamChat(
+                        API_BASE + '/api/chat/stream?session_id=' + _tmChatSid,
+                        { message: text, history: _tmChatHistory },
+                        {
+                            onStatus: function() {},
+                            onDelta: function(data) {
+                                if (!bubbleEl) {
+                                    thinkDiv.innerHTML = '<div class="tm-chat-bubble"></div>';
+                                    bubbleEl = thinkDiv.querySelector('.tm-chat-bubble');
+                                }
+                                accumulated += data.text;
+                                if (!bubbleEl._fmtTimer) {
+                                    bubbleEl._fmtTimer = setTimeout(function() {
+                                        bubbleEl.innerHTML = fmt(accumulated);
+                                        bubbleEl._fmtTimer = null;
+                                        msgsEl.scrollTop = msgsEl.scrollHeight;
+                                    }, 100);
+                                }
+                            },
+                            onDone: function(data) {
+                                if (bubbleEl && bubbleEl._fmtTimer) {
+                                    clearTimeout(bubbleEl._fmtTimer);
+                                    bubbleEl._fmtTimer = null;
+                                }
+                                if (data.full_text) accumulated = data.full_text;
+                                if (bubbleEl) bubbleEl.innerHTML = fmt(accumulated);
+                                else thinkDiv.innerHTML = '<div class="tm-chat-bubble">' + fmt(accumulated) + '</div>';
+                                _tmChatHistory.push({ role: 'assistant', content: accumulated });
+                                msgsEl.scrollTop = msgsEl.scrollHeight;
+                            },
+                            onError: function(msg) {
+                                thinkDiv.innerHTML = '<div class="tm-chat-bubble" style="color:#f87171">Error: ' + esc(msg) + '</div>';
+                                _tmChatHistory.pop();
+                            }
+                        }
+                    );
+                } catch(e) {
+                    if (!accumulated) {
+                        thinkDiv.innerHTML = '<div class="tm-chat-bubble" style="color:#f87171">Connection error</div>';
+                        _tmChatHistory.pop();
+                    }
+                } finally {
+                    _tmChatBusy = false;
+                    if (sendBtn) sendBtn.disabled = false;
+                    if (input) input.focus();
+                }
+            }
+
+            function tmChatAsk(query) {
+                var input = document.getElementById('tmChatInput');
+                if (input) input.value = query;
+                tmChatSend();
+            }
+
+            /* Add Rep modal */
+            function showAddRep() {
+                var overlay = document.createElement('div');
+                overlay.className = 'tm-overlay';
+                overlay.id = 'tmOverlay';
+                overlay.onclick = function(e) { if (e.target === overlay) closeForm(); };
+                overlay.innerHTML = '<div class="tm-modal">' +
+                    '<div class="tm-modal-title">Add Sales Rep</div>' +
+                    '<div class="tm-add-rep-fields">' +
+                        '<div class="tm-add-rep-row">' +
+                            '<div class="tm-field"><label>First Name *</label><input type="text" id="tmRepFirst" placeholder="Wesley"></div>' +
+                            '<div class="tm-field"><label>Last Name *</label><input type="text" id="tmRepLast" placeholder="White"></div>' +
+                        '</div>' +
+                        '<div class="tm-field"><label>Email *</label><input type="email" id="tmRepEmail" placeholder="wwhite@comvoy.com"></div>' +
+                        '<div class="tm-field"><label>Territory States (optional)</label>' +
+                            '<div class="tm-tags-input" id="tmRepStatesWrap" onclick="document.getElementById(\'tmRepStatesInput\').focus()">' +
+                                '<input type="text" id="tmRepStatesInput" placeholder="Type state (e.g. GA) + Enter" onkeydown="tmTagKey(event,\'states\')">' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="tm-field"><label>Focus Body Types (optional)</label>' +
+                            '<div class="tm-tags-input" id="tmRepBodyWrap" onclick="document.getElementById(\'tmRepBodyInput\').focus()">' +
+                                '<input type="text" id="tmRepBodyInput" placeholder="Type body type + Enter" onkeydown="tmTagKey(event,\'body\')">' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="tm-modal-actions">' +
+                        '<button class="tm-modal-btn secondary" onclick="closeTripForm()">Cancel</button>' +
+                        '<button class="tm-modal-btn primary" id="tmSaveRepBtn" onclick="tmSaveRep()">Add Rep</button>' +
+                    '</div></div>';
+                document.body.appendChild(overlay);
+                setTimeout(function() { var f = document.getElementById('tmRepFirst'); if (f) f.focus(); }, 100);
+            }
+
+            var _repTags = { states: [], body: [] };
+
+            function tagKey(e, type) {
+                if (e.key !== 'Enter' && e.key !== ',') return;
+                e.preventDefault();
+                var input = e.target;
+                var val = input.value.trim().replace(/,/g, '');
+                if (!val) return;
+                if (type === 'states') val = val.toUpperCase().slice(0, 2);
+                if (_repTags[type].includes(val)) { input.value = ''; return; }
+                _repTags[type].push(val);
+                input.value = '';
+                var wrap = type === 'states' ? document.getElementById('tmRepStatesWrap') : document.getElementById('tmRepBodyWrap');
+                _renderTags(wrap, type);
+            }
+
+            function removeTag(type, idx) {
+                _repTags[type].splice(idx, 1);
+                var wrap = type === 'states' ? document.getElementById('tmRepStatesWrap') : document.getElementById('tmRepBodyWrap');
+                _renderTags(wrap, type);
+            }
+
+            function _renderTags(wrap, type) {
+                if (!wrap) return;
+                var tags = _repTags[type].map(function(t, i) {
+                    return '<span class="tm-tag">' + esc(t) + '<span class="tm-tag-x" onclick="tmRemoveTag(\'' + type + '\',' + i + ')">×</span></span>';
+                }).join('');
+                var inputEl = wrap.querySelector('input');
+                var inputHTML = inputEl ? inputEl.outerHTML : '';
+                wrap.innerHTML = tags + inputHTML;
+            }
+
+            async function saveRep() {
+                var first = (document.getElementById('tmRepFirst') || {}).value || '';
+                var last = (document.getElementById('tmRepLast') || {}).value || '';
+                var email = (document.getElementById('tmRepEmail') || {}).value || '';
+                first = first.trim(); last = last.trim(); email = email.trim();
+                if (!first || !last || !email) { alert('First name, last name, and email are required'); return; }
+                var btn = document.getElementById('tmSaveRepBtn');
+                if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+                try {
+                    var res = await fetchT(API_BASE + '/api/travel/reps', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: first + ' ' + last,
+                            email: email,
+                            territory_states: _repTags.states.length ? _repTags.states : null,
+                            focus_body_types: _repTags.body.length ? _repTags.body : null
+                        })
+                    });
+                    if (!res.ok) {
+                        var err = await res.json().catch(function() { return {}; });
+                        alert(err.detail || 'Failed to add rep');
+                        if (btn) { btn.disabled = false; btn.textContent = 'Add Rep'; }
+                        return;
+                    }
+                    _repTags = { states: [], body: [] };
+                    closeForm();
+                    loadReps();
+                } catch(e) {
+                    alert('Error: ' + e.message);
+                    if (btn) { btn.disabled = false; btn.textContent = 'Add Rep'; }
+                }
             }
 
             function showForm(editId) {
@@ -5750,6 +6341,7 @@
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
+                                rep_id: _selectedRepId,
                                 travel_date: dateVal,
                                 start_location: startVal,
                                 end_location: endVal,
@@ -5764,6 +6356,7 @@
                         return;
                     }
                     closeForm();
+                    loadTrips();
                 } catch(e) {
                     alert('Error saving trip: ' + e.message);
                     if (btn) { btn.disabled = false; btn.textContent = _tmEditId ? 'Update' : 'Save Trip'; }
@@ -5775,6 +6368,7 @@
                 try {
                     var res = await fetchT(API_BASE + '/api/travel/plans/' + planId, { method: 'DELETE' });
                     if (!res.ok) throw new Error('Delete failed');
+                    loadTrips();
                 } catch(e) {
                     alert('Error deleting trip: ' + e.message);
                 }
@@ -5782,7 +6376,10 @@
 
             return {
                 open: open, showForm: showForm, closeForm: closeForm, save: save,
-                deletePlan: deletePlan, askSuggestion: askSuggestion
+                deletePlan: deletePlan, tmChatSend: tmChatSend, tmChatAsk: tmChatAsk,
+                onRepChange: onRepChange, setTab: setTab, expandDealers: expandDealers,
+                viewOnMap: viewOnMap, showAddRep: showAddRep, saveRep: saveRep,
+                tagKey: tagKey, removeTag: removeTag
             };
         })();
 
@@ -7897,7 +8494,16 @@
         window.closeTripForm = () => TripManager.closeForm();
         window.saveTripPlan = () => TripManager.save();
         window.deleteTripPlan = (id) => TripManager.deletePlan(id);
-        window.tmSuggest = (query) => TripManager.askSuggestion(query);
+        window.tmRepChange = (id) => TripManager.onRepChange(id);
+        window.tmSetTab = (tab) => TripManager.setTab(tab);
+        window.tmExpandDealers = (id) => TripManager.expandDealers(id);
+        window.tmViewOnMap = (id) => TripManager.viewOnMap(id);
+        window.tmChatSend = () => TripManager.tmChatSend();
+        window.tmChatAsk = (q) => TripManager.tmChatAsk(q);
+        window.tmShowAddRep = () => TripManager.showAddRep();
+        window.tmSaveRep = () => TripManager.saveRep();
+        window.tmTagKey = (e, t) => TripManager.tagKey(e, t);
+        window.tmRemoveTag = (t, i) => TripManager.removeTag(t, i);
 
     </script>
 </body>
