@@ -2662,7 +2662,6 @@
         }
 
         body.trip-manager .chat-input-wrap { display: none; }
-        body.trip-manager .input-area { display: none; }
 
         .btn-trips {
             padding: 6px 14px;
@@ -2898,7 +2897,7 @@
 
         /* Trip management body */
         .tm-body {
-            padding: 20px 20px 160px;
+            padding: 20px 20px 40px;
             max-width: 600px;
             margin: 0 auto;
         }
@@ -4176,7 +4175,7 @@
             .tm-hero-headline { font-size: 20px; }
             .tm-hero-sub { font-size: 12px; }
             .tm-route-scene { width: 90vw; height: 120px; }
-            .tm-body { padding: 16px 14px 160px; }
+            .tm-body { padding: 16px 14px 40px; }
             .tm-controls-row { height: auto; }
             .tm-controls-row:first-child { flex-direction: column; gap: 8px; }
             .tm-controls-row:first-child .tm-rep-select { width: 100%; }
@@ -5674,7 +5673,6 @@
             }
 
             function buildHTML() {
-                var sendIcon = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
                 var plusIcon = '<svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg>';
                 var userIcon = '<svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="7" r="3.5"/><path d="M3 17.5c0-3.5 3-5.5 7-5.5s7 2 7 5.5"/></svg>';
                 return '<div class="tm-container" id="tmContainer">' +
@@ -5706,23 +5704,8 @@
                                 '<button class="tm-new-trip-btn" onclick="showTripForm()">' + plusIcon + ' New Trip</button>' +
                             '</div>' +
                         '</div>' +
-                        '<div class="tm-trips-list" id="tmTripsList">' +
-                            '<div class="tm-empty"><div class="tm-empty-icon"><svg viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="rgba(79,143,255,0.4)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="8" width="36" height="34" rx="4"/><path d="M6 18h36"/><path d="M16 4v8M32 4v8"/><path d="M18 28l4 4 8-8"/></svg></div><div class="tm-empty-title">Select a rep to view their trips</div><div class="tm-empty-sub">Choose a sales rep above, or add a new one to get started</div></div>' +
-                        '</div>' +
+                        '<div class="tm-trips-list" id="tmTripsList"></div>' +
                     '</div>' +
-                '</div>' +
-
-                /* Section C: Inline Chat (fixed bottom) */
-                '<div class="tm-chat-wrap">' +
-                    '<div class="tm-chat-messages" id="tmChatMsgs"></div>' +
-                    '<div class="tm-chat-chips">' +
-                        '<button class="tm-chat-chip" onclick="tmChatAsk(\'Plan a 3-day route for my hottest leads\')">Plan a route</button>' +
-                        '<button class="tm-chat-chip" onclick="tmChatAsk(\'Which hot leads should I visit this week?\')">Hot leads to visit</button>' +
-                        '<button class="tm-chat-chip" onclick="tmChatAsk(\'Compare dealer activity across my territory\')">Territory overview</button>' +
-                    '</div>' +
-                    '<div class="tm-chat-input-row">' +
-                        '<input class="tm-chat-input" id="tmChatInput" placeholder="Ask Otto about trips, routes, leads..." onkeydown="if(event.key===\'Enter\')tmChatSend()">' +
-                        '<button class="tm-chat-send" id="tmChatSendBtn" onclick="tmChatSend()">' + sendIcon + '</button>' +
                     '</div>' +
                 '</div>';
             }
@@ -5779,7 +5762,7 @@
                 if (_selectedRepId) loadTrips();
                 else {
                     var list = document.getElementById('tmTripsList');
-                    if (list) list.innerHTML = '<div class="tm-empty"><div class="tm-empty-icon"><svg viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="rgba(79,143,255,0.4)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="8" width="36" height="34" rx="4"/><path d="M6 18h36"/><path d="M16 4v8M32 4v8"/><path d="M18 28l4 4 8-8"/></svg></div><div class="tm-empty-title">Select a rep to view their trips</div><div class="tm-empty-sub">Choose a sales rep above, or add a new one to get started</div></div>';
+                    if (list) list.innerHTML = '';
                 }
             }
 
@@ -5812,12 +5795,8 @@
                 });
 
                 if (filtered.length === 0) {
-                    var emptyIcon = _tmTab === 'upcoming'
-                        ? '<svg viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="rgba(79,143,255,0.4)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="8" width="36" height="34" rx="4"/><path d="M6 18h36"/><path d="M16 4v8M32 4v8"/><path d="M24 26v8M20 30h8"/></svg>'
-                        : '<svg viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="8" width="36" height="34" rx="4"/><path d="M6 18h36"/><path d="M16 4v8M32 4v8"/></svg>';
-                    list.innerHTML = '<div class="tm-empty"><div class="tm-empty-icon">' + emptyIcon + '</div>' +
-                        '<div class="tm-empty-title">' + (_tmTab === 'upcoming' ? 'No upcoming trips' : 'No past trips yet') + '</div>' +
-                        '<div class="tm-empty-sub">' + (_tmTab === 'upcoming' ? 'Click "New Trip" to plan your next route' : 'Completed trips will appear here') + '</div></div>';
+                    list.innerHTML = '<div class="tm-empty">' +
+                        '<div class="tm-empty-title">' + (_tmTab === 'upcoming' ? 'No upcoming trips' : 'No past trips') + '</div></div>';
                     return;
                 }
 
