@@ -5015,28 +5015,37 @@
                 "Dealers gaining vehicles"
             ];
 
-            const _morningGreets = [
-                "Morning — let's find some opportunities.",
-                "Rise and grind — who needs a visit today?",
-                "New day, new leads. Where do we start?",
-                "Morning — your territory's been busy overnight.",
-            ];
-            const _afternoonGreets = [
-                "Afternoon — ready to dig into the data.",
-                "Let's make this afternoon count.",
-                "What's on your radar this afternoon?",
-                "Afternoon — I've got intel when you're ready.",
-            ];
-            const _eveningGreets = [
-                "Evening — prepping for tomorrow?",
-                "Burning the midnight oil? I'm here for it.",
-                "Late hustle — let's plan your next move.",
-                "Evening — let's get ahead of tomorrow.",
-            ];
+            /* ~50 hourly greetings — rotates once per hour, time-of-day aligned */
+            const _hourlyGreets = {
+                0: ["Burning the midnight oil? I'm here for it.", "The night shift — let's get ahead of everyone."],
+                1: ["Still at it? Respect. What do you need?", "1 AM grind — let's make it count."],
+                2: ["Late night intel session? I'm ready.", "Can't sleep? Let's find some leads."],
+                3: ["3 AM — this is when legends prep.", "The early bird catches the deal."],
+                4: ["Up before the sun — let's move.", "4 AM hustle. What's the play?"],
+                5: ["Early riser — your competitors are still sleeping.", "Dawn patrol. Let's scout the territory."],
+                6: ["Morning — coffee and conquests.", "6 AM — time to plan the day's wins."],
+                7: ["Morning — let's find some opportunities.", "Rise and grind — who needs a visit today?"],
+                8: ["New day, new leads. Where do we start?", "Morning — your territory's been busy overnight."],
+                9: ["Let's hit the ground running.", "9 AM — prime selling hours. Who's first?"],
+                10: ["Mid-morning momentum. What's the target?", "10 AM — deals don't close themselves."],
+                11: ["Almost lunch — let's squeeze in one more move.", "11 AM — stay sharp, stay selling."],
+                12: ["Lunch break intel? Smart move.", "Noon — halfway through, let's check the scoreboard."],
+                13: ["Afternoon — ready to dig into the data.", "Post-lunch push. Who's on the list?"],
+                14: ["Let's make this afternoon count.", "2 PM — the afternoon belongs to closers."],
+                15: ["What's on your radar this afternoon?", "3 PM — still time to make today a win."],
+                16: ["Afternoon — I've got intel when you're ready.", "4 PM — one more play before the whistle."],
+                17: ["It's five o'clock somewhere — but we're still closing.", "5 PM — clock out or lock in? Your call."],
+                18: ["Evening — prepping for tomorrow's wins?", "6 PM — the after-hours advantage."],
+                19: ["Evening hustle — tomorrow's pipeline starts now.", "7 PM — quiet hours, loud strategy."],
+                20: ["Late session? Let's plan your next move.", "8 PM — getting ahead while others unwind."],
+                21: ["Night owl mode — I've got the data.", "9 PM — tomorrow's calls start with tonight's prep."],
+                22: ["10 PM — still grinding? Let's make it worthwhile.", "Late night strategy session. What do you need?"],
+                23: ["Almost midnight — one last look at the numbers?", "11 PM — the day's not over 'til you say so."]
+            };
 
             function _buildGreeting() {
                 const h = new Date().getHours();
-                const pool = h < 12 ? _morningGreets : h < 17 ? _afternoonGreets : _eveningGreets;
+                const pool = _hourlyGreets[h] || ["Ready when you are."];
                 const greet = pool[Math.floor(Math.random() * pool.length)];
                 const picks = [..._suggestions].sort(() => Math.random() - 0.5).slice(0, 3);
                 const chips = picks.map(s =>
