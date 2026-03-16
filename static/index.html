@@ -124,7 +124,7 @@
 
         .topbar > * { pointer-events: auto; }
 
-        .topbar-center, .topbar .btn-ghost {
+        .topbar-center, .topbar .btn-home {
             opacity: 0;
             transform: translateY(-6px);
             transition: opacity 0.4s var(--smooth), transform 0.4s var(--smooth);
@@ -132,10 +132,11 @@
         }
 
         body.chatting .topbar-center,
-        body.chatting .topbar .btn-ghost,
         body.chatting .topbar .btn-trips,
+        body.chatting .topbar .btn-home,
         body.chatting .usage-badge,
-        body.dashboard .topbar .btn-trips {
+        body.dashboard .topbar .btn-trips,
+        body.dashboard .topbar .btn-home {
             opacity: 1;
             transform: translateY(0);
             pointer-events: auto;
@@ -1526,7 +1527,7 @@
         .action-card:hover::after { opacity: 1; }
 
         /* ========== DEALER MAP VIEW ========== */
-        .btn-map {
+        .btn-map, .btn-home {
             padding: 6px 14px;
             border-radius: 8px;
             border: none;
@@ -1538,7 +1539,7 @@
             cursor: pointer;
             transition: all 0.2s var(--smooth);
         }
-        .btn-map:hover {
+        .btn-map:hover, .btn-home:hover {
             background: rgba(255,255,255,0.06);
             color: var(--text-primary);
         }
@@ -1558,6 +1559,7 @@
 
         body.map-view .topbar-center,
         body.map-view .topbar .btn-ghost,
+        body.map-view .topbar .btn-home,
         body.map-view .usage-badge,
         body.map-view .topbar .btn-trips,
         body.map-view .topbar .btn-map {
@@ -2647,6 +2649,7 @@
         /* ========== TRIP MANAGER VIEW ========== */
         body.trip-manager .topbar-center,
         body.trip-manager .topbar .btn-ghost,
+        body.trip-manager .topbar .btn-home,
         body.trip-manager .usage-badge,
         body.trip-manager .topbar .btn-trips {
             opacity: 1;
@@ -2659,6 +2662,7 @@
         }
 
         body.trip-manager .chat-input-wrap { display: none; }
+        body.trip-manager .input-area { display: none; }
 
         .btn-trips {
             padding: 6px 14px;
@@ -2714,12 +2718,13 @@
         .tm-rep-select {
             background: var(--glass);
             border: 1px solid var(--glass-border);
-            border-radius: 12px;
+            border-radius: 10px;
             color: var(--text-primary);
             color-scheme: dark;
             font-family: inherit;
-            font-size: 14px;
-            padding: 10px 16px;
+            font-size: 13px;
+            padding: 0 16px;
+            height: 40px;
             outline: none;
             cursor: pointer;
             transition: border-color 0.2s;
@@ -2734,9 +2739,9 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            padding: 16px 20px 12px;
+            padding: 16px 20px 8px;
             overflow: visible;
-            max-height: 240px;
+            max-height: 220px;
         }
 
         /* Liquid route scene */
@@ -2891,40 +2896,52 @@
             100% { transform: translateY(-120px) translateX(30px); opacity: 0; }
         }
 
-        .tm-stats {
-            display: flex;
-            gap: 16px;
-            margin-top: 20px;
-            position: relative;
-            z-index: 2;
-            opacity: 0;
-            animation: tmTextEntrance 0.6s cubic-bezier(0.16,1,0.3,1) 0.9s forwards;
-        }
-
-        .tm-stat {
-            font-size: 12px;
-            color: var(--text-tertiary);
-            letter-spacing: 0.3px;
-        }
-
-        .tm-stat-sep {
-            color: rgba(79,143,255,0.4);
-        }
-
         /* Trip management body */
         .tm-body {
-            padding: 0 20px 140px;
-            max-width: 680px;
+            padding: 20px 20px 160px;
+            max-width: 600px;
             margin: 0 auto;
         }
 
-        .tm-toolbar {
+        .tm-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .tm-controls-row {
+            display: flex;
+            align-items: stretch;
+            gap: 10px;
+            height: 40px;
+        }
+
+        .tm-rep-select {
+            flex: 1;
+            height: 40px;
+        }
+
+        .tm-icon-btn {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+            padding: 0 16px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
         }
+        .tm-icon-btn:hover { background: rgba(255,255,255,0.06); color: var(--text-primary); border-color: rgba(255,255,255,0.12); }
+        .tm-icon-btn svg { flex-shrink: 0; }
 
         .tm-tab-bar {
             display: flex;
@@ -2932,10 +2949,14 @@
             border-radius: 10px;
             border: 1px solid var(--glass-border);
             overflow: hidden;
+            height: 40px;
         }
 
         .tm-tab {
-            padding: 7px 16px;
+            padding: 0 20px;
+            height: 40px;
+            display: flex;
+            align-items: center;
             font-size: 12px;
             font-weight: 500;
             color: var(--text-tertiary);
@@ -2951,11 +2972,16 @@
             background: rgba(79,143,255,0.12);
         }
 
-        .tm-add-btn {
+        .tm-new-trip-btn {
             margin-left: auto;
-            padding: 7px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 0 18px;
+            height: 40px;
             border-radius: 10px;
-            border: 1px solid rgba(79,143,255,0.3);
+            border: 1px solid rgba(79,143,255,0.2);
             background: rgba(79,143,255,0.08);
             color: var(--accent-blue);
             font-size: 12px;
@@ -2963,31 +2989,33 @@
             font-family: inherit;
             cursor: pointer;
             transition: all 0.2s;
+            white-space: nowrap;
         }
-        .tm-add-btn:hover { background: rgba(79,143,255,0.18); }
+        .tm-new-trip-btn:hover { background: rgba(79,143,255,0.18); border-color: rgba(79,143,255,0.35); }
+        .tm-new-trip-btn svg { flex-shrink: 0; }
 
         .tm-trips-list {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
         }
 
         .tm-trip-card {
             background: var(--glass);
             border: 1px solid var(--glass-border);
             border-radius: 14px;
-            padding: 14px 16px;
+            padding: 16px 18px;
             position: relative;
-            transition: all 0.2s;
+            transition: all 0.25s var(--smooth);
             animation: tmFadeIn 0.3s ease;
         }
-        .tm-trip-card:hover { border-color: rgba(79,143,255,0.25); background: rgba(255,255,255,0.04); }
+        .tm-trip-card:hover { border-color: rgba(79,143,255,0.25); background: rgba(255,255,255,0.04); transform: translateY(-1px); }
 
         .tm-trip-top {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         .tm-card-badge {
@@ -2995,12 +3023,12 @@
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            padding: 2px 8px;
-            border-radius: 6px;
+            padding: 3px 10px;
+            border-radius: 100px;
             white-space: nowrap;
         }
         .tm-card-badge.today { background: rgba(34,197,94,0.15); color: #22c55e; }
-        .tm-card-badge.upcoming { background: rgba(79,143,255,0.15); color: #4f8fff; }
+        .tm-card-badge.upcoming { background: rgba(79,143,255,0.12); color: #4f8fff; }
         .tm-card-badge.past { background: rgba(255,255,255,0.06); color: var(--text-tertiary); }
 
         .tm-card-date {
@@ -3010,9 +3038,9 @@
         }
 
         .tm-card-route {
-            font-size: 13px;
+            font-size: 14px;
             color: var(--text-secondary);
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             display: flex;
             align-items: center;
             gap: 6px;
@@ -3023,20 +3051,22 @@
         .tm-card-notes {
             font-size: 12px;
             color: var(--text-tertiary);
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             font-style: italic;
+            line-height: 1.5;
         }
 
         .tm-card-actions {
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
         }
 
         .tm-card-act {
             font-size: 11px;
             font-weight: 500;
-            padding: 4px 10px;
-            border-radius: 6px;
+            padding: 5px 12px;
+            border-radius: 8px;
             border: none;
             cursor: pointer;
             font-family: inherit;
@@ -3051,11 +3081,12 @@
 
         .tm-empty {
             text-align: center;
-            padding: 40px 20px;
+            padding: 48px 20px;
             color: var(--text-tertiary);
-            font-size: 14px;
         }
-        .tm-empty-icon { font-size: 32px; margin-bottom: 8px; opacity: 0.3; }
+        .tm-empty-icon { margin-bottom: 16px; opacity: 0.6; }
+        .tm-empty-title { font-size: 16px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+        .tm-empty-sub { font-size: 13px; color: var(--text-tertiary); line-height: 1.5; }
 
         /* Dealer accordion */
         .tm-dealers {
@@ -3097,9 +3128,10 @@
             left: 0;
             right: 0;
             z-index: 50;
-            background: rgba(10,10,20,0.95);
-            backdrop-filter: blur(20px);
-            border-top: 1px solid var(--glass-border);
+            background: linear-gradient(180deg, rgba(10,10,20,0) 0%, rgba(10,10,20,0.85) 30%, rgba(10,10,20,0.95) 100%);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding-top: 20px;
             display: none;
         }
         body.trip-manager .tm-chat-wrap { display: block; }
@@ -3108,7 +3140,7 @@
             max-height: 300px;
             overflow-y: auto;
             padding: 12px 20px 0;
-            max-width: 680px;
+            max-width: 600px;
             margin: 0 auto;
             display: none;
         }
@@ -3129,29 +3161,29 @@
             align-items: center;
             gap: 8px;
             padding: 10px 20px 14px;
-            max-width: 680px;
+            max-width: 600px;
             margin: 0 auto;
         }
 
         .tm-chat-input {
             flex: 1;
-            padding: 10px 16px;
+            padding: 11px 16px;
             border-radius: 12px;
             border: 1px solid var(--glass-border);
-            background: var(--glass);
+            background: rgba(255,255,255,0.04);
             color: var(--text-primary);
             font-family: inherit;
             font-size: 13px;
             outline: none;
             transition: border-color 0.2s;
         }
-        .tm-chat-input:focus { border-color: var(--accent-blue); }
+        .tm-chat-input:focus { border-color: rgba(79,143,255,0.4); background: rgba(255,255,255,0.06); }
         .tm-chat-input::placeholder { color: var(--text-tertiary); }
 
         .tm-chat-send {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
             border: none;
             background: var(--accent-blue);
             color: white;
@@ -3168,10 +3200,11 @@
         .tm-chat-chips {
             display: flex;
             gap: 6px;
-            padding: 0 20px 8px;
-            max-width: 680px;
+            padding: 8px 20px 6px;
+            max-width: 600px;
             margin: 0 auto;
             flex-wrap: wrap;
+            justify-content: center;
         }
 
         .tm-chat-chip {
@@ -3308,238 +3341,6 @@
 
         .tm-sug-text { display: contents; }
         .tm-sug-sub { display: none; }
-
-        /* Plan a trip CTA button in hero */
-        .tm-hero-cta {
-            margin-top: 16px;
-            padding: 10px 24px;
-            border-radius: 12px;
-            border: 1px solid rgba(79,143,255,0.2);
-            background: rgba(79,143,255,0.08);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            color: var(--accent-blue);
-            font-size: 14px;
-            font-family: inherit;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s var(--smooth);
-            position: relative;
-            z-index: 2;
-            opacity: 0;
-            animation: tmTextEntrance 0.6s cubic-bezier(0.16,1,0.3,1) 1.1s forwards;
-        }
-
-        .tm-hero-cta:hover {
-            background: rgba(79,143,255,0.15);
-            border-color: rgba(79,143,255,0.4);
-            transform: translateY(-1px);
-        }
-
-        /* TM add trip button — glassmorphism */
-        .tm-add-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px 20px;
-            border-radius: 14px;
-            border: 1px solid rgba(79,143,255,0.15);
-            background: rgba(79,143,255,0.06);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
-            color: var(--accent-blue);
-            font-size: 14px;
-            font-family: inherit;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s var(--smooth);
-            width: 100%;
-            margin-bottom: 16px;
-        }
-
-        .tm-add-btn:hover {
-            background: rgba(79,143,255,0.12);
-            border-color: rgba(79,143,255,0.35);
-            box-shadow: inset 0 0 0 1px rgba(79,143,255,0.08), 0 4px 16px rgba(79,143,255,0.12);
-            transform: translateY(-1px);
-        }
-
-        .tm-add-icon {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: rgba(79,143,255,0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 15px;
-            font-weight: 700;
-        }
-
-        /* Empty trips state (rep selected, no trips) */
-        .tm-empty-trips {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 48px 20px;
-            position: relative;
-        }
-
-        .tm-empty-trips-icon {
-            width: 56px;
-            height: 56px;
-            filter: drop-shadow(0 0 18px rgba(79,143,255,0.3));
-            opacity: 0;
-            animation: tmIconEntrance 0.7s cubic-bezier(0.16,1,0.3,1) forwards;
-        }
-
-        .tm-empty-trips-headline {
-            font-size: 22px;
-            font-weight: 600;
-            margin-top: 18px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(79,143,255,0.9), rgba(168,85,247,0.8));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            opacity: 0;
-            animation: tmTextEntrance 0.6s cubic-bezier(0.16,1,0.3,1) 0.15s forwards;
-        }
-
-        .tm-empty-trips-sub {
-            font-size: 14px;
-            color: var(--text-tertiary);
-            margin-top: 6px;
-            text-align: center;
-            opacity: 0;
-            animation: tmTextEntrance 0.6s cubic-bezier(0.16,1,0.3,1) 0.25s forwards;
-        }
-
-        .tm-empty-trips-cta {
-            margin-top: 20px;
-            padding: 12px 28px;
-            border-radius: 14px;
-            border: 1px solid rgba(79,143,255,0.25);
-            background: rgba(79,143,255,0.1);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            color: var(--accent-blue);
-            font-size: 15px;
-            font-family: inherit;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s var(--smooth);
-            opacity: 0;
-            animation: tmCardEntrance 0.6s cubic-bezier(0.16,1,0.3,1) 0.4s forwards;
-        }
-
-        .tm-empty-trips-cta:hover {
-            background: rgba(79,143,255,0.18);
-            border-color: rgba(79,143,255,0.4);
-            box-shadow: 0 4px 16px rgba(79,143,255,0.15);
-            transform: translateY(-2px);
-        }
-
-        .tm-empty {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-tertiary);
-            font-size: 14px;
-        }
-
-        /* Enhanced trip cards */
-        .tm-card {
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 14px;
-            padding: 16px 20px;
-            margin-bottom: 10px;
-            transition: all 0.25s var(--smooth);
-            position: relative;
-            overflow: hidden;
-            opacity: 0;
-            animation: tmCardEntrance 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
-        }
-
-        .tm-card::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-            background: linear-gradient(180deg, var(--accent-blue), rgba(168,85,247,0.7));
-            border-radius: 3px 0 0 3px;
-        }
-
-        .tm-card:hover {
-            background: var(--glass-hover);
-            border-color: rgba(79,143,255,0.18);
-            box-shadow: 0 4px 16px rgba(79,143,255,0.08);
-        }
-
-        .tm-card-top {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 12px;
-        }
-
-        .tm-card-date {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--accent-blue);
-        }
-
-        .tm-card-route {
-            font-size: 15px;
-            color: var(--text-secondary);
-            margin-top: 4px;
-        }
-
-        .tm-card-route span {
-            color: var(--accent-blue);
-            margin: 0 8px;
-            opacity: 0.6;
-        }
-
-        .tm-card-notes {
-            font-size: 13px;
-            color: var(--text-tertiary);
-            margin-top: 6px;
-            font-style: italic;
-        }
-
-        .tm-card-actions {
-            display: flex;
-            gap: 6px;
-            flex-shrink: 0;
-        }
-
-        .tm-card-btn {
-            padding: 7px 14px;
-            border-radius: 8px;
-            border: 1px solid var(--glass-border);
-            background: transparent;
-            color: var(--text-secondary);
-            font-size: 12px;
-            font-family: inherit;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .tm-card-btn:hover {
-            background: var(--glass-hover);
-            color: var(--text-primary);
-        }
-
-        .tm-card-btn.hot { border-color: rgba(255,107,53,0.3); color: #ff6b35; }
-        .tm-card-btn.hot:hover { background: rgba(255,107,53,0.1); }
-        .tm-card-btn.danger { border-color: rgba(239,68,68,0.3); color: #ef4444; }
-        .tm-card-btn.danger:hover { background: rgba(239,68,68,0.1); }
 
         /* Trip form modal overlay */
         .tm-overlay {
@@ -3721,6 +3522,7 @@
         }
         body.dashboard .topbar-center,
         body.dashboard .topbar .btn-ghost,
+        body.dashboard .topbar .btn-home,
         body.dashboard .usage-badge,
         body.dashboard .topbar .btn-dash,
         body.dashboard .topbar .btn-map,
@@ -4364,23 +4166,26 @@
             .usage-badge { display: none !important; }
             .topbar { padding: 10px 12px; gap: 6px; }
             .topbar-right { gap: 4px; }
-            .btn-ghost, .btn-map, .btn-dash, .btn-trips {
+            .btn-ghost, .btn-map, .btn-dash, .btn-trips, .btn-home {
                 font-size: 11px; padding: 10px 10px; min-height: 36px;
             }
             /* Mobile trip manager */
             .tm-modal { padding: 16px; margin: 8px; max-width: calc(100vw - 16px); border-radius: 16px; }
             .tm-particle { display: none; }
-            .tm-hero { padding: 8px 12px 8px; max-height: 180px; }
+            .tm-hero { padding: 8px 12px 4px; max-height: 180px; }
             .tm-hero-headline { font-size: 20px; }
-            .tm-hero-sub { font-size: 13px; }
+            .tm-hero-sub { font-size: 12px; }
             .tm-route-scene { width: 90vw; height: 120px; }
-            .tm-stats { gap: 10px; flex-wrap: wrap; justify-content: center; }
-            .tm-body { padding: 0 12px 140px; }
-            .tm-toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
-            .tm-add-btn { margin-left: 0; }
-            .tm-chat-input-row { padding: 8px 12px 12px; }
-            .tm-chat-chips { padding: 0 12px 6px; }
+            .tm-body { padding: 16px 14px 160px; }
+            .tm-controls-row { height: auto; }
+            .tm-controls-row:first-child { flex-direction: column; gap: 8px; }
+            .tm-controls-row:first-child .tm-rep-select { width: 100%; }
+            .tm-controls-row:first-child .tm-icon-btn { height: 38px; }
+            .tm-controls-row:last-child .tm-tab { padding: 0 14px; }
+            .tm-chat-input-row { padding: 8px 14px 14px; }
+            .tm-chat-chips { padding: 6px 14px 4px; }
             .tm-add-rep-row { flex-direction: column; }
+            .tm-card-actions { flex-wrap: wrap; }
             /* Mobile dashboard KPIs */
             .dash-kpi-row { gap: 8px; }
             .dash-kpi-item { min-width: calc(50% - 4px); }
@@ -4403,7 +4208,7 @@
             .chat-suggestions { flex-wrap: wrap; }
         }
         @media (max-width: 380px) {
-            .btn-ghost, .btn-map, .btn-dash, .btn-trips { font-size: 10px; padding: 10px 8px; }
+            .btn-ghost, .btn-map, .btn-dash, .btn-trips, .btn-home { font-size: 10px; padding: 10px 8px; }
             .wordmark-text { font-size: 20px; }
         }
     </style>
@@ -4429,6 +4234,7 @@
         </div>
         <div class="topbar-right">
             <div class="usage-badge" id="usageBadge" title="Token usage this session"></div>
+            <button class="btn-home" onclick="goHome()">Home</button>
             <button class="btn-map" onclick="openDealerMap()">Map</button>
             <button class="btn-dash" onclick="openDashboard()">Dashboard</button>
             <button class="btn-trips" onclick="openTripManager()">Trips</button>
@@ -5869,6 +5675,8 @@
 
             function buildHTML() {
                 var sendIcon = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
+                var plusIcon = '<svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg>';
+                var userIcon = '<svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="7" r="3.5"/><path d="M3 17.5c0-3.5 3-5.5 7-5.5s7 2 7 5.5"/></svg>';
                 return '<div class="tm-container" id="tmContainer">' +
                     /* Section A: Compact Hero */
                     '<div class="tm-hero">' +
@@ -5878,24 +5686,28 @@
                         _tmParticles() +
                         _buildScene() +
                         '<div class="tm-hero-headline">Trip Planner</div>' +
-                        '<div class="tm-stats" id="tmStats"><span class="tm-stat">Loading...</span></div>' +
+                        '<div class="tm-hero-sub">Manage routes, track visits, plan your territory</div>' +
                     '</div>' +
 
                     /* Section B: Trip Management */
                     '<div class="tm-body">' +
-                        '<div class="tm-toolbar">' +
-                            '<select class="tm-rep-select" id="tmRepSelect" onchange="tmRepChange(this.value)">' +
-                                '<option value="">Select rep...</option>' +
-                            '</select>' +
-                            '<div class="tm-tab-bar">' +
-                                '<button class="tm-tab active" id="tmTabUpcoming" onclick="tmSetTab(\'upcoming\')">Upcoming</button>' +
-                                '<button class="tm-tab" id="tmTabPast" onclick="tmSetTab(\'past\')">Past</button>' +
+                        '<div class="tm-controls">' +
+                            '<div class="tm-controls-row">' +
+                                '<select class="tm-rep-select" id="tmRepSelect" onchange="tmRepChange(this.value)">' +
+                                    '<option value="">Select rep...</option>' +
+                                '</select>' +
+                                '<button class="tm-icon-btn" onclick="tmShowAddRep()" title="Add Rep">' + userIcon + ' Add Rep</button>' +
                             '</div>' +
-                            '<button class="tm-add-btn" onclick="showTripForm()">+ New Trip</button>' +
-                            '<button class="tm-add-btn" style="border-color:rgba(34,197,94,0.3);color:#22c55e;background:rgba(34,197,94,0.08)" onclick="tmShowAddRep()">+ Add Rep</button>' +
+                            '<div class="tm-controls-row">' +
+                                '<div class="tm-tab-bar">' +
+                                    '<button class="tm-tab active" id="tmTabUpcoming" onclick="tmSetTab(\'upcoming\')">Upcoming</button>' +
+                                    '<button class="tm-tab" id="tmTabPast" onclick="tmSetTab(\'past\')">Past</button>' +
+                                '</div>' +
+                                '<button class="tm-new-trip-btn" onclick="showTripForm()">' + plusIcon + ' New Trip</button>' +
+                            '</div>' +
                         '</div>' +
                         '<div class="tm-trips-list" id="tmTripsList">' +
-                            '<div class="tm-empty"><div class="tm-empty-icon">&#128218;</div>Select a rep to view their trips</div>' +
+                            '<div class="tm-empty"><div class="tm-empty-icon"><svg viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="rgba(79,143,255,0.4)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="8" width="36" height="34" rx="4"/><path d="M6 18h36"/><path d="M16 4v8M32 4v8"/><path d="M18 28l4 4 8-8"/></svg></div><div class="tm-empty-title">Select a rep to view their trips</div><div class="tm-empty-sub">Choose a sales rep above, or add a new one to get started</div></div>' +
                         '</div>' +
                     '</div>' +
                 '</div>' +
@@ -5967,7 +5779,7 @@
                 if (_selectedRepId) loadTrips();
                 else {
                     var list = document.getElementById('tmTripsList');
-                    if (list) list.innerHTML = '<div class="tm-empty"><div class="tm-empty-icon">&#128218;</div>Select a rep to view their trips</div>';
+                    if (list) list.innerHTML = '<div class="tm-empty"><div class="tm-empty-icon"><svg viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="rgba(79,143,255,0.4)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="8" width="36" height="34" rx="4"/><path d="M6 18h36"/><path d="M16 4v8M32 4v8"/><path d="M18 28l4 4 8-8"/></svg></div><div class="tm-empty-title">Select a rep to view their trips</div><div class="tm-empty-sub">Choose a sales rep above, or add a new one to get started</div></div>';
                 }
             }
 
@@ -6000,9 +5812,12 @@
                 });
 
                 if (filtered.length === 0) {
-                    list.innerHTML = '<div class="tm-empty"><div class="tm-empty-icon">' +
-                        (_tmTab === 'upcoming' ? '&#128197;' : '&#128203;') + '</div>' +
-                        (_tmTab === 'upcoming' ? 'No upcoming trips. Plan one!' : 'No past trips yet.') + '</div>';
+                    var emptyIcon = _tmTab === 'upcoming'
+                        ? '<svg viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="rgba(79,143,255,0.4)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="8" width="36" height="34" rx="4"/><path d="M6 18h36"/><path d="M16 4v8M32 4v8"/><path d="M24 26v8M20 30h8"/></svg>'
+                        : '<svg viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="8" width="36" height="34" rx="4"/><path d="M6 18h36"/><path d="M16 4v8M32 4v8"/></svg>';
+                    list.innerHTML = '<div class="tm-empty"><div class="tm-empty-icon">' + emptyIcon + '</div>' +
+                        '<div class="tm-empty-title">' + (_tmTab === 'upcoming' ? 'No upcoming trips' : 'No past trips yet') + '</div>' +
+                        '<div class="tm-empty-sub">' + (_tmTab === 'upcoming' ? 'Click "New Trip" to plan your next route' : 'Completed trips will appear here') + '</div></div>';
                     return;
                 }
 
