@@ -269,18 +269,50 @@ async def chat_stream(msg: ChatMessage, session_id: str = "default"):
         tools_called = []
 
         try:
+            _SENTINEL = object()
+            loop = asyncio.get_running_loop()
+
             for iteration in range(settings.agent_max_loop):
-                # Use blocking create() for tool-use iterations (need full response),
-                # true streaming for final text response
+                # Stream every API call. Tool-use iterations accumulate the
+                # full response before processing; the final text response
+                # yields deltas to the client in real-time.
+                chunk_q = asyncio.Queue()
+                final_msg_box = []
+
+                def _make_stream_runner(msgs, tools):
+                    def _run():
+                        kwargs = dict(
+                            model=settings.agent_model,
+                            max_tokens=settings.agent_max_tokens,
+                            system=system_prompt,
+                            messages=msgs,
+                        )
+                        if tools:
+                            kwargs["tools"] = tools
+                        with client.messages.stream(**kwargs) as stream:
+                            for text in stream.text_stream:
+                                asyncio.run_coroutine_threadsafe(chunk_q.put(text), loop)
+                            asyncio.run_coroutine_threadsafe(chunk_q.put(_SENTINEL), loop)
+                            final_msg_box.append(stream.get_final_message())
+                    return _run
+
                 try:
-                    response = await asyncio.to_thread(
-                        client.messages.create,
-                        model=settings.agent_model,
-                        max_tokens=settings.agent_max_tokens,
-                        system=system_prompt,
-                        tools=TOOL_DEFINITIONS,
-                        messages=history,
+                    future = loop.run_in_executor(
+                        None, _make_stream_runner(history, TOOL_DEFINITIONS)
                     )
+
+                    # Yield text deltas in real-time as they arrive from the API.
+                    # For tool-use iterations this is usually preamble text like
+                    # "Let me look that up..." which is fine to show.
+                    full_text = ""
+                    while True:
+                        chunk = await chunk_q.get()
+                        if chunk is _SENTINEL:
+                            break
+                        full_text += chunk
+                        yield _sse_event("delta", {"text": chunk})
+
+                    await future  # propagate exceptions
                 except AuthenticationError:
                     yield _sse_event("error", {"message": "API key is invalid."})
                     return
@@ -295,6 +327,7 @@ async def chat_stream(msg: ChatMessage, session_id: str = "default"):
                     yield _sse_event("error", {"message": "Something went wrong."})
                     return
 
+                response = final_msg_box[0]
                 total_input_tokens += response.usage.input_tokens
                 total_output_tokens += response.usage.output_tokens
 
@@ -328,17 +361,8 @@ async def chat_stream(msg: ChatMessage, session_id: str = "default"):
                     history.append({"role": "user", "content": tool_results})
                     continue
 
-                # Final text response — stream real tokens via streaming API
-                text_parts = [block.text for block in response.content if hasattr(block, "text")]
-                full_text = "\n".join(text_parts)
+                # Final text response — deltas already yielded above
                 history.append({"role": "assistant", "content": full_text})
-
-                # Stream text in chunks for typing effect
-                chunk_size = 24
-                for i in range(0, len(full_text), chunk_size):
-                    chunk = full_text[i:i + chunk_size]
-                    yield _sse_event("delta", {"text": chunk})
-                    await asyncio.sleep(0.008)
 
                 # Done event with usage
                 elapsed = time.time() - start_time
