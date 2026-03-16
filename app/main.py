@@ -49,6 +49,9 @@ _PUBLIC_PATHS = {"/", "/health", "/static"}
 
 @app.middleware("http")
 async def api_key_auth(request: Request, call_next):
+    # Let CORS preflight through — CORSMiddleware handles OPTIONS responses
+    if request.method == "OPTIONS":
+        return await call_next(request)
     path = request.url.path
     # Allow public paths and static files
     if path in _PUBLIC_PATHS or path.startswith("/static/"):
