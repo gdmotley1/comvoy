@@ -2,15 +2,23 @@
 
 Runs automatically after each monthly data upload. Scores every dealer
 on a 0-100 scale based on:
-  - Inventory size (bigger = more opportunity)
-  - Body type match (do they stock what Smyrna builds?)
-  - Smyrna status (whitespace vs upsell vs at-risk)
-  - Growth momentum (inventory trending up = active buyer)
+  - Fleet scale (0-20) — bigger fleet = bigger order potential
+  - Product fit (0-25) — % of inventory in body types Smyrna builds
+  - Smyrna penetration (0-30) — proven buyers > speculation
+  - Growth signal (0-25) — growing inventory = active buyer
+
+Opportunity types (what the rep should DO):
+  - conquest:   Has Smyrna <5% — proven buyer, maximum runway
+  - expand:     Smyrna 5-15% — growing relationship, push deeper
+  - grow:       Smyrna 15-30% — solid presence, nurture
+  - defend:     Smyrna 30%+ — strong presence, protect
+  - whitespace: Zero Smyrna — unproven prospect, qualify
+  - at_risk:    Had Smyrna last month, lost it — emergency retention
 
 Tiers:
-  - hot (70-100):  Large whitespace or growing Smyrna accounts
-  - warm (40-69):  Medium whitespace or stable Smyrna
-  - cold (0-39):   Small dealers or shrinking accounts
+  - hot (70-100):  High-value targets — conquest accounts, at-risk retention
+  - warm (40-69):  Active opportunities — growing accounts, qualified whitespace
+  - cold (0-39):   Low priority — small dealers, poor fit, or saturated
 """
 
 import logging
@@ -22,6 +30,47 @@ from app.database import get_service_client
 
 router = APIRouter(prefix="/api/scoring", tags=["scoring"])
 logger = logging.getLogger(__name__)
+
+# ═══════════════════════════════════════════════════════════════════════
+# SCORING CONFIGURATION — CEO-adjustable weights
+# Change any value here and re-run scoring to update all dealer ranks.
+# ═══════════════════════════════════════════════════════════════════════
+
+# Factor maximums (must sum to 100)
+MAX_FLEET_SCALE = 20       # How much raw dealer size matters
+MAX_PRODUCT_FIT = 25       # Body type alignment with Smyrna catalog
+MAX_SMYRNA_PEN = 30        # Penetration-based opportunity (the key factor)
+MAX_GROWTH_SIGNAL = 25     # Inventory growth = active buying signal
+
+# Smyrna penetration points by opportunity type
+PEN_WHITESPACE = 18        # Zero Smyrna — unproven prospect
+PEN_CONQUEST = 28          # <5% penetration — proven buyer, max runway
+PEN_EXPAND = 22            # 5-15% — growing relationship
+PEN_GROW = 15              # 15-30% — solid presence, nurture
+PEN_DEFEND = 10            # 30%+ — strong presence, protect
+
+# Penetration thresholds (as decimals)
+THRESH_CONQUEST = 0.05     # Below this = conquest
+THRESH_EXPAND = 0.15       # Below this = expand
+THRESH_GROW = 0.30         # Below this = grow; above = defend
+
+# Growth signal points
+GROWTH_EXPLOSIVE = 25      # 20%+ growth
+GROWTH_STRONG = 18         # 10-19% growth
+GROWTH_SOLID = 12          # 5-9% growth
+GROWTH_SLIGHT = 6          # 1-4% growth
+GROWTH_FLAT = 3            # 0% (flat)
+GROWTH_DECLINING = 0       # Negative growth
+GROWTH_NEW_DEALER = 15     # New dealer appeared with inventory
+
+# At-risk bonus (on top of whitespace points + tier override to hot)
+AT_RISK_BONUS = 12
+
+# Tier boundaries
+TIER_HOT = 70              # Score >= this = hot
+TIER_WARM = 40             # Score >= this = warm; below = cold
+
+# ═══════════════════════════════════════════════════════════════════════
 
 # Body types that Smyrna/Fouts Bros manufactures
 SMYRNA_BODY_TYPES = {
@@ -81,7 +130,10 @@ def compute_lead_scores(snapshot_id: str, prev_snapshot_id: str | None = None) -
             vehicles, smyrna, dealer_bts, prev
         )
 
-        tier = "hot" if score >= 70 else "warm" if score >= 40 else "cold"
+        tier = "hot" if score >= TIER_HOT else "warm" if score >= TIER_WARM else "cold"
+        # At-risk dealers always surface as hot — losing a customer is urgent
+        if opp_type == "at_risk" and tier != "hot":
+            tier = "hot"
 
         scores.append({
             "dealer_id": did,
@@ -124,7 +176,20 @@ def _score_dealer(
     body_types: dict[str, int],
     prev: dict | None,
 ) -> tuple[int, dict, str]:
-    """Score a single dealer. Returns (score, factors_dict, opportunity_type)."""
+    """Score a single dealer. Returns (score, factors_dict, opportunity_type).
+
+    Scoring philosophy: proven buyers > speculation. A dealer already buying
+    Smyrna with room to grow is a higher-probability sale than a dealer
+    who's never bought. Growth signals matter more than raw size.
+
+    Opportunity types tell the rep WHAT to do:
+      conquest  — proven buyer <5% pen, go win the account
+      expand    — 5-15% pen, push deeper
+      grow      — 15-30% pen, nurture
+      defend    — 30%+ pen, protect the business
+      whitespace — zero Smyrna, qualify and pitch
+      at_risk   — lost Smyrna since last month, emergency retention
+    """
 
     factors = {}
 
@@ -132,72 +197,89 @@ def _score_dealer(
     if vehicles == 0:
         return 0, {"note": "zero_inventory"}, "whitespace"
 
-    # --- 1. Inventory size (0-30 points) ---
-    # Log scale: 10 vehicles = 10pts, 50 = 20pts, 150+ = 30pts
-    if vehicles >= 150:
-        size_pts = 30
+    # --- 1. Fleet Scale (0-MAX_FLEET_SCALE points) ---
+    # Size is context, not strategy. Reduced weight vs old model.
+    if vehicles >= 200:
+        scale_pts = MAX_FLEET_SCALE
+    elif vehicles >= 100:
+        scale_pts = int(MAX_FLEET_SCALE * 0.80)
     elif vehicles >= 50:
-        size_pts = 15 + int((vehicles - 50) / 100 * 15)
+        scale_pts = int(MAX_FLEET_SCALE * 0.60)
+    elif vehicles >= 25:
+        scale_pts = int(MAX_FLEET_SCALE * 0.40)
     elif vehicles >= 10:
-        size_pts = int(vehicles / 50 * 15)
+        scale_pts = int(MAX_FLEET_SCALE * 0.25)
     else:
-        size_pts = max(0, vehicles)
-    factors["inventory_size"] = size_pts
+        scale_pts = min(vehicles, 3)
+    factors["fleet_scale"] = scale_pts
 
-    # --- 2. Body type match (0-30 points) ---
-    # What % of their inventory is in body types Smyrna builds?
+    # --- 2. Product Fit (0-MAX_PRODUCT_FIT points) ---
+    # What % of their inventory is body types Smyrna builds?
     total_bt_vehicles = sum(body_types.values()) or 1
     smyrna_match_vehicles = sum(
         count for bt, count in body_types.items() if bt in SMYRNA_BODY_TYPES
     )
     match_pct = smyrna_match_vehicles / total_bt_vehicles
-    bt_pts = int(match_pct * 30)
-    factors["body_type_match"] = bt_pts
+    fit_pts = int(match_pct * MAX_PRODUCT_FIT)
+    factors["product_fit"] = fit_pts
     factors["match_pct"] = round(match_pct * 100)
 
-    # --- 3. Smyrna status (0-25 points) ---
-    if smyrna == 0:
-        # Whitespace — full opportunity
-        opp_type = "whitespace"
-        smyrna_pts = 25
-    elif smyrna > 0 and (smyrna / max(vehicles, 1)) < 0.05:
-        # Has some Smyrna but low penetration — upsell
-        opp_type = "upsell"
-        smyrna_pts = 15
-    else:
-        # Decent Smyrna penetration — monitor/grow
-        opp_type = "upsell"
-        smyrna_pts = 8
-    factors["smyrna_opportunity"] = smyrna_pts
+    # --- 3. Smyrna Penetration (0-MAX_SMYRNA_PEN points) — THE key factor ---
+    # Proven buyers score higher than speculation. Tells the rep what to DO.
+    pen_pct = smyrna / max(vehicles, 1)
 
-    # --- 4. Growth momentum (0-15 points) ---
+    if smyrna == 0:
+        opp_type = "whitespace"
+        pen_pts = PEN_WHITESPACE
+    elif pen_pct < THRESH_CONQUEST:
+        opp_type = "conquest"
+        pen_pts = PEN_CONQUEST
+    elif pen_pct < THRESH_EXPAND:
+        opp_type = "expand"
+        pen_pts = PEN_EXPAND
+    elif pen_pct < THRESH_GROW:
+        opp_type = "grow"
+        pen_pts = PEN_GROW
+    else:
+        opp_type = "defend"
+        pen_pts = PEN_DEFEND
+    factors["smyrna_penetration"] = pen_pts
+    factors["penetration_pct"] = round(pen_pct * 100)
+
+    # --- 4. Growth Signal (0-MAX_GROWTH_SIGNAL points) ---
+    # Growing inventory = active buyer. Highest signal weight increase.
     growth_pts = 0
     if prev:
         prev_vehicles = prev.get("total_vehicles", 0) or 0
         if prev_vehicles > 0 and vehicles > 0:
             growth = (vehicles - prev_vehicles) / prev_vehicles
             if growth >= 0.20:
-                growth_pts = 15  # 20%+ growth
+                growth_pts = GROWTH_EXPLOSIVE
             elif growth >= 0.10:
-                growth_pts = 10
-            elif growth >= 0.0:
-                growth_pts = 5   # stable or slight growth
+                growth_pts = GROWTH_STRONG
+            elif growth >= 0.05:
+                growth_pts = GROWTH_SOLID
+            elif growth > 0.0:
+                growth_pts = GROWTH_SLIGHT
+            elif growth == 0.0:
+                growth_pts = GROWTH_FLAT
             else:
-                growth_pts = 0   # shrinking
+                growth_pts = GROWTH_DECLINING
             factors["growth_pct"] = round(growth * 100)
         elif prev_vehicles == 0 and vehicles > 0:
             # New dealer appeared with inventory — positive signal
-            growth_pts = 10
+            growth_pts = GROWTH_NEW_DEALER
             factors["growth_pct"] = "new"
-    factors["growth_momentum"] = growth_pts
+    factors["growth_signal"] = growth_pts
 
-    # Check for at-risk: had Smyrna last month, lost it this month
+    # --- At-Risk Override ---
+    # Had Smyrna last month, lost it this month = emergency retention
     if prev and (prev.get("smyrna_units") or 0) > 0 and smyrna == 0:
         opp_type = "at_risk"
-        # Boost score so it surfaces
-        factors["at_risk_bonus"] = 20
+        # Moderate bonus (tier override to "hot" does the heavy lifting)
+        factors["at_risk_bonus"] = AT_RISK_BONUS
 
-    total = min(100, size_pts + bt_pts + smyrna_pts + growth_pts + factors.get("at_risk_bonus", 0))
+    total = min(100, scale_pts + fit_pts + pen_pts + growth_pts + factors.get("at_risk_bonus", 0))
     return total, factors, opp_type
 
 

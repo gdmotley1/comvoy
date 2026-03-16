@@ -323,6 +323,14 @@ def get_map_data(response: Response):
 @router.get("/territory/{state}")
 def get_territory_summary(state: str):
     """Get a state-level territory summary."""
+    # Check cache
+    cache_key = f"territory_{state.upper()}"
+    now = time.time()
+    if cache_key in _cache:
+        ts, cached = _cache[cache_key]
+        if now - ts < _CACHE_TTL:
+            return cached
+
     db = get_service_client()
     snap_id = _latest_snapshot_id(db)
 
@@ -352,7 +360,7 @@ def get_territory_summary(state: str):
         for r in result.data[:10]
     ]
 
-    return {
+    resp = {
         "state": state.upper(),
         "total_dealers": total_dealers,
         "total_vehicles": total_vehicles,
@@ -361,6 +369,8 @@ def get_territory_summary(state: str):
         "smyrna_penetration_pct": round(dealers_with_smyrna / total_dealers * 100, 1) if total_dealers else 0,
         "top_10_dealers": top_dealers,
     }
+    _cache[cache_key] = (time.time(), resp)
+    return resp
 
 
 # ---------------------------------------------------------------------------

@@ -212,8 +212,9 @@ TOOL_DEFINITIONS = [
         "name": "get_lead_scores",
         "description": (
             "Get ranked leads scored by opportunity value (0-100). Tiers: hot (70+), warm (40-69), cold (<40). "
-            "Scoring factors: inventory size, body type match with Smyrna products, whitespace status, growth momentum. "
-            "Use for 'who should I call?', 'top opportunities in TX', 'hot leads', 'best whitespace targets'."
+            "Four factors: fleet scale (0-20), product fit (0-25), Smyrna penetration (0-30), growth signal (0-25). "
+            "Opportunity types: conquest (proven buyer <5%), expand (5-15%), grow (15-30%), defend (30%+), whitespace (zero Smyrna), at_risk (lost Smyrna). "
+            "Use for 'who should I call?', 'top opportunities in TX', 'hot leads', 'conquest targets', 'at-risk accounts'."
         ),
         "input_schema": {
             "type": "object",
@@ -229,8 +230,8 @@ TOOL_DEFINITIONS = [
                 },
                 "opportunity_type": {
                     "type": "string",
-                    "description": "Filter: 'whitespace' (no Smyrna), 'upsell' (has some), 'at_risk' (losing Smyrna). Optional.",
-                    "enum": ["whitespace", "upsell", "at_risk"],
+                    "description": "Filter: 'conquest' (proven <5%), 'expand' (5-15%), 'grow' (15-30%), 'defend' (30%+), 'whitespace' (zero Smyrna), 'at_risk' (lost Smyrna). Optional.",
+                    "enum": ["conquest", "expand", "grow", "defend", "whitespace", "at_risk"],
                 },
                 "limit": {
                     "type": "integer",
@@ -614,9 +615,7 @@ def _geocode_sync(location: str) -> tuple[float, float] | None:
     city = " ".join(city_parts) if city_parts else location
 
     try:
-        loop = asyncio.new_event_loop()
-        result = loop.run_until_complete(_geocode_single_async(city, state))
-        loop.close()
+        result = asyncio.run(_geocode_single_async(city, state))
         return result
     except Exception as e:
         logger.warning(f"Geocoding failed for '{location}': {e}")
@@ -885,16 +884,18 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                 f = lead.get("factors", {})
                 if f:
                     why = {}
-                    if f.get("inventory_size") is not None:
-                        why["size_pts"] = f"{f['inventory_size']}/30"
+                    if f.get("fleet_scale") is not None:
+                        why["fleet"] = f"{f['fleet_scale']}/20"
                     if f.get("match_pct") is not None:
-                        why["body_match"] = f"{f['match_pct']}%"
-                    if f.get("body_type_match") is not None:
-                        why["match_pts"] = f"{f['body_type_match']}/30"
-                    if f.get("smyrna_opportunity") is not None:
-                        why["smyrna_pts"] = f"{f['smyrna_opportunity']}/25"
-                    if f.get("growth_momentum") is not None:
-                        why["growth_pts"] = f"{f['growth_momentum']}/15"
+                        why["fit"] = f"{f['match_pct']}%"
+                    if f.get("product_fit") is not None:
+                        why["fit_pts"] = f"{f['product_fit']}/25"
+                    if f.get("smyrna_penetration") is not None:
+                        why["pen_pts"] = f"{f['smyrna_penetration']}/30"
+                    if f.get("penetration_pct") is not None:
+                        why["pen_pct"] = f"{f['penetration_pct']}%"
+                    if f.get("growth_signal") is not None:
+                        why["growth_pts"] = f"{f['growth_signal']}/25"
                     if f.get("growth_pct") is not None:
                         why["growth_pct"] = f"{f['growth_pct']}%"
                     if f.get("at_risk_bonus"):
@@ -918,17 +919,13 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
 
             travel_dt = date.fromisoformat(tool_input["travel_date"])
             try:
-                # _get_route_dealers is async — run it in an event loop
-                loop = asyncio.new_event_loop()
-                try:
-                    result = loop.run_until_complete(_get_route_dealers(
-                        rep_id=rep_id,
-                        travel_date=travel_dt,
-                        buffer_miles=tool_input.get("buffer_miles", 20),
-                        limit=30,
-                    ))
-                finally:
-                    loop.close()
+                # _get_route_dealers is async — run it synchronously
+                result = asyncio.run(_get_route_dealers(
+                    rep_id=rep_id,
+                    travel_date=travel_dt,
+                    buffer_miles=tool_input.get("buffer_miles", 20),
+                    limit=30,
+                ))
             except Exception as e:
                 if "No travel plan" in str(e) or "404" in str(e):
                     # Fetch available dates so Otto can suggest alternatives
@@ -979,9 +976,11 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                 if f:
                     why = {}
                     if f.get("match_pct") is not None:
-                        why["body_match"] = f"{f['match_pct']}%"
-                    if f.get("smyrna_opportunity") is not None:
-                        why["smyrna_pts"] = f"{f['smyrna_opportunity']}/25"
+                        why["fit"] = f"{f['match_pct']}%"
+                    if f.get("smyrna_penetration") is not None:
+                        why["pen_pts"] = f"{f['smyrna_penetration']}/30"
+                    if f.get("penetration_pct") is not None:
+                        why["pen_pct"] = f"{f['penetration_pct']}%"
                     if f.get("growth_pct") is not None:
                         why["growth"] = f"{f['growth_pct']}%"
                     if f.get("at_risk_bonus"):
@@ -1006,54 +1005,150 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
 
         elif tool_name == "get_dealer_intel":
             # Build comprehensive talking points from briefing + lead score + trends
+            # Parallelized: group 1 (briefing + snapshot) then group 2 (all enrichments)
+            import concurrent.futures
             dealer_id = tool_input["dealer_id"]
+
+            # Group 1: briefing + snapshot (needed by everything else)
             result = _get_briefing(dealer_id)
             d = result.dealer
-
-            # Get lead score
             db = get_service_client()
             snap = db.table("report_snapshots").select("id").order("report_date", desc=True).limit(1).execute()
-            score_data = None
-            if snap.data:
+            snap_id = snap.data[0]["id"] if snap.data else None
+
+            # Group 2: parallel enrichment queries
+            def _fetch_score():
+                if not snap_id:
+                    return None
                 scores = db.table("lead_scores").select("score, tier, opportunity_type, factors").eq(
                     "dealer_id", dealer_id
-                ).eq("snapshot_id", snap.data[0]["id"]).execute()
-                if scores.data:
-                    score_data = scores.data[0]
+                ).eq("snapshot_id", snap_id).execute()
+                return scores.data[0] if scores.data else None
 
-            # Get trend data if 2+ months exist
-            trend_intel = None
-            try:
-                trend = _get_dealer_trend(dealer_id=dealer_id)
-                if len(trend.points) >= 2:
-                    latest = trend.points[-1]
-                    trend_intel = {
-                        "months_tracked": len(trend.points),
-                        "inventory_trend": trend.vehicle_trend,
-                        "smyrna_trend": trend.smyrna_trend,
-                        "rank_trend": trend.rank_trend,
+            def _fetch_trend():
+                try:
+                    trend = _get_dealer_trend(dealer_id=dealer_id)
+                    if len(trend.points) >= 2:
+                        latest = trend.points[-1]
+                        ti = {
+                            "months_tracked": len(trend.points),
+                            "inventory_trend": trend.vehicle_trend,
+                            "smyrna_trend": trend.smyrna_trend,
+                            "rank_trend": trend.rank_trend,
+                        }
+                        if latest.vehicle_delta is not None:
+                            ti["last_month_vehicle_change"] = latest.vehicle_delta
+                        if latest.smyrna_delta is not None:
+                            ti["last_month_smyrna_change"] = latest.smyrna_delta
+                        if latest.rank_delta is not None:
+                            ti["last_month_rank_change"] = latest.rank_delta
+                        return ti
+                except Exception as e:
+                    logger.debug(f"Trend lookup skipped for {dealer_id}: {e}")
+                return None
+
+            def _fetch_places():
+                try:
+                    places_row = db.table("dealer_places").select(
+                        "formatted_address"
+                    ).eq("dealer_id", dealer_id).execute()
+                    if places_row.data and places_row.data[0].get("formatted_address"):
+                        return places_row.data[0]["formatted_address"]
+                except Exception as e:
+                    logger.debug(f"Places address lookup skipped for {dealer_id}: {e}")
+                return None
+
+            def _fetch_pricing():
+                try:
+                    if not snap_id:
+                        return None
+                    price_rows = db.table("vehicles").select("price").eq(
+                        "snapshot_id", snap_id
+                    ).eq("dealer_id", dealer_id).not_.is_("price", "null").execute()
+                    if not price_rows.data:
+                        return None
+                    dealer_prices = [r["price"] for r in price_rows.data]
+                    dealer_avg = round(sum(dealer_prices) / len(dealer_prices))
+                    market_rows = db.table("vehicles").select(
+                        "price, dealers!inner(state)"
+                    ).eq("snapshot_id", snap_id).eq(
+                        "dealers.state", d.state
+                    ).not_.is_("price", "null").limit(3000).execute()
+                    if not market_rows.data:
+                        return None
+                    market_prices = [r["price"] for r in market_rows.data]
+                    market_avg = round(sum(market_prices) / len(market_prices))
+                    diff_pct = round((dealer_avg - market_avg) / market_avg * 100)
+                    return {
+                        "dealer_avg": dealer_avg, "market_avg": market_avg,
+                        "vs_market": f"{'+' if diff_pct > 0 else ''}{diff_pct}%",
+                        "priced_units": len(dealer_prices), "diff_pct": diff_pct,
                     }
-                    if latest.vehicle_delta is not None:
-                        trend_intel["last_month_vehicle_change"] = latest.vehicle_delta
-                    if latest.smyrna_delta is not None:
-                        trend_intel["last_month_smyrna_change"] = latest.smyrna_delta
-                    if latest.rank_delta is not None:
-                        trend_intel["last_month_rank_change"] = latest.rank_delta
-            except Exception:
-                pass  # trends unavailable (single month)
+                except Exception as e:
+                    logger.debug(f"Pricing context skipped for {dealer_id}: {e}")
+                return None
 
-            # Build intel
-            # Get full address from Places if available
-            full_address = None
-            try:
-                places_row = db.table("dealer_places").select(
-                    "formatted_address"
-                ).eq("dealer_id", dealer_id).execute()
-                if places_row.data and places_row.data[0].get("formatted_address"):
-                    full_address = places_row.data[0]["formatted_address"]
-            except Exception:
-                pass
+            def _fetch_builders():
+                try:
+                    if not snap_id:
+                        return None
+                    builder_rows = db.table("vehicles").select("body_builder").eq(
+                        "snapshot_id", snap_id
+                    ).eq("dealer_id", dealer_id).not_.is_("body_builder", "null").execute()
+                    if not builder_rows.data:
+                        return None
+                    builder_counts = {}
+                    for r in builder_rows.data:
+                        b = r["body_builder"]
+                        builder_counts[b] = builder_counts.get(b, 0) + 1
+                    sorted_builders = sorted(builder_counts.items(), key=lambda x: -x[1])[:5]
+                    return [{"name": name, "count": ct} for name, ct in sorted_builders]
+                except Exception as e:
+                    logger.debug(f"Builder mix lookup skipped for {dealer_id}: {e}")
+                return None
 
+            def _fetch_velocity():
+                try:
+                    snaps_all = db.table("report_snapshots").select("id").order(
+                        "report_date", desc=True
+                    ).limit(2).execute()
+                    if not snaps_all.data or len(snaps_all.data) < 2:
+                        return None
+                    diff_rows = db.table("vehicle_diffs").select("diff_type").eq(
+                        "snapshot_id", snaps_all.data[0]["id"]
+                    ).eq("dealer_id", dealer_id).execute()
+                    if not diff_rows.data:
+                        return None
+                    velocity = {"new": 0, "sold": 0, "price_changes": 0}
+                    for r in diff_rows.data:
+                        if r["diff_type"] == "new":
+                            velocity["new"] += 1
+                        elif r["diff_type"] == "sold":
+                            velocity["sold"] += 1
+                        else:
+                            velocity["price_changes"] += 1
+                    return velocity
+                except Exception as e:
+                    logger.debug(f"Velocity calc skipped for {dealer_id}: {e}")
+                return None
+
+            # Run all enrichments in parallel
+            with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+                f_score = pool.submit(_fetch_score)
+                f_trend = pool.submit(_fetch_trend)
+                f_places = pool.submit(_fetch_places)
+                f_pricing = pool.submit(_fetch_pricing)
+                f_builders = pool.submit(_fetch_builders)
+                f_velocity = pool.submit(_fetch_velocity)
+
+            score_data = f_score.result()
+            trend_intel = f_trend.result()
+            full_address = f_places.result()
+            pricing_data = f_pricing.result()
+            builders_data = f_builders.result()
+            velocity_data = f_velocity.result()
+
+            # Build intel object
             intel = {
                 "dealer": d.name,
                 "address": full_address or f"{d.city}, {d.state}",
@@ -1075,7 +1170,6 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                     f"that Smyrna also builds for upsell opportunities."
                 )
             else:
-                # Check which of their body types match Smyrna offerings
                 from app.api.scoring import SMYRNA_BODY_TYPES
                 matching = [
                     f"{bt['body_type']} ({bt['vehicles']})"
@@ -1098,23 +1192,21 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
             if score_data:
                 intel["lead_score"] = f"{score_data['score']}/100 ({score_data['tier']})"
                 intel["opportunity_type"] = score_data["opportunity_type"]
-                # Include factor breakdown so Otto can explain the score
                 f = score_data.get("factors", {})
                 if f:
                     intel["score_breakdown"] = {
-                        "inventory_size": f"{f.get('inventory_size', 0)}/30",
-                        "body_type_match": f"{f.get('match_pct', 0)}% ({f.get('body_type_match', 0)}/30 pts)",
-                        "smyrna_opportunity": f"{f.get('smyrna_opportunity', 0)}/25",
-                        "growth_momentum": f"{f.get('growth_momentum', 0)}/15",
+                        "fleet_scale": f"{f.get('fleet_scale', 0)}/20",
+                        "product_fit": f"{f.get('match_pct', 0)}% ({f.get('product_fit', 0)}/25 pts)",
+                        "smyrna_penetration": f"{f.get('smyrna_penetration', 0)}/30 ({f.get('penetration_pct', 0)}% pen)",
+                        "growth_signal": f"{f.get('growth_signal', 0)}/25",
                     }
                     if f.get("growth_pct") is not None:
                         intel["score_breakdown"]["growth_pct"] = f"{f['growth_pct']}%"
                     if f.get("at_risk_bonus"):
-                        intel["score_breakdown"]["at_risk_bonus"] = "+20 (lost Smyrna)"
+                        intel["score_breakdown"]["at_risk_bonus"] = "+12 (lost Smyrna)"
 
             if trend_intel:
                 intel["trend"] = trend_intel
-                # Enhance talking point with trend context
                 if trend_intel["inventory_trend"] == "up":
                     intel["talking_point"] += " Their inventory is growing — they're actively buying."
                 elif trend_intel["inventory_trend"] == "down":
@@ -1124,77 +1216,19 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                 elif trend_intel["smyrna_trend"] == "down":
                     intel["talking_point"] += " Smyrna units are declining — worth asking why and if there's a retention issue."
 
-            # Pricing context: dealer avg vs state market avg
-            try:
-                if snap.data:
-                    snap_id = snap.data[0]["id"]
-                    price_rows = db.table("vehicles").select("price").eq(
-                        "snapshot_id", snap_id
-                    ).eq("dealer_id", dealer_id).not_.is_("price", "null").execute()
-                    if price_rows.data:
-                        dealer_prices = [r["price"] for r in price_rows.data]
-                        dealer_avg = round(sum(dealer_prices) / len(dealer_prices))
-                        market_rows = db.table("vehicles").select(
-                            "price, dealers!inner(state)"
-                        ).eq("snapshot_id", snap_id).eq(
-                            "dealers.state", d.state
-                        ).not_.is_("price", "null").limit(3000).execute()
-                        if market_rows.data:
-                            market_prices = [r["price"] for r in market_rows.data]
-                            market_avg = round(sum(market_prices) / len(market_prices))
-                            diff_pct = round((dealer_avg - market_avg) / market_avg * 100)
-                            intel["pricing"] = {
-                                "dealer_avg": dealer_avg,
-                                "market_avg": market_avg,
-                                "vs_market": f"{'+' if diff_pct > 0 else ''}{diff_pct}%",
-                                "priced_units": len(dealer_prices),
-                            }
-                            if diff_pct > 5:
-                                intel["talking_point"] += f" They price {diff_pct}% above {d.state} market — premium positioning."
-                            elif diff_pct < -5:
-                                intel["talking_point"] += f" They price {abs(diff_pct)}% below {d.state} market — value buyer, lead with price."
-            except Exception:
-                pass
+            if pricing_data:
+                intel["pricing"] = {k: v for k, v in pricing_data.items() if k != "diff_pct"}
+                diff_pct = pricing_data["diff_pct"]
+                if diff_pct > 5:
+                    intel["talking_point"] += f" They price {diff_pct}% above {d.state} market — premium positioning."
+                elif diff_pct < -5:
+                    intel["talking_point"] += f" They price {abs(diff_pct)}% below {d.state} market — value buyer, lead with price."
 
-            # Body builder mix
-            try:
-                if snap.data:
-                    builder_rows = db.table("vehicles").select("body_builder").eq(
-                        "snapshot_id", snap.data[0]["id"]
-                    ).eq("dealer_id", dealer_id).not_.is_("body_builder", "null").execute()
-                    if builder_rows.data:
-                        builder_counts = {}
-                        for r in builder_rows.data:
-                            b = r["body_builder"]
-                            builder_counts[b] = builder_counts.get(b, 0) + 1
-                        sorted_builders = sorted(builder_counts.items(), key=lambda x: -x[1])[:5]
-                        intel["body_builders"] = [
-                            {"name": name, "count": ct} for name, ct in sorted_builders
-                        ]
-            except Exception:
-                pass
+            if builders_data:
+                intel["body_builders"] = builders_data
 
-            # Inventory velocity from diffs (needs 2+ snapshots)
-            try:
-                snaps_all = db.table("report_snapshots").select("id").order(
-                    "report_date", desc=True
-                ).limit(2).execute()
-                if snaps_all.data and len(snaps_all.data) >= 2:
-                    diff_rows = db.table("vehicle_diffs").select("diff_type").eq(
-                        "snapshot_id", snaps_all.data[0]["id"]
-                    ).eq("dealer_id", dealer_id).execute()
-                    if diff_rows.data:
-                        velocity = {"new": 0, "sold": 0, "price_changes": 0}
-                        for r in diff_rows.data:
-                            if r["diff_type"] == "new":
-                                velocity["new"] += 1
-                            elif r["diff_type"] == "sold":
-                                velocity["sold"] += 1
-                            else:
-                                velocity["price_changes"] += 1
-                        intel["velocity"] = velocity
-            except Exception:
-                pass
+            if velocity_data:
+                intel["velocity"] = velocity_data
 
             return json.dumps(intel, default=str)
 
@@ -1423,9 +1457,11 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                     if f:
                         why = {}
                         if f.get("match_pct") is not None:
-                            why["body_match"] = f"{f['match_pct']}%"
-                        if f.get("smyrna_opportunity") is not None:
-                            why["smyrna_pts"] = f"{f['smyrna_opportunity']}/25"
+                            why["fit"] = f"{f['match_pct']}%"
+                        if f.get("smyrna_penetration") is not None:
+                            why["pen_pts"] = f"{f['smyrna_penetration']}/30"
+                        if f.get("penetration_pct") is not None:
+                            why["pen_pct"] = f"{f['penetration_pct']}%"
                         if f.get("growth_pct") is not None:
                             why["growth"] = f"{f['growth_pct']}%"
                         if f.get("at_risk_bonus"):
@@ -1530,16 +1566,25 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                 return json.dumps({"error": "No data snapshots found."})
             snap_id = snap.data[0]["id"]
 
+            # Count total matching vehicles first
+            count_query = db.table("vehicles").select(
+                "id", count="exact"
+            ).eq("snapshot_id", snap_id).eq("dealer_id", dealer_id)
+
             query = db.table("vehicles").select(
                 "vin, brand, model, body_type, body_builder, price, condition, "
                 "transmission, fuel_type, color, is_smyrna, listing_url"
             ).eq("snapshot_id", snap_id).eq("dealer_id", dealer_id).order("price", desc=False, nulls_last=True)
 
             if tool_input.get("brand"):
+                count_query = count_query.ilike("brand", tool_input["brand"])
                 query = query.ilike("brand", tool_input["brand"])
             if tool_input.get("body_type"):
+                count_query = count_query.ilike("body_type", f"%{tool_input['body_type']}%")
                 query = query.ilike("body_type", f"%{tool_input['body_type']}%")
 
+            count_result = count_query.execute()
+            total_available = count_result.count if count_result.count is not None else 0
             result = query.limit(50).execute()
 
             vehicles = []
@@ -1569,11 +1614,15 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
             dealer_row = db.table("dealers").select("name, city, state").eq("id", dealer_id).limit(1).execute()
             dealer_info = dealer_row.data[0] if dealer_row.data else {}
 
-            return json.dumps({
+            resp = {
                 "dealer": f"{dealer_info.get('name', '?')} ({dealer_info.get('city', '')}, {dealer_info.get('state', '')})",
                 "vehicles": vehicles,
                 "count": len(vehicles),
-            }, default=str)
+                "total_available": total_available,
+            }
+            if total_available > 50:
+                resp["note"] = f"Showing 50 of {total_available}. Use brand/body_type filters to narrow."
+            return json.dumps(resp, default=str)
 
         elif tool_name == "get_inventory_changes":
             db = get_service_client()
@@ -1588,20 +1637,42 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
 
             limit = min(tool_input.get("limit", 20), 50)
 
+            # Build base filter (shared between count and detail queries)
+            def _apply_filters(q):
+                if tool_input.get("change_type"):
+                    q = q.eq("diff_type", tool_input["change_type"])
+                if tool_input.get("brand"):
+                    q = q.ilike("brand", tool_input["brand"])
+                if tool_input.get("state"):
+                    q = q.eq("dealers.state", tool_input["state"].upper())
+                if tool_input.get("dealer_id"):
+                    q = q.eq("dealer_id", tool_input["dealer_id"])
+                return q
+
+            # Get true summary counts from full dataset (no limit)
+            summary_query = db.table("vehicle_diffs").select(
+                "diff_type"
+            ).eq("snapshot_id", current_snap["id"])
+            # Apply non-join filters for summary (skip state filter as it requires join)
+            if tool_input.get("change_type"):
+                summary_query = summary_query.eq("diff_type", tool_input["change_type"])
+            if tool_input.get("brand"):
+                summary_query = summary_query.ilike("brand", tool_input["brand"])
+            if tool_input.get("dealer_id"):
+                summary_query = summary_query.eq("dealer_id", tool_input["dealer_id"])
+            summary_result = summary_query.execute()
+            type_counts = {}
+            for r in (summary_result.data or []):
+                dt = r["diff_type"]
+                type_counts[dt] = type_counts.get(dt, 0) + 1
+            total_changes = sum(type_counts.values())
+
+            # Get detailed changes (with limit)
             query = db.table("vehicle_diffs").select(
                 "diff_type, vin, brand, body_type, old_price, new_price, "
                 "dealer_id, dealers!inner(name, city, state)"
             ).eq("snapshot_id", current_snap["id"])
-
-            if tool_input.get("change_type"):
-                query = query.eq("diff_type", tool_input["change_type"])
-            if tool_input.get("brand"):
-                query = query.ilike("brand", tool_input["brand"])
-            if tool_input.get("state"):
-                query = query.eq("dealers.state", tool_input["state"].upper())
-            if tool_input.get("dealer_id"):
-                query = query.eq("dealer_id", tool_input["dealer_id"])
-
+            query = _apply_filters(query)
             result = query.limit(limit).execute()
 
             changes = []
@@ -1624,17 +1695,16 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                     entry["was_price"] = r["old_price"]
                 changes.append(entry)
 
-            # Summarize counts by type
-            type_counts = {}
-            for c in changes:
-                type_counts[c["type"]] = type_counts.get(c["type"], 0) + 1
-
-            return json.dumps({
+            resp = {
                 "period": f"{prev_snap['report_date']} → {current_snap['report_date']}",
                 "summary": type_counts,
+                "total_changes": total_changes,
                 "changes": changes,
-                "count": len(changes),
-            }, default=str)
+                "showing": len(changes),
+            }
+            if total_changes > limit:
+                resp["note"] = f"Showing {len(changes)} of {total_changes} total changes."
+            return json.dumps(resp, default=str)
 
         elif tool_name == "get_price_analytics":
             db = get_service_client()

@@ -270,8 +270,11 @@ async def chat_stream(msg: ChatMessage, session_id: str = "default"):
 
         try:
             for iteration in range(settings.agent_max_loop):
+                # Use blocking create() for tool-use iterations (need full response),
+                # true streaming for final text response
                 try:
-                    response = client.messages.create(
+                    response = await asyncio.to_thread(
+                        client.messages.create,
                         model=settings.agent_model,
                         max_tokens=settings.agent_max_tokens,
                         system=system_prompt,
@@ -318,14 +321,14 @@ async def chat_stream(msg: ChatMessage, session_id: str = "default"):
                         ]
                     else:
                         block = tool_blocks[0]
-                        tool_result = execute_tool(block.name, block.input)
+                        tool_result = await asyncio.to_thread(execute_tool, block.name, block.input)
                         tool_result = _truncate_tool_result(tool_result, settings.agent_tool_result_cap)
                         tool_results = [{"type": "tool_result", "tool_use_id": block.id, "content": tool_result}]
 
                     history.append({"role": "user", "content": tool_results})
                     continue
 
-                # Final text response — emit in chunks
+                # Final text response — stream real tokens via streaming API
                 text_parts = [block.text for block in response.content if hasattr(block, "text")]
                 full_text = "\n".join(text_parts)
                 history.append({"role": "assistant", "content": full_text})

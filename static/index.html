@@ -1580,7 +1580,13 @@
         body.map-view #dealerMap { display: block; }
 
         /* Dark map tiles */
-        .leaflet-container { background: #0a0e1a; }
+        .leaflet-container { background: #0a0e1a; -webkit-font-smoothing: antialiased; }
+        .leaflet-zoom-anim .leaflet-zoom-animated {
+            will-change: transform;
+            transition: transform 0.35s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+        }
+        .leaflet-tile-pane { will-change: transform; }
+        .leaflet-marker-pane { will-change: transform; }
         .leaflet-control-zoom {
             border: none !important;
             box-shadow: 0 2px 12px rgba(0,0,0,0.4) !important;
@@ -1737,6 +1743,18 @@
             font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; line-height: 1.4;
         }
         .sk-factor-desc em { font-style: normal; color: rgba(255,255,255,0.45); }
+        .sk-opp-grid {
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .sk-opp {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1.3;
+        }
+        .sk-opp-badge {
+            display: inline-block; padding: 1px 6px; border-radius: 4px;
+            font-size: 10px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.04em; white-space: nowrap; flex-shrink: 0;
+        }
         .sk-sweet-spot {
             margin-top: 10px; padding: 8px 10px;
             background: rgba(79,143,255,0.06);
@@ -2189,6 +2207,7 @@
         .ember {
             position: relative; display: flex; align-items: center; justify-content: center;
             transform: scale(var(--ember-scale, 1));
+            transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
         }
         .ember svg { width: 100%; height: 100%; }
         .ember.tier-hot svg { filter: drop-shadow(0 0 5px rgba(239,68,68,0.6)); }
@@ -4154,23 +4173,34 @@
             <div class="scoring-key-section">
                 <div class="scoring-key-section-title">What drives the score</div>
                 <div class="sk-factor">
-                    <div class="sk-factor-head"><span>Fleet Size</span><span class="sk-factor-pts">/30</span></div>
-                    <div class="sk-factor-desc">Larger lots score higher</div>
+                    <div class="sk-factor-head"><span>Smyrna Penetration</span><span class="sk-factor-pts">/30</span></div>
+                    <div class="sk-factor-desc">Proven buyers score highest — speculation scores less</div>
                 </div>
                 <div class="sk-factor">
-                    <div class="sk-factor-head"><span>Body Type Fit</span><span class="sk-factor-pts">/30</span></div>
-                    <div class="sk-factor-desc">% stocking what Smyrna builds</div>
+                    <div class="sk-factor-head"><span>Product Fit</span><span class="sk-factor-pts">/25</span></div>
+                    <div class="sk-factor-desc">% of inventory in body types Smyrna builds</div>
                 </div>
                 <div class="sk-factor">
-                    <div class="sk-factor-head"><span>New Business</span><span class="sk-factor-pts">/25</span></div>
-                    <div class="sk-factor-desc">Less Smyrna presence = more opportunity</div>
+                    <div class="sk-factor-head"><span>Growth Signal</span><span class="sk-factor-pts">/25</span></div>
+                    <div class="sk-factor-desc">Inventory trending up = active buyer</div>
                 </div>
                 <div class="sk-factor">
-                    <div class="sk-factor-head"><span>Growth</span><span class="sk-factor-pts">/15</span></div>
-                    <div class="sk-factor-desc">Inventory trending up month-over-month</div>
+                    <div class="sk-factor-head"><span>Fleet Scale</span><span class="sk-factor-pts">/20</span></div>
+                    <div class="sk-factor-desc">Bigger fleet = bigger order potential</div>
                 </div>
             </div>
-            <div class="sk-sweet-spot">The sweet spot: a big, growing dealer that stocks our body types but hasn't bought Smyrna yet.</div>
+            <div class="scoring-key-section">
+                <div class="scoring-key-section-title">Opportunity Types</div>
+                <div class="sk-opp-grid">
+                    <span class="sk-opp"><span class="sk-opp-badge" style="background:rgba(239,68,68,0.15);color:#ef4444">Conquest</span> Proven buyer &lt;5% — win this account</span>
+                    <span class="sk-opp"><span class="sk-opp-badge" style="background:rgba(255,140,0,0.15);color:#ff8c00">Expand</span> 5-15% pen — push deeper</span>
+                    <span class="sk-opp"><span class="sk-opp-badge" style="background:rgba(79,143,255,0.15);color:#4f8fff">Grow</span> 15-30% pen — nurture</span>
+                    <span class="sk-opp"><span class="sk-opp-badge" style="background:rgba(34,197,94,0.15);color:#22c55e">Defend</span> 30%+ pen — protect</span>
+                    <span class="sk-opp"><span class="sk-opp-badge" style="background:rgba(139,149,165,0.12);color:#8b95a5">Whitespace</span> Zero Smyrna — qualify</span>
+                    <span class="sk-opp"><span class="sk-opp-badge" style="background:rgba(239,68,68,0.25);color:#ef4444;border:1px solid rgba(239,68,68,0.3)">At Risk</span> Lost Smyrna — emergency</span>
+                </div>
+            </div>
+            <div class="sk-sweet-spot">The sweet spot: a growing dealer that already buys Smyrna but barely — maximum runway to conquer the account.</div>
         </div>
     </div>
     <div class="map-filters" id="mapFilters">
@@ -6107,6 +6137,12 @@
                         minZoom: 4, maxZoom: 18,
                         maxBounds: L.latLngBounds(L.latLng(20.0, -108.0), L.latLng(42.0, -68.0)),
                         maxBoundsViscosity: 0.8,
+                        zoomSnap: 0.5,
+                        zoomDelta: 0.5,
+                        wheelDebounceTime: 80,
+                        wheelPxPerZoomLevel: 120,
+                        zoomAnimation: true,
+                        zoomAnimationThreshold: 4,
                     }).fitBounds(usBounds, { padding: [20, 20] });
                     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
@@ -6133,6 +6169,7 @@
                         const scale = Math.min(Math.max(0.18 + (z - 4) * 0.117, 0.25), 1.15);
                         document.documentElement.style.setProperty('--ember-scale', scale.toFixed(3));
                     }
+                    _map.on('zoom', updateEmberScale);
                     _map.on('zoomend', updateEmberScale);
                     updateEmberScale();
 
