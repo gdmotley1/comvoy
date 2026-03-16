@@ -168,9 +168,35 @@ def load_vehicles(db, csv_path, snapshot_id, dealer_map, smyrna_vins):
         reader = csv.DictReader(f)
         all_rows = list(reader)
 
+    # Build first_seen_date lookup: VIN → earliest date we've ever seen it
+    # Query all previous vehicles to find the first appearance of each VIN
+    logger.info("Building first_seen_date lookup from historical data...")
+    first_seen_map = {}
+    offset = 0
+    page_size = 1000
+    while True:
+        batch_result = db.table("vehicles").select(
+            "vin, first_seen_date"
+        ).not_.is_("first_seen_date", "null").range(offset, offset + page_size - 1).execute()
+        for r in batch_result.data:
+            vin = r["vin"]
+            seen = r["first_seen_date"]
+            if vin not in first_seen_map or (seen and seen < first_seen_map[vin]):
+                first_seen_map[vin] = seen
+        if len(batch_result.data) < page_size:
+            break
+        offset += page_size
+    logger.info(f"  Found first_seen_date for {len(first_seen_map)} historical VINs")
+
+    # Get this snapshot's report_date for new VINs
+    snap_row = db.table("report_snapshots").select("report_date").eq("id", snapshot_id).execute()
+    today_date = snap_row.data[0]["report_date"] if snap_row.data else datetime.now().strftime("%Y-%m-%d")
+
     vehicles = []
     skipped = 0
     seen_vins = set()
+    new_vins = 0
+    carried = 0
 
     for row in all_rows:
         vin = row.get("vin", "").strip()
@@ -186,6 +212,14 @@ def load_vehicles(db, csv_path, snapshot_id, dealer_map, smyrna_vins):
 
         price_str = row.get("price", "").strip()
         price = int(price_str) if price_str and price_str.isdigit() else None
+
+        # Carry forward first_seen_date if we've seen this VIN before
+        if vin in first_seen_map:
+            first_seen = first_seen_map[vin]
+            carried += 1
+        else:
+            first_seen = today_date
+            new_vins += 1
 
         vehicles.append({
             "vin": vin,
@@ -203,6 +237,7 @@ def load_vehicles(db, csv_path, snapshot_id, dealer_map, smyrna_vins):
             "listing_url": row.get("listing_url", "") or None,
             "image_url": row.get("image_url", "") or None,
             "is_smyrna": vin in smyrna_vins,
+            "first_seen_date": first_seen,
         })
 
     # Batch insert
@@ -213,6 +248,7 @@ def load_vehicles(db, csv_path, snapshot_id, dealer_map, smyrna_vins):
             logger.info(f"  Loaded {min(i + BATCH_SIZE, len(vehicles))}/{len(vehicles)} vehicles")
 
     logger.info(f"Loaded {len(vehicles)} vehicles ({skipped} skipped — no dealer match)")
+    logger.info(f"  first_seen_date: {carried} carried forward, {new_vins} new VINs (first appearance)")
     return len(vehicles)
 
 

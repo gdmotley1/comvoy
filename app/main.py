@@ -7,6 +7,8 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
+from app.config import settings
+
 from app.api.ingest import router as ingest_router
 from app.api.dealers import router as dealers_router
 from app.api.chat import router as chat_router
@@ -38,8 +40,29 @@ app.add_middleware(
     ],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["Content-Type", "x-api-key"],
 )
+
+
+# API key authentication middleware
+_PUBLIC_PATHS = {"/", "/health", "/static"}
+
+@app.middleware("http")
+async def api_key_auth(request: Request, call_next):
+    path = request.url.path
+    # Allow public paths and static files
+    if path in _PUBLIC_PATHS or path.startswith("/static/"):
+        return await call_next(request)
+    # All /api/ routes require API key
+    if path.startswith("/api/") and settings.api_key:
+        key = request.headers.get("x-api-key", "")
+        if key != settings.api_key:
+            return Response(
+                content='{"detail":"Unauthorized"}',
+                status_code=401,
+                media_type="application/json",
+            )
+    return await call_next(request)
 
 
 # Security headers middleware

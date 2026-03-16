@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     google_maps_api_key: str = ""
     reports_dir: str = "./data/reports"
+    api_key: str = ""  # shared secret for API auth (X-API-Key header)
 
     # --- Token budget guardrails ---
     agent_model: str = "claude-sonnet-4-20250514"

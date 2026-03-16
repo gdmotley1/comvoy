@@ -911,7 +911,7 @@
         /* ---- Glassmorphism Suggestion Chips ---- */
         .chat-suggestions {
             display: flex;
-            flex-wrap: nowrap;
+            flex-wrap: wrap;
             gap: 10px;
             justify-content: center;
             z-index: 2;
@@ -4468,12 +4468,14 @@
         // =====================================================================
         const Core = (function() {
             const API_BASE = location.hostname === 'localhost' ? '' : 'https://comvoy-api.vercel.app';
+            const _API_KEY = 'QQr9drTN1PsXsJa-0i_bZKCJWwzShAKsdQW1l2PG9iY';
             const $ = id => document.getElementById(id);
             const _uid = (() => { let n = 0; return () => 'm' + (n++); })();
 
             function fetchT(url, opts = {}, timeoutMs = 15000) {
                 const ctrl = new AbortController();
                 const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+                opts.headers = { 'x-api-key': _API_KEY, ...(opts.headers || {}) };
                 return fetch(url, { ...opts, signal: ctrl.signal })
                     .finally(() => clearTimeout(timer));
             }
@@ -4543,7 +4545,7 @@
                 try {
                     const resp = await fetch(url, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'x-api-key': _API_KEY },
                         body: JSON.stringify(body),
                         signal: ctrl.signal,
                     });
@@ -5653,7 +5655,7 @@
                         container.innerHTML = cards.map(function(c) {
                             return '<div class="tm-sug-card sug-' + c.type + '" onclick="tmSuggest(\'' + c.query.replace(/'/g, "\\'") + '\')">' +
                                 '<div class="tm-sug-icon">' + c.icon + '</div>' +
-                                '<div class="tm-sug-text"><div class="tm-sug-title">' + c.title + '</div><div class="tm-sug-sub">' + c.sub + '</div></div>' +
+                                '<div class="tm-sug-text"><div class="tm-sug-title">' + c.title + '</div>' + (c.sub ? '<div class="tm-sug-sub">' + c.sub + '</div>' : '') + '</div>' +
                             '</div>';
                         }).join('');
                     }
