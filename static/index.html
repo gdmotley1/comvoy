@@ -2717,13 +2717,13 @@
         .tm-rep-select {
             background: var(--glass);
             border: 1px solid var(--glass-border);
-            border-radius: 10px;
+            border-radius: 12px;
             color: var(--text-primary);
             color-scheme: dark;
             font-family: inherit;
-            font-size: 13px;
-            padding: 0 16px;
-            height: 40px;
+            font-size: 14px;
+            padding: 0 18px;
+            height: 46px;
             outline: none;
             cursor: pointer;
             transition: border-color 0.2s;
@@ -2738,9 +2738,9 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            padding: 16px 20px 8px;
+            padding: 16px 20px 16px;
             overflow: visible;
-            max-height: 220px;
+            max-height: 240px;
         }
 
         /* Liquid route scene */
@@ -2864,7 +2864,7 @@
         .tm-hero-sub {
             font-size: 15px;
             color: var(--text-tertiary);
-            margin-top: 6px;
+            margin-top: 10px;
             text-align: center;
             position: relative;
             z-index: 2;
@@ -2897,42 +2897,42 @@
 
         /* Trip management body */
         .tm-body {
-            padding: 20px 20px 40px;
-            max-width: 600px;
+            padding: 36px 28px 60px;
+            max-width: 640px;
             margin: 0 auto;
         }
 
         .tm-controls {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            margin-bottom: 24px;
+            gap: 16px;
+            margin-bottom: 32px;
         }
 
         .tm-controls-row {
             display: flex;
             align-items: stretch;
-            gap: 10px;
-            height: 40px;
+            gap: 12px;
+            height: 46px;
         }
 
         .tm-rep-select {
             flex: 1;
-            height: 40px;
+            min-width: 0;
         }
 
         .tm-icon-btn {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            padding: 0 16px;
-            height: 40px;
-            border-radius: 10px;
+            gap: 8px;
+            padding: 0 22px;
+            height: 46px;
+            border-radius: 12px;
             border: 1px solid var(--glass-border);
             background: var(--glass);
             color: var(--text-secondary);
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 500;
             font-family: inherit;
             cursor: pointer;
@@ -2945,18 +2945,18 @@
         .tm-tab-bar {
             display: flex;
             background: var(--glass);
-            border-radius: 10px;
+            border-radius: 12px;
             border: 1px solid var(--glass-border);
             overflow: hidden;
-            height: 40px;
+            height: 46px;
         }
 
         .tm-tab {
-            padding: 0 20px;
-            height: 40px;
+            padding: 0 26px;
+            height: 46px;
             display: flex;
             align-items: center;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 500;
             color: var(--text-tertiary);
             cursor: pointer;
@@ -2976,14 +2976,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            padding: 0 18px;
-            height: 40px;
-            border-radius: 10px;
+            gap: 8px;
+            padding: 0 24px;
+            height: 46px;
+            border-radius: 12px;
             border: 1px solid rgba(79,143,255,0.2);
             background: rgba(79,143,255,0.08);
             color: var(--accent-blue);
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
             font-family: inherit;
             cursor: pointer;
@@ -4175,14 +4175,13 @@
             .tm-hero-headline { font-size: 20px; }
             .tm-hero-sub { font-size: 12px; }
             .tm-route-scene { width: 90vw; height: 120px; }
-            .tm-body { padding: 16px 14px 40px; }
+            .tm-body { padding: 24px 16px 40px; }
             .tm-controls-row { height: auto; }
-            .tm-controls-row:first-child { flex-direction: column; gap: 8px; }
-            .tm-controls-row:first-child .tm-rep-select { width: 100%; }
-            .tm-controls-row:first-child .tm-icon-btn { height: 38px; }
-            .tm-controls-row:last-child .tm-tab { padding: 0 14px; }
-            .tm-chat-input-row { padding: 8px 14px 14px; }
-            .tm-chat-chips { padding: 6px 14px 4px; }
+            .tm-controls-row:first-child { flex-direction: column; gap: 10px; }
+            .tm-controls-row:first-child .tm-rep-select { width: 100%; height: 46px; }
+            .tm-controls-row:first-child .tm-icon-btn { height: 44px; }
+            .tm-controls-row:last-child { height: 44px; }
+            .tm-controls-row:last-child .tm-tab { padding: 0 18px; }
             .tm-add-rep-row { flex-direction: column; }
             .tm-card-actions { flex-wrap: wrap; }
             /* Mobile dashboard KPIs */
@@ -5590,16 +5589,17 @@
             };
 
             async function open() {
-                document.body.classList.remove('chatting', 'map-view', 'dashboard');
+                // Move input bar back to its home before replacing scroll content
+                const bar = document.querySelector('.input-bar');
+                const area = document.querySelector('.input-area');
+                if (bar && area) area.appendChild(bar);
+                document.body.classList.remove('chatting', 'map-view', 'dashboard', 'greeting-mode');
                 document.body.classList.add('trip-manager');
                 const w = document.getElementById('welcome');
                 if (w) w.remove();
                 Chat.setMessagesDiv(null);
-                _tmChatSid = _tmChatSid || crypto.randomUUID();
-                _tmChatHistory = [];
                 Chat.getScroll().innerHTML = buildHTML();
                 loadReps();
-                loadStats();
             }
 
             function _tmParticles() {
