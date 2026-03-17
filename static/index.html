@@ -1179,33 +1179,64 @@
             line-height: 44px;
         }
 
-        .attach-btn {
-            width: 44px; height: 44px;
+        .data-info-btn {
+            width: 38px; height: 38px;
             border-radius: 50%;
             border: none;
             background: transparent;
             color: var(--text-tertiary);
-            cursor: pointer;
+            cursor: default;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.25s var(--smooth);
             flex-shrink: 0;
+            position: relative;
+            transition: color 0.25s var(--smooth);
         }
-
-        .attach-btn:hover {
-            color: var(--text-secondary);
-            background: rgba(255,255,255,0.05);
-        }
-        .attach-btn:active { transform: scale(0.9); }
-
-        .attach-btn svg {
-            width: 19px; height: 19px;
+        .data-info-btn:hover { color: var(--text-secondary); }
+        .data-info-btn svg {
+            width: 17px; height: 17px;
             fill: none;
             stroke: currentColor;
             stroke-width: 1.8;
             stroke-linecap: round;
             stroke-linejoin: round;
+        }
+        .data-info-tip {
+            position: absolute;
+            bottom: calc(100% + 10px);
+            left: 0;
+            background: rgba(15,18,30,0.95);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 12px 16px;
+            min-width: 220px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        .data-info-btn:hover .data-info-tip { opacity: 1; }
+        .data-info-tip-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--accent-blue);
+            margin-bottom: 8px;
+        }
+        .data-info-tip-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+            padding: 2px 0;
+        }
+        .data-info-tip-row span:last-child {
+            color: var(--text-primary);
+            font-weight: 500;
         }
 
         .send-btn {
@@ -1238,92 +1269,6 @@
             stroke-width: 2.5;
             stroke-linecap: round;
             stroke-linejoin: round;
-        }
-
-        .file-toast {
-            position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%) translateY(20px);
-            background: rgba(20,25,40,0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 14px;
-            padding: 14px 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            opacity: 0;
-            transition: all 0.4s var(--spring);
-            pointer-events: none;
-            z-index: 100;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.5);
-        }
-
-        .file-toast.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-            pointer-events: auto;
-        }
-
-        .file-toast-icon {
-            width: 40px; height: 40px;
-            border-radius: 10px;
-            background: rgba(79,143,255,0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .file-toast-icon svg {
-            width: 20px; height: 20px;
-            fill: none;
-            stroke: var(--accent-blue);
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        .file-toast-info {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            min-width: 0;
-        }
-
-        .file-toast-name {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-primary);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 200px;
-        }
-
-        .file-toast-status {
-            font-size: 11px;
-            color: var(--text-secondary);
-        }
-
-        .file-toast-status.success { color: #34d399; }
-        .file-toast-status.error { color: #f87171; }
-
-        .file-toast-progress {
-            height: 3px;
-            background: rgba(255,255,255,0.06);
-            border-radius: 2px;
-            overflow: hidden;
-            margin-top: 4px;
-        }
-
-        .file-toast-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
-            border-radius: 2px;
-            width: 0%;
-            transition: width 0.5s var(--smooth);
         }
 
         /* ========== TREND INDICATORS ========== */
@@ -4464,6 +4409,17 @@
 
     <div class="input-area">
         <div class="input-bar" id="inputBar">
+            <div class="data-info-btn" aria-label="Data sources">
+                <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4.03 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/></svg>
+                <div class="data-info-tip">
+                    <div class="data-info-tip-title">Otto's Data</div>
+                    <div class="data-info-tip-row"><span>Dealers</span><span id="infoTipDealers">597</span></div>
+                    <div class="data-info-tip-row"><span>Vehicles</span><span id="infoTipVehicles">~12,700</span></div>
+                    <div class="data-info-tip-row"><span>States</span><span>12</span></div>
+                    <div class="data-info-tip-row"><span>Brands</span><span>13</span></div>
+                    <div class="data-info-tip-row"><span>Last scrape</span><span id="infoTipScrape">Mar 2026</span></div>
+                </div>
+            </div>
             <textarea id="input" placeholder="Ask Otto anything..." rows="1" aria-label="Message Otto"
                 onkeydown="onKey(event)" oninput="autoGrow(this)"
                 onfocus="document.getElementById('inputBar').classList.add('focused')"
@@ -5100,46 +5056,6 @@
                     _ddOpen = false;
                     $('snapshotDropdown').classList.remove('open');
                 }
-            });
-
-            // File upload
-            const fileInput = $('fileInput');
-            const fileToast = $('fileToast');
-            const fileName = $('fileName');
-            const fileStatus = $('fileStatus');
-            const fileProgress = $('fileProgress');
-
-            fileInput.addEventListener('change', async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                fileName.textContent = file.name;
-                fileStatus.textContent = 'Uploading...';
-                fileStatus.className = 'file-toast-status';
-                fileProgress.style.width = '0%';
-                fileToast.classList.add('show');
-                fileProgress.style.width = '60%';
-                const form = new FormData();
-                form.append('file', file);
-                try {
-                    const res = await fetchT(API_BASE + '/api/ingest/upload', { method: 'POST', body: form });
-                    fileProgress.style.width = '100%';
-                    if (res.ok) {
-                        const data = await res.json();
-                        fileStatus.textContent = `Done — ${data.dealers_loaded || 0} dealers loaded`;
-                        fileStatus.className = 'file-toast-status success';
-                        addBot(`Report **${file.name}** uploaded successfully! ${data.dealers_loaded || 0} dealers loaded, ${data.dealers_geocoded || 0} geocoded. Ask me anything about the new data.`);
-                    } else {
-                        const err = await res.json().catch(() => ({ detail: 'Upload failed' }));
-                        fileStatus.textContent = err.detail || 'Upload failed';
-                        fileStatus.className = 'file-toast-status error';
-                    }
-                } catch (err) {
-                    fileProgress.style.width = '100%';
-                    fileStatus.textContent = 'Connection error';
-                    fileStatus.className = 'file-toast-status error';
-                }
-                fileInput.value = '';
-                setTimeout(() => fileToast.classList.remove('show'), 4000);
             });
 
             async function loadSnapshots() {
