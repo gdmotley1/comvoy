@@ -2031,6 +2031,15 @@
         }
 
         /* ========== OTTO FLOATING CHAT (Map View) ========== */
+        .office-star-marker {
+            filter: drop-shadow(0 0 6px rgba(251,191,36,0.6)) drop-shadow(0 0 14px rgba(245,158,11,0.3));
+            animation: starPulse 3s ease-in-out infinite;
+        }
+        @keyframes starPulse {
+            0%, 100% { filter: drop-shadow(0 0 6px rgba(251,191,36,0.6)) drop-shadow(0 0 14px rgba(245,158,11,0.3)); }
+            50% { filter: drop-shadow(0 0 10px rgba(251,191,36,0.8)) drop-shadow(0 0 20px rgba(245,158,11,0.5)); }
+        }
+
         .otto-fab {
             position: fixed;
             bottom: 28px;
@@ -6404,6 +6413,25 @@ ${eye}</div>
                         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
                         subdomains: 'abcd', maxZoom: 18,
                     }).addTo(_map);
+
+                    // Comvoy office locations — star markers
+                    const _offices = [
+                        { name: 'Smyrna Truck & Equipment', lat: 33.0812, lng: -83.2321, addr: '138 Roberson Mill Rd, Milledgeville, GA' },
+                        { name: 'Fouts Bros / Comvoy', lat: 29.9088, lng: -96.8767, addr: '4495 W State Hwy 71, La Grange, TX' },
+                    ];
+                    const _starIcon = L.divIcon({
+                        className: 'office-star-marker',
+                        html: `<svg viewBox="0 0 24 24" width="28" height="28"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" fill="#fbbf24" stroke="#f59e0b" stroke-width="1" opacity="0.95"/></svg>`,
+                        iconSize: [28, 28],
+                        iconAnchor: [14, 14],
+                    });
+                    _offices.forEach(o => {
+                        L.marker([o.lat, o.lng], { icon: _starIcon, zIndexOffset: 1000 })
+                            .bindPopup(`<div style="font-weight:600;font-size:13px;margin-bottom:2px">${o.name}</div><div style="font-size:11px;color:#aaa">${o.addr}</div>`)
+                            .bindTooltip(o.name, { direction: 'top', offset: [0, -14] })
+                            .addTo(_map);
+                    });
+
                     try {
                         const res = await fetchT(API_BASE + '/api/dealers/map');
                         if (!res.ok) throw new Error('Failed to load map data');
