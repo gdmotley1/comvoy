@@ -6323,23 +6323,12 @@ ${eye}</div>
                         subdomains: 'abcd', maxZoom: 18,
                     }).addTo(_map);
 
-                    // Comvoy office locations — star markers
-                    const _offices = [
-                        { name: 'Fouts Bros Inc.', lat: 33.0812, lng: -83.2321, addr: '138 Roberson Mill Rd, Milledgeville, GA' },
-                        { name: 'Fouts Bros Inc.', lat: 29.9088, lng: -96.8767, addr: '4495 W State Hwy 71, La Grange, TX' },
-                    ];
-                    const _starIcon = L.divIcon({
-                        className: 'office-star-marker',
-                        html: `<svg viewBox="0 0 16 16" width="16" height="16"><rect x="3" y="3" width="10" height="10" rx="1.5" transform="rotate(45 8 8)" fill="rgba(255,255,255,0.7)" stroke="rgba(255,255,255,0.4)" stroke-width="0.8"/></svg>`,
-                        iconSize: [16, 16],
-                        iconAnchor: [8, 8],
-                    });
-                    _offices.forEach(o => {
-                        L.marker([o.lat, o.lng], { icon: _starIcon, zIndexOffset: 1000 })
-                            .bindPopup(`<div style="font-weight:600;font-size:13px;margin-bottom:2px">${o.name}</div><div style="font-size:11px;color:#aaa">${o.addr}</div>`)
-                            .bindTooltip(o.name, { direction: 'top', offset: [0, -14] })
-                            .addTo(_map);
-                    });
+                    // Fouts/Comvoy office — La Grange TX (not in dealer DB, hard-coded)
+                    const _foutsLaGrange = { name: 'Fouts Bros Inc.', lat: 29.9088, lng: -96.8767, addr: '4495 W State Hwy 71, La Grange, TX' };
+                    L.marker([_foutsLaGrange.lat, _foutsLaGrange.lng], { icon: createTacticalIcon('comvoy'), zIndexOffset: 1000 })
+                        .bindPopup(`<div style="font-weight:600;font-size:13px;margin-bottom:2px">${_foutsLaGrange.name}</div><div style="font-size:11px;color:#aaa">${_foutsLaGrange.addr}</div>`)
+                        .bindTooltip(_foutsLaGrange.name, { direction: 'top', offset: [0, -14] })
+                        .addTo(_map);
 
                     try {
                         const res = await fetchT(API_BASE + '/api/dealers/map');
@@ -6550,14 +6539,22 @@ ${eye}</div>
         }
 
         function createTacticalIcon(tier, color) {
+            const isComvoy = tier === 'comvoy';
             const isHot = tier === 'hot';
             const isWarm = tier === 'warm';
             const isCold = tier === 'cold';
-            const size = isHot ? 28 : isWarm ? 26 : isCold ? 22 : 20;
+            const size = isComvoy ? 28 : isHot ? 28 : isWarm ? 26 : isCold ? 22 : 20;
             const half = size / 2;
             const tc = tier ? 'tier-' + tier : 'tier-unscored';
             let svg;
-            if (isHot) {
+            if (isComvoy) {
+                // White diamond — Fouts/Comvoy locations
+                svg = `<svg viewBox="0 0 28 28" width="${size}" height="${size}">
+                    <rect x="6" y="6" width="16" height="16" rx="2.5" transform="rotate(45 14 14)" fill="rgba(255,255,255,0.7)" stroke="rgba(255,255,255,0.4)" stroke-width="1.8"/>
+                    <circle cx="14" cy="14" r="4.5" fill="#fff"/>
+                    <circle cx="14" cy="14" r="1.8" fill="#1a1a2e" opacity="0.6"/>
+                </svg>`;
+            } else if (isHot) {
                 // Diamond shape — matches legend
                 svg = `<svg viewBox="0 0 28 28" width="${size}" height="${size}">
                     <rect x="6" y="6" width="16" height="16" rx="2.5" transform="rotate(45 14 14)" fill="#ef4444" fill-opacity="0.3" stroke="#ef4444" stroke-width="1.8"/>
@@ -6601,8 +6598,10 @@ ${eye}</div>
             _markerMap = new Map();
             dealers.forEach(d => {
                 if (!d.lat || !d.lng) return;
+                const isFouts = /fouts|smyrna\s*truck/i.test(d.name);
+                const displayTier = isFouts ? 'comvoy' : d.tier;
                 const color = tierColor(d.tier);
-                const marker = L.marker([d.lat, d.lng], { icon: createTacticalIcon(d.tier, color) });
+                const marker = L.marker([d.lat, d.lng], { icon: createTacticalIcon(displayTier, color), zIndexOffset: isFouts ? 1000 : 0 });
                 marker._trueLat = d.lat;
                 marker._trueLng = d.lng;
                 if (d.id) _markerMap.set(d.id, marker);
