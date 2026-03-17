@@ -4922,11 +4922,16 @@
                 requestAnimationFrame(() => { scroll.scrollTop = scroll.scrollHeight; });
             }
 
+            function _pickGreet(exclude) {
+                const h = new Date().getHours();
+                const pool = (_hourlyGreets[h] || ["Ready when you are."]).filter(g => g !== exclude);
+                return pool[Math.floor(Math.random() * pool.length)];
+            }
+
             function buildWelcomeHTML() {
                 const eye = ottoEyeSvgFull();
-                const h = new Date().getHours();
-                const pool = _hourlyGreets[h] || ["Ready when you are."];
-                const greet = pool[Math.floor(Math.random() * pool.length)];
+                const greet = _pickGreet(null);
+                _lastHomeGreet = greet;
                 return `<div class="welcome" id="welcome">
 <div class="orb-hero"><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
 ${eye}</div>
@@ -4967,38 +4972,39 @@ ${eye}</div>
                 "Dealers gaining vehicles"
             ];
 
-            /* ~50 hourly greetings — rotates once per hour, time-of-day aligned */
+            /* Hourly greetings — 4 per hour so home & chat always differ */
             const _hourlyGreets = {
-                0: ["Burning the midnight oil? I'm here for it.", "The night shift — let's get ahead of everyone."],
-                1: ["Still at it? Respect. What do you need?", "1 AM grind — let's make it count."],
-                2: ["Late night intel session? I'm ready.", "Can't sleep? Let's find some leads."],
-                3: ["3 AM — this is when legends prep.", "The early bird catches the deal."],
-                4: ["Up before the sun — let's move.", "4 AM hustle. What's the play?"],
-                5: ["Early riser — your competitors are still sleeping.", "Dawn patrol. Let's scout the territory."],
-                6: ["Morning — coffee and conquests.", "6 AM — time to plan the day's wins."],
-                7: ["Morning — let's find some opportunities.", "Rise and grind — who needs a visit today?"],
-                8: ["New day, new leads. Where do we start?", "Morning — your territory's been busy overnight."],
-                9: ["Let's hit the ground running.", "9 AM — prime selling hours. Who's first?"],
-                10: ["Mid-morning momentum. What's the target?", "10 AM — deals don't close themselves."],
-                11: ["Almost lunch — let's squeeze in one more move.", "11 AM — stay sharp, stay selling."],
-                12: ["Lunch break intel? Smart move.", "Noon — halfway through, let's check the scoreboard."],
-                13: ["Afternoon — ready to dig into the data.", "Post-lunch push. Who's on the list?"],
-                14: ["Let's make this afternoon count.", "2 PM — the afternoon belongs to closers."],
-                15: ["What's on your radar this afternoon?", "3 PM — still time to make today a win."],
-                16: ["Afternoon — I've got intel when you're ready.", "4 PM — one more play before the whistle."],
-                17: ["It's five o'clock somewhere — but we're still closing.", "5 PM — clock out or lock in? Your call."],
-                18: ["Evening — prepping for tomorrow's wins?", "6 PM — the after-hours advantage."],
-                19: ["Evening hustle — tomorrow's pipeline starts now.", "7 PM — quiet hours, loud strategy."],
-                20: ["Late session? Let's plan your next move.", "8 PM — getting ahead while others unwind."],
-                21: ["Night owl mode — I've got the data.", "9 PM — tomorrow's calls start with tonight's prep."],
-                22: ["10 PM — still grinding? Let's make it worthwhile.", "Late night strategy session. What do you need?"],
-                23: ["Almost midnight — one last look at the numbers?", "11 PM — the day's not over 'til you say so."]
+                0: ["Burning the midnight oil? I'm here for it.", "The night shift — let's get ahead of everyone.", "Midnight moves. What's the plan?", "While they sleep, we strategize."],
+                1: ["Still at it? Respect. What do you need?", "1 AM grind — let's make it count.", "The world's quiet. Let's find opportunities.", "Night ops — I've got fresh data."],
+                2: ["Late night intel session? I'm ready.", "Can't sleep? Let's find some leads.", "2 AM — only the serious are still up.", "Quiet hours, big moves. What's next?"],
+                3: ["3 AM — this is when legends prep.", "The early bird catches the deal.", "Before the sun rises, we plan.", "3 AM hustle — let's build the pipeline."],
+                4: ["Up before the sun — let's move.", "4 AM hustle. What's the play?", "First light's coming. Let's get ready.", "The early advantage is yours."],
+                5: ["Early riser — your competitors are still sleeping.", "Dawn patrol. Let's scout the territory.", "5 AM — head start on the whole market.", "Up and at it. Where do we begin?"],
+                6: ["Morning — coffee and conquests.", "6 AM — time to plan the day's wins.", "Fresh start. What's the priority?", "Dawn's here — let's line up today's wins."],
+                7: ["Morning — let's find some opportunities.", "Rise and grind — who needs a visit today?", "7 AM — the day is wide open.", "Good morning. I've got leads waiting."],
+                8: ["New day, new leads. Where do we start?", "Morning — your territory's been busy overnight.", "8 AM — let's own this day.", "Coffee's hot, data's fresh. Let's go."],
+                9: ["Let's hit the ground running.", "9 AM — prime selling hours. Who's first?", "The market's moving. Stay ahead.", "Morning momentum — let's keep it rolling."],
+                10: ["Mid-morning momentum. What's the target?", "10 AM — deals don't close themselves.", "Who's next on the list?", "Let's turn this morning into numbers."],
+                11: ["Almost lunch — let's squeeze in one more move.", "11 AM — stay sharp, stay selling.", "One more win before noon.", "The morning's not over yet."],
+                12: ["Lunch break intel? Smart move.", "Noon — halfway through, let's check the scoreboard.", "Midday check-in. How's the pipeline?", "Refuel and refocus. What's next?"],
+                13: ["Afternoon — ready to dig into the data.", "Post-lunch push. Who's on the list?", "1 PM — second half starts now.", "Let's make this afternoon productive."],
+                14: ["Let's make this afternoon count.", "2 PM — the afternoon belongs to closers.", "Peak hours. Who needs attention?", "Afternoon push — I've got intel."],
+                15: ["What's on your radar this afternoon?", "3 PM — still time to make today a win.", "The day's not done. Neither are we.", "Afternoon check — any fires to put out?"],
+                16: ["Afternoon — I've got intel when you're ready.", "4 PM — one more play before the whistle.", "Last stretch. Make it count.", "4 PM — closers close late."],
+                17: ["It's five o'clock somewhere — but we're still closing.", "5 PM — clock out or lock in? Your call.", "End of day? Or just getting started?", "5 PM — the after-hours edge."],
+                18: ["Evening — prepping for tomorrow's wins?", "6 PM — the after-hours advantage.", "While others unwind, we plan.", "Evening intel session? Let's do it."],
+                19: ["Evening hustle — tomorrow's pipeline starts now.", "7 PM — quiet hours, loud strategy.", "Tonight's prep is tomorrow's win.", "The evening shift. What's the move?"],
+                20: ["Late session? Let's plan your next move.", "8 PM — getting ahead while others unwind.", "Night strategy. I like it.", "Tomorrow's calls start with tonight's prep."],
+                21: ["Night owl mode — I've got the data.", "9 PM — tomorrow's calls start with tonight's prep.", "Burning late? Let's make it worth it.", "The quiet hours — perfect for planning."],
+                22: ["10 PM — still grinding? Let's make it worthwhile.", "Late night strategy session. What do you need?", "Almost done? Or just warming up?", "10 PM intel drop. What do you need?"],
+                23: ["Almost midnight — one last look at the numbers?", "11 PM — the day's not over 'til you say so.", "Last call. What's on your mind?", "Midnight approaches. One more look?"]
             };
 
+            /* Track last-used greeting so home & chat never show the same one */
+            let _lastHomeGreet = null;
+
             function _buildGreeting() {
-                const h = new Date().getHours();
-                const pool = _hourlyGreets[h] || ["Ready when you are."];
-                const greet = pool[Math.floor(Math.random() * pool.length)];
+                const greet = _pickGreet(_lastHomeGreet);
                 const eye = ottoEyeSvgFull();
                 const colors = ['rgba(79,143,255,', 'rgba(168,85,247,', 'rgba(0,212,255,'];
                 let particles = '';
@@ -5130,12 +5136,12 @@ ${eye}</div>
                 const bar = document.querySelector('.input-bar');
                 const area = document.querySelector('.input-area');
                 if (bar && area) area.appendChild(bar);
-                // Set greeting text and init eye tracking
+                // Set greeting text (different from chat) and init eye tracking
                 const greetEl = Core.$('welcomeGreet');
                 if (greetEl) {
-                    const h = new Date().getHours();
-                    const pool = _hourlyGreets[h] || ["Ready when you are."];
-                    greetEl.textContent = pool[Math.floor(Math.random() * pool.length)];
+                    const g = _pickGreet(null);
+                    _lastHomeGreet = g;
+                    greetEl.textContent = g;
                 }
                 Effects.initEyeTracking();
                 checkApiStatus();
@@ -5254,6 +5260,7 @@ ${eye}</div>
                 onKey, autoGrow, expandQuickForm, handleActionCard,
                 submitTrip, submitDealer, submitTerritory, loadReps,
                 toggleDropdown, selectSnapshot, checkApiStatus,
+                _pickGreet, _setLastHomeGreet: g => { _lastHomeGreet = g; },
             };
         })();
 
@@ -5431,27 +5438,14 @@ ${eye}</div>
             return { init, toggle, send };
         })();
 
-        // Init effects on load
+        // Init welcome greeting on load — Chat IIFE reads _lastHomeGreet to pick a different one
         (function _initWelcomeGreet() {
             const el = Core.$('welcomeGreet');
             if (!el) return;
-            const h = new Date().getHours();
-            const pool = {
-                0:["Burning the midnight oil? I'm here for it."],1:["Still at it? Respect. What do you need?"],
-                2:["Late night intel session? I'm ready."],3:["3 AM — this is when legends prep."],
-                4:["Up before the sun — let's move."],5:["Early riser — your competitors are still sleeping."],
-                6:["Morning — coffee and conquests."],7:["Morning — let's find some opportunities."],
-                8:["New day, new leads. Where do we start?"],9:["Let's hit the ground running."],
-                10:["Mid-morning momentum. What's the target?"],11:["Almost lunch — let's squeeze in one more move."],
-                12:["Lunch break intel? Smart move."],13:["Afternoon — ready to dig into the data."],
-                14:["Let's make this afternoon count."],15:["What's on your radar this afternoon?"],
-                16:["Afternoon — I've got intel when you're ready."],17:["It's five o'clock somewhere — but we're still closing."],
-                18:["Evening — prepping for tomorrow's wins?"],19:["Evening hustle — tomorrow's pipeline starts now."],
-                20:["Late session? Let's plan your next move."],21:["Night owl mode — I've got the data."],
-                22:["10 PM — still grinding? Let's make it worthwhile."],23:["Almost midnight — one last look at the numbers?"]
-            };
-            const greets = pool[h] || ["Ready when you are."];
-            el.textContent = greets[Math.floor(Math.random() * greets.length)];
+            // Chat IIFE sets _lastHomeGreet via buildWelcomeHTML/goHome — seed it here for the static HTML
+            const g = Chat._pickGreet ? Chat._pickGreet(null) : 'Ready when you are.';
+            el.textContent = g;
+            if (Chat._setLastHomeGreet) Chat._setLastHomeGreet(g);
         })();
         Effects.initEyeTracking();
 
