@@ -7501,19 +7501,38 @@ ${eye}</div>
             if (!legend) return;
             const existing = legend.querySelector('.map-legend-route');
             if (active && !existing) {
+                legend.style.flexDirection = 'column';
+                legend.style.gap = '8px';
+                legend.style.alignItems = 'flex-start';
+                // Wrap tier items in a row
+                const tierItems = legend.querySelectorAll(':scope > .map-legend-item');
+                const tierRow = document.createElement('div');
+                tierRow.className = 'map-legend-tier-row';
+                tierRow.style.cssText = 'display:flex;gap:12px;align-items:center;flex-wrap:wrap;';
+                tierItems.forEach(el => tierRow.appendChild(el));
+                legend.insertBefore(tierRow, legend.firstChild);
+                // Route section
                 const div = document.createElement('div');
                 div.className = 'map-legend-route';
-                div.style.cssText = 'margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);';
+                div.style.cssText = 'display:flex;gap:12px;align-items:center;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08);width:100%;';
                 div.innerHTML = `
-                    <div class="map-legend-title" style="margin-bottom:8px">Route</div>
-                    <div class="map-legend-item"><div class="map-legend-dot" style="background:#22c55e"></div> Start</div>
-                    <div class="map-legend-item"><div class="map-legend-dot" style="background:#ef4444"></div> End</div>
-                    <div class="map-legend-item"><div class="map-legend-dot" style="background:#4f8fff;box-shadow:0 0 6px #4f8fff;"></div> Route line</div>
-                    <div class="map-legend-item"><div class="map-legend-dot" style="background:#ff6b35;box-shadow:0 0 6px #ff6b35;animation:routePulse 2s ease-out infinite;"></div> Recommended</div>
+                    <span class="map-legend-title" style="margin-right:2px">Route</span>
+                    <span class="map-legend-item"><span class="map-legend-dot" style="background:#22c55e"></span> Start</span>
+                    <span class="map-legend-item"><span class="map-legend-dot" style="background:#ef4444"></span> End</span>
+                    <span class="map-legend-item"><span class="map-legend-dot" style="background:#ff6b35;box-shadow:0 0 6px #ff6b35;animation:routePulse 2s ease-out infinite;"></span> Recommended</span>
                 `;
                 legend.appendChild(div);
             } else if (!active && existing) {
                 existing.remove();
+                // Unwrap tier items back to legend root
+                const tierRow = legend.querySelector('.map-legend-tier-row');
+                if (tierRow) {
+                    while (tierRow.firstChild) legend.appendChild(tierRow.firstChild);
+                    tierRow.remove();
+                }
+                legend.style.flexDirection = 'row';
+                legend.style.gap = '12px';
+                legend.style.alignItems = 'center';
             }
         }
 
