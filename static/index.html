@@ -5534,7 +5534,7 @@ ${eye}</div>
                         '<div class="tm-kpi-row" id="tmKpiRow">' +
                             '<div class="tm-kpi-card"><div class="tm-kpi-value" id="tmKpiTrips">&mdash;</div><div class="tm-kpi-label">Upcoming</div></div>' +
                             '<div class="tm-kpi-card"><div class="tm-kpi-value" id="tmKpiStops">&mdash;</div><div class="tm-kpi-label">Total Trips</div></div>' +
-                            '<div class="tm-kpi-card"><div class="tm-kpi-value" id="tmKpiHot">&mdash;</div><div class="tm-kpi-label">Hot Leads</div></div>' +
+                            '<div class="tm-kpi-card"><div class="tm-kpi-value" id="tmKpiHot">&mdash;</div><div class="tm-kpi-label">Hot on Route</div></div>' +
                         '</div>' +
 
                         /* Single Toolbar: tabs + new trip */
@@ -5587,18 +5587,18 @@ ${eye}</div>
                 var list = document.getElementById('tmTripsList');
                 if (list) list.innerHTML = '<div class="tm-empty">Loading trips...</div>';
                 try {
-                    var [tripsRes, leadsRes] = await Promise.all([
+                    var [tripsRes, hotRes] = await Promise.all([
                         fetchT(API_BASE + '/api/travel/plans/' + _selectedRepId),
-                        fetchT(API_BASE + '/api/scoring/leads?tier=hot&limit=100').catch(function() { return null; })
+                        fetchT(API_BASE + '/api/travel/route-hot-count/' + _selectedRepId).catch(function() { return null; })
                     ]);
                     if (!tripsRes.ok) throw new Error('Failed');
                     _tmTrips = await tripsRes.json();
                     if (!Array.isArray(_tmTrips)) _tmTrips = _tmTrips.plans || _tmTrips.data || [];
 
                     var hotCount = 0;
-                    if (leadsRes && leadsRes.ok) {
-                        var ld = await leadsRes.json();
-                        hotCount = ld.total || (ld.leads ? ld.leads.length : 0);
+                    if (hotRes && hotRes.ok) {
+                        var hd = await hotRes.json();
+                        hotCount = hd.hot_count || 0;
                     }
                     _hotLeadCount = hotCount;
                     renderTrips();

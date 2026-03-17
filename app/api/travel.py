@@ -456,6 +456,55 @@ def delete_travel_plan(plan_id: str):
     return {"status": "deleted", "plan_id": plan_id}
 
 
+@router.get("/route-hot-count/{rep_id}")
+def get_route_hot_count(rep_id: str, buffer_miles: float = Query(20)):
+    """Count unique hot-tier dealers along all upcoming trip routes for a rep."""
+    db = get_service_client()
+    today = date.today().isoformat()
+
+    plans = db.table("rep_travel_plans").select(
+        "start_lat, start_lng, end_lat, end_lng, route_polyline"
+    ).eq("rep_id", rep_id).gte("travel_date", today).execute()
+
+    if not plans.data:
+        return {"hot_count": 0}
+
+    # Get latest snapshot for lead scores
+    snap = db.table("report_snapshots").select("id").order("report_date", desc=True).limit(1).execute()
+    snap_id = snap.data[0]["id"] if snap.data else None
+    if not snap_id:
+        return {"hot_count": 0}
+
+    hot_dealer_ids = set()
+    for p in plans.data:
+        rpc_params = {
+            "p_start_lat": p["start_lat"],
+            "p_start_lng": p["start_lng"],
+            "p_end_lat": p["end_lat"],
+            "p_end_lng": p["end_lng"],
+            "p_buffer_miles": buffer_miles,
+        }
+        if p.get("route_polyline"):
+            rpc_params["p_polyline_wkt"] = p["route_polyline"]
+
+        try:
+            rd = db.rpc("find_dealers_along_route", rpc_params).execute()
+            if rd.data:
+                hot_dealer_ids.update(r["dealer_id"] for r in rd.data)
+        except Exception as e:
+            logger.warning(f"Route dealer lookup failed: {e}")
+
+    if not hot_dealer_ids:
+        return {"hot_count": 0}
+
+    # Filter to hot-tier only
+    scores = db.table("lead_scores").select("dealer_id").eq(
+        "snapshot_id", snap_id
+    ).eq("tier", "hot").in_("dealer_id", list(hot_dealer_ids)).execute()
+
+    return {"hot_count": len(scores.data) if scores.data else 0}
+
+
 # ---------------------------------------------------------------------------
 # Auto-briefing background task
 # ---------------------------------------------------------------------------
