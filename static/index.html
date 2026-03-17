@@ -6746,7 +6746,7 @@ ${eye}</div>
                 open, getMap: () => _map, getAllDealers: () => _allDealers,
                 getClusterLayer: () => _clusterLayer, setClusterLayer: v => { _clusterLayer = v; },
                 getMarkerMap: () => _markerMap, addMarkers, updateStats,
-                isLoaded: () => _mapLoaded,
+                isLoaded: () => _mapLoaded, createTacticalIcon,
             };
         })();
 
@@ -7411,13 +7411,7 @@ ${eye}</div>
                 data.dealers.forEach((d, i) => {
                     const color = tierColor(d.lead_tier);
                     const isTop5 = i < 5;
-                    const icon = L.divIcon({
-                        html: `<div class="route-dealer-marker">
-                            <div class="dot" style="background:${color};box-shadow:0 0 8px ${color}80;"></div>
-                            ${isTop5 ? `<div class="pulse-ring" style="border-color:${color};"></div>` : ''}
-                        </div>`,
-                        className: 'route-marker', iconSize: [16, 16], iconAnchor: [8, 8],
-                    });
+                    const icon = DealerMap.createTacticalIcon(d.lead_tier, color);
                     const tierLabel = d.lead_tier ? d.lead_tier.charAt(0).toUpperCase() + d.lead_tier.slice(1) : 'Unscored';
                     const tierClass = d.lead_tier || 'cold';
                     const distStr = d.dist_from_route_mi != null ? d.dist_from_route_mi.toFixed(1) : '?';
