@@ -4644,29 +4644,16 @@
 
             function initEyeTracking() { /* disabled for perf */ }
 
-            // Spotlight glow on cards — RAF-throttled
-            let _spotRAF = null;
+            // Spotlight glow on cards — CSS-only hover, JS just tracks cursor for radial gradient
             document.addEventListener('mousemove', e => {
-                if (_spotRAF) return;
-                _spotRAF = requestAnimationFrame(() => {
-                    _spotRAF = null;
-                    document.querySelectorAll('.action-card, .hero-card').forEach(card => {
-                        const r = card.getBoundingClientRect();
-                        const x = e.clientX - r.left;
-                        const y = e.clientY - r.top;
-                        const nx = x / r.width - 0.5;
-                        const ny = y / r.height - 0.5;
-                        const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
-                        if (inside) {
-                            card.style.setProperty('--spot-x', x + 'px');
-                            card.style.setProperty('--spot-y', y + 'px');
-                            if (!card.classList.contains('expanded')) {
-                                card.style.transform = 'translateY(-2px) perspective(600px) rotateX(' + (-ny * 8) + 'deg) rotateY(' + (nx * 8) + 'deg)';
-                            }
-                        } else if (!card.classList.contains('expanded')) {
-                            card.style.transform = '';
-                        }
-                    });
+                const cards = document.querySelectorAll('.action-card, .hero-card');
+                if (!cards.length) return;
+                cards.forEach(card => {
+                    const r = card.getBoundingClientRect();
+                    if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
+                        card.style.setProperty('--spot-x', (e.clientX - r.left) + 'px');
+                        card.style.setProperty('--spot-y', (e.clientY - r.top) + 'px');
+                    }
                 });
             });
 
