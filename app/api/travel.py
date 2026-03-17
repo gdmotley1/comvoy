@@ -263,10 +263,29 @@ async def get_route_dealers(
     if is_day_trip:
         # Same-location day trip: sort by distance from base (closest first)
         dealers.sort(key=lambda x: x["dist_from_route_mi"])
+        dealers = dealers[:limit]
     else:
-        # Route: sort by position along route (start → end)
-        dealers.sort(key=lambda x: x["route_position"])
-    dealers = dealers[:limit]
+        # Route: distribute evenly along the route to avoid endpoint clustering
+        # Divide route into segments, pick best dealers from each
+        n_segments = min(limit, 10)
+        seg_size = 1.0 / n_segments
+        selected = []
+        remaining = []
+        for seg_i in range(n_segments):
+            seg_start = seg_i * seg_size
+            seg_end = seg_start + seg_size
+            seg_dealers = [d for d in dealers if seg_start <= d["route_position"] < seg_end]
+            # Sort by score descending, then distance ascending
+            seg_dealers.sort(key=lambda x: (-(x.get("lead_score") or 0), x["dist_from_route_mi"]))
+            per_seg = max(1, limit // n_segments)
+            selected.extend(seg_dealers[:per_seg])
+            remaining.extend(seg_dealers[per_seg:])
+        # Fill remaining slots with best leftover dealers
+        remaining.sort(key=lambda x: (-(x.get("lead_score") or 0), x["dist_from_route_mi"]))
+        selected.extend(remaining[:max(0, limit - len(selected))])
+        # Sort final list by route position for display order
+        selected.sort(key=lambda x: x["route_position"])
+        dealers = selected[:limit]
 
     # Optimize stop order with Distance Matrix API if requested
     optimized = False

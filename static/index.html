@@ -5720,7 +5720,7 @@ ${eye}</div>
                 var trip = _tmTrips.find(function(t) { return t.id === planId; });
                 if (!trip) return;
                 try {
-                    var res = await fetchT(API_BASE + '/api/travel/route-dealers?rep_id=' + _selectedRepId + '&travel_date=' + trip.travel_date + '&buffer_miles=25&limit=15');
+                    var res = await fetchT(API_BASE + '/api/travel/route-dealers?rep_id=' + _selectedRepId + '&travel_date=' + trip.travel_date + '&buffer_miles=25&limit=50');
                     if (!res.ok) throw new Error('Failed');
                     var data = await res.json();
                     var dealers = data.dealers || [];
@@ -7326,11 +7326,23 @@ ${eye}</div>
                 const nearby = TripCreate.highlightProximity(routeCoords, 20);
                 TripCreate.renderSummary(nearby);
             }
+
+            // Fit bounds to include route + dealer markers
+            const _map = DealerMap.getMap();
+            if (_routeLayer) {
+                const bounds = _routeLayer.getBounds ? _routeLayer.getBounds() : L.latLngBounds();
+                if (_routeDealerLayer) {
+                    _routeDealerLayer.eachLayer(m => {
+                        if (m.getLatLng) bounds.extend(m.getLatLng());
+                    });
+                }
+                if (bounds.isValid()) _map.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
+            }
         }
 
             function drawPolyline(trip) {
                 const _map = DealerMap.getMap();
-                _routeLayer = L.layerGroup().addTo(_map);
+                _routeLayer = L.featureGroup().addTo(_map);
                 let coords = parseWkt(trip.route_polyline);
             if (coords.length < 2 && trip.start_lat && trip.end_lat) {
                 coords = [[trip.start_lat, trip.start_lng], [trip.end_lat, trip.end_lng]];
@@ -7374,18 +7386,19 @@ ${eye}</div>
             }).bindPopup(`<div class="map-popup-name">End</div><div class="map-popup-loc">${esc(trip.end_location)}</div>`)
               .addTo(_routeLayer);
 
-            _map.fitBounds(mainLine.getBounds(), { padding: [60, 280], maxZoom: 10 });
+            // Initial fit — will be overridden by selectRouteTrip after dealers load
+            _map.fitBounds(mainLine.getBounds(), { padding: [60, 60], maxZoom: 8 });
         }
 
             async function loadDealers(trip) {
                 const _map = DealerMap.getMap();
-                _routeDealerLayer = L.layerGroup().addTo(_map);
+                _routeDealerLayer = L.featureGroup().addTo(_map);
             try {
                 const params = new URLSearchParams({
                     rep_id: _routeSelectedRep,
                     travel_date: trip.travel_date,
-                    buffer_miles: '20',
-                    limit: '25',
+                    buffer_miles: '25',
+                    limit: '50',
                 });
                 const res = await fetchT(API_BASE + `/api/travel/route-dealers?${params}`);
                 if (!res.ok) throw new Error('Failed to load route dealers');
