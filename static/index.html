@@ -7630,7 +7630,7 @@ ${eye}</div>
                     ${brands.map((b, i) => `<div class="dash-hbar-row">
                         <div class="dash-hbar-label">${b.brand}</div>
                         <div class="dash-hbar-track">
-                            <div class="dash-hbar-fill dash-bar" style="width:0%;background:${COLORS[i % COLORS.length]};opacity:0.7" data-w="${(b.count/maxBrand*100).toFixed(1)}%"></div>
+                            <div class="dash-hbar-fill dash-bar" style="width:0%;background:#4f8fff;opacity:0.7" data-w="${(b.count/maxBrand*100).toFixed(1)}%"></div>
                             <span class="dash-hbar-tooltip">${b.count.toLocaleString()} vehicles</span>
                         </div>
                         <div class="dash-hbar-val">${b.share}%</div>
@@ -7791,7 +7791,7 @@ ${eye}</div>
                         return `<div class="dash-hbar-row">
                             <div class="dash-hbar-label" ${isSmyrna ? 'style="color:#D2691E;font-weight:600"' : ''}>${b.builder}</div>
                             <div class="dash-hbar-track">
-                                <div class="dash-hbar-fill dash-bar ${isSmyrna ? 'smyrna' : ''}" style="width:0%;${isSmyrna ? '' : 'background:' + COLORS[(i+3) % COLORS.length] + ';opacity:0.7'}" data-w="${(b.count/maxBuilder*100).toFixed(1)}%"></div>
+                                <div class="dash-hbar-fill dash-bar ${isSmyrna ? 'smyrna' : ''}" style="width:0%;${isSmyrna ? '' : 'background:#4f8fff;opacity:0.7'}" data-w="${(b.count/maxBuilder*100).toFixed(1)}%"></div>
                                 <span class="dash-hbar-tooltip">${b.count.toLocaleString()} vehicles · ${b.share}%</span>
                             </div>
                             <div class="dash-hbar-val">${fmtK(b.count)}</div>
@@ -7925,7 +7925,7 @@ ${eye}</div>
                     ${geoData.map((g, i) => `<div class="dash-hbar-row">
                         <div class="dash-hbar-label">${useCity ? g.city : g.state}</div>
                         <div class="dash-hbar-track">
-                            <div class="dash-hbar-fill dash-bar" style="width:0%;background:${geoColors[i % geoColors.length]};opacity:0.7" data-w="${(g.vehicles/maxGeo*100).toFixed(1)}%"></div>
+                            <div class="dash-hbar-fill dash-bar" style="width:0%;background:#4f8fff;opacity:0.7" data-w="${(g.vehicles/maxGeo*100).toFixed(1)}%"></div>
                             <span class="dash-hbar-tooltip">${g.vehicles.toLocaleString()} vehicles</span>
                         </div>
                         <div class="dash-hbar-val">${fmtK(g.vehicles)}</div>
