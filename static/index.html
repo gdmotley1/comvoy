@@ -7435,6 +7435,8 @@ ${eye}</div>
                     const marker = L.marker([d.lat, d.lng], { icon, zIndexOffset: 500 })
                         .bindPopup(popup, { maxWidth: 280 })
                         .addTo(_routeDealerLayer);
+                    if (marker._icon) marker._icon.classList.add('route-marker');
+                    marker.on('add', function() { if (marker._icon) marker._icon.classList.add('route-marker'); });
                     marker.bindTooltip(`${esc(d.name)} — ${d.vehicles || 0} vehicles`, {
                         direction: 'top', offset: [0, -10], className: 'map-hover-tooltip'
                     });
