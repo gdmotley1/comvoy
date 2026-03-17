@@ -7,7 +7,7 @@ TMPDIR=$(mktemp -d)
 cp -r app api requirements.txt vercel.json "$TMPDIR/"
 cp -r .vercel "$TMPDIR/" 2>/dev/null || true
 (cd "$TMPDIR" && vercel deploy --prod --yes)
-rm -rf "$TMPDIR"
+rm -rf "$TMPDIR" 2>/dev/null || true
 
 echo ""
 echo "=== Pushing to GitHub (triggers GitHub Pages deploy) ==="

@@ -213,8 +213,7 @@ TOOL_DEFINITIONS = [
         "description": (
             "Get ranked leads scored by opportunity value (0-100). Tiers: hot (70+), warm (40-69), cold (<40). "
             "Four factors: fleet scale (0-20), product fit (0-25), Smyrna penetration (0-30), growth signal (0-25). "
-            "Opportunity types: conquest (proven buyer <5%), expand (5-15%), grow (15-30%), defend (30%+), whitespace (zero Smyrna), at_risk (lost Smyrna). "
-            "Use for 'who should I call?', 'top opportunities in TX', 'hot leads', 'conquest targets', 'at-risk accounts'."
+            "Use for 'who should I call?', 'top opportunities in TX', 'hot leads'."
         ),
         "input_schema": {
             "type": "object",
@@ -227,11 +226,6 @@ TOOL_DEFINITIONS = [
                     "type": "string",
                     "description": "Filter by tier: 'hot', 'warm', or 'cold'. Optional.",
                     "enum": ["hot", "warm", "cold"],
-                },
-                "opportunity_type": {
-                    "type": "string",
-                    "description": "Filter: 'conquest' (proven <5%), 'expand' (5-15%), 'grow' (15-30%), 'defend' (30%+), 'whitespace' (zero Smyrna), 'at_risk' (lost Smyrna). Optional.",
-                    "enum": ["conquest", "expand", "grow", "defend", "whitespace", "at_risk"],
                 },
                 "limit": {
                     "type": "integer",
@@ -760,7 +754,7 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                 if result.smyrna_details:
                     briefing["smyrna_body_types"] = result.smyrna_details.get("top_smyrna_body_types")
             else:
-                briefing["smyrna"] = "NONE — whitespace opportunity"
+                briefing["smyrna"] = "NONE — zero Smyrna products"
             # Enrich with cached Google Places data (sync DB read, no API call)
             try:
                 db_p = get_service_client()
@@ -866,7 +860,6 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
             result = _get_leads(
                 state=tool_input.get("state"),
                 tier=tool_input.get("tier"),
-                opportunity_type=tool_input.get("opportunity_type"),
                 limit=limit,
             )
             # Include scoring factors so Otto can explain WHY each dealer scored the way they did
@@ -876,7 +869,6 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                     "id": lead["dealer_id"], "name": lead["name"],
                     "city": lead["city"], "state": lead["state"],
                     "score": lead["score"], "tier": lead["lead_tier"] if "lead_tier" in lead else lead["tier"],
-                    "type": lead.get("opportunity") or lead.get("type"),
                 }
                 if lead.get("lat"):
                     entry["lat"] = round(lead["lat"], 4)
@@ -898,8 +890,6 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                         why["growth_pts"] = f"{f['growth_signal']}/25"
                     if f.get("growth_pct") is not None:
                         why["growth_pct"] = f"{f['growth_pct']}%"
-                    if f.get("at_risk_bonus"):
-                        why["at_risk"] = True
                     if f.get("note"):
                         why["note"] = f["note"]
                     entry["why"] = why
@@ -969,8 +959,6 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                 if d.get("lead_score"):
                     entry["score"] = d["lead_score"]
                     entry["tier"] = d["lead_tier"]
-                if d.get("opportunity"):
-                    entry["type"] = d["opportunity"]
                 # Include scoring factors for score explanation
                 f = factors_map.get(d.get("dealer_id"), {})
                 if f:
@@ -983,8 +971,6 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                         why["pen_pct"] = f"{f['penetration_pct']}%"
                     if f.get("growth_pct") is not None:
                         why["growth"] = f"{f['growth_pct']}%"
-                    if f.get("at_risk_bonus"):
-                        why["at_risk"] = True
                     entry["why"] = why
                 dealers.append(entry)
             output = {
@@ -1020,7 +1006,7 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
             def _fetch_score():
                 if not snap_id:
                     return None
-                scores = db.table("lead_scores").select("score, tier, opportunity_type, factors").eq(
+                scores = db.table("lead_scores").select("score, tier, factors").eq(
                     "dealer_id", dealer_id
                 ).eq("snapshot_id", snap_id).execute()
                 return scores.data[0] if scores.data else None
@@ -1180,7 +1166,7 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                     bt["vehicles"] for bt in result.body_type_breakdown
                     if bt["body_type"] in SMYRNA_BODY_TYPES
                 )
-                intel["smyrna_status"] = "WHITESPACE — zero Smyrna products"
+                intel["smyrna_status"] = "Zero Smyrna products"
                 intel["body_type_overlap"] = matching
                 intel["overlap_vehicles"] = total_match
                 intel["talking_point"] = (
@@ -1191,7 +1177,6 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
 
             if score_data:
                 intel["lead_score"] = f"{score_data['score']}/100 ({score_data['tier']})"
-                intel["opportunity_type"] = score_data["opportunity_type"]
                 f = score_data.get("factors", {})
                 if f:
                     intel["score_breakdown"] = {
@@ -1202,8 +1187,6 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                     }
                     if f.get("growth_pct") is not None:
                         intel["score_breakdown"]["growth_pct"] = f"{f['growth_pct']}%"
-                    if f.get("at_risk_bonus"):
-                        intel["score_breakdown"]["at_risk_bonus"] = "+12 (lost Smyrna)"
 
             if trend_intel:
                 intel["trend"] = trend_intel
@@ -1366,7 +1349,7 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
             # Query lead scores for target states, joined with dealers for location
             # Supabase PostgREST: use foreign key join — include factors for score explanation
             scores = db.table("lead_scores").select(
-                "dealer_id, score, tier, opportunity_type, factors, "
+                "dealer_id, score, tier, factors, "
                 "dealers!inner(id, name, city, state, latitude, longitude)"
             ).eq("snapshot_id", snap_id).gte("score", min_score).in_(
                 "dealers.state", states
@@ -1395,7 +1378,6 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                     "lng": d["longitude"],
                     "score": row["score"],
                     "tier": row["tier"],
-                    "type": row["opportunity_type"],
                     "factors": row.get("factors", {}),
                 })
 
@@ -1464,8 +1446,6 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                             why["pen_pct"] = f"{f['penetration_pct']}%"
                         if f.get("growth_pct") is not None:
                             why["growth"] = f"{f['growth_pct']}%"
-                        if f.get("at_risk_bonus"):
-                            why["at_risk"] = True
                         entry["why"] = why
                     # Add distance from previous stop
                     if i > 1:

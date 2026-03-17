@@ -61,7 +61,7 @@ def generate_upload_report(snapshot_id: str) -> dict:
 
     # Lead scores for this snapshot
     scores = db.table("lead_scores").select(
-        "dealer_id, score, tier, opportunity_type, factors, "
+        "dealer_id, score, tier, factors, "
         "dealers!inner(name, city, state)"
     ).eq("snapshot_id", snapshot_id).order("score", desc=True).execute()
 
@@ -176,7 +176,7 @@ def _build_report(current, prev, cur_map, prev_map, score_map) -> dict:
             "cold": len(cold),
             "top_10": [
                 {"name": r["dealers"]["name"], "state": r["dealers"]["state"],
-                 "score": r["score"], "type": r["opportunity_type"]}
+                 "score": r["score"], "tier": r["tier"]}
                 for r in sorted(score_map.values(), key=lambda x: x["score"], reverse=True)[:10]
             ],
         }

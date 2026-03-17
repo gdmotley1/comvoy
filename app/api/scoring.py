@@ -7,17 +7,9 @@ on a 0-100 scale based on:
   - Smyrna penetration (0-30) — proven buyers > speculation
   - Growth signal (0-25) — growing inventory = active buyer
 
-Opportunity types (what the rep should DO):
-  - conquest:   Has Smyrna <5% — proven buyer, maximum runway
-  - expand:     Smyrna 5-15% — growing relationship, push deeper
-  - grow:       Smyrna 15-30% — solid presence, nurture
-  - defend:     Smyrna 30%+ — strong presence, protect
-  - whitespace: Zero Smyrna — unproven prospect, qualify
-  - at_risk:    Had Smyrna last month, lost it — emergency retention
-
 Tiers:
-  - hot (70-100):  High-value targets — conquest accounts, at-risk retention
-  - warm (40-69):  Active opportunities — growing accounts, qualified whitespace
+  - hot (70-100):  High-value targets
+  - warm (40-69):  Active opportunities
   - cold (0-39):   Low priority — small dealers, poor fit, or saturated
 """
 
@@ -42,17 +34,17 @@ MAX_PRODUCT_FIT = 25       # Body type alignment with Smyrna catalog
 MAX_SMYRNA_PEN = 30        # Penetration-based opportunity (the key factor)
 MAX_GROWTH_SIGNAL = 25     # Inventory growth = active buying signal
 
-# Smyrna penetration points by opportunity type
-PEN_WHITESPACE = 18        # Zero Smyrna — unproven prospect
-PEN_CONQUEST = 28          # <5% penetration — proven buyer, max runway
-PEN_EXPAND = 22            # 5-15% — growing relationship
-PEN_GROW = 15              # 15-30% — solid presence, nurture
-PEN_DEFEND = 10            # 30%+ — strong presence, protect
+# Smyrna penetration points by penetration level
+PEN_ZERO = 18              # Zero Smyrna — prospect
+PEN_LOW = 28               # <5% penetration — most room to grow
+PEN_MID_LOW = 22           # 5-15% — growing presence
+PEN_MID = 15               # 15-30% — solid presence
+PEN_HIGH = 10              # 30%+ — already well-penetrated
 
 # Penetration thresholds (as decimals)
-THRESH_CONQUEST = 0.05     # Below this = conquest
-THRESH_EXPAND = 0.15       # Below this = expand
-THRESH_GROW = 0.30         # Below this = grow; above = defend
+THRESH_LOW = 0.05
+THRESH_MID_LOW = 0.15
+THRESH_MID = 0.30
 
 # Growth signal points
 GROWTH_EXPLOSIVE = 25      # 20%+ growth
@@ -62,9 +54,6 @@ GROWTH_SLIGHT = 6          # 1-4% growth
 GROWTH_FLAT = 3            # 0% (flat)
 GROWTH_DECLINING = 0       # Negative growth
 GROWTH_NEW_DEALER = 15     # New dealer appeared with inventory
-
-# At-risk bonus (on top of whitespace points + tier override to hot)
-AT_RISK_BONUS = 12
 
 # Tier boundaries
 TIER_HOT = 70              # Score >= this = hot
@@ -126,21 +115,17 @@ def compute_lead_scores(snapshot_id: str, prev_snapshot_id: str | None = None) -
         dealer_bts = bt_map.get(did, {})
         prev = prev_map.get(did)
 
-        score, factors, opp_type = _score_dealer(
+        score, factors = _score_dealer(
             vehicles, smyrna, dealer_bts, prev
         )
 
         tier = "hot" if score >= TIER_HOT else "warm" if score >= TIER_WARM else "cold"
-        # At-risk dealers always surface as hot — losing a customer is urgent
-        if opp_type == "at_risk" and tier != "hot":
-            tier = "hot"
 
         scores.append({
             "dealer_id": did,
             "snapshot_id": snapshot_id,
             "score": score,
             "tier": tier,
-            "opportunity_type": opp_type,
             "factors": factors,
         })
 
@@ -158,12 +143,9 @@ def compute_lead_scores(snapshot_id: str, prev_snapshot_id: str | None = None) -
     hot = sum(1 for s in scores if s["tier"] == "hot")
     warm = sum(1 for s in scores if s["tier"] == "warm")
     cold = sum(1 for s in scores if s["tier"] == "cold")
-    whitespace = sum(1 for s in scores if s["opportunity_type"] == "whitespace")
-
     summary = {
         "total_scored": len(scores),
         "hot": hot, "warm": warm, "cold": cold,
-        "whitespace": whitespace,
         "top_score": max(s["score"] for s in scores) if scores else 0,
     }
     logger.info(f"Scored {len(scores)} dealers: {hot} hot, {warm} warm, {cold} cold")
@@ -175,27 +157,19 @@ def _score_dealer(
     smyrna: int,
     body_types: dict[str, int],
     prev: dict | None,
-) -> tuple[int, dict, str]:
-    """Score a single dealer. Returns (score, factors_dict, opportunity_type).
+) -> tuple[int, dict]:
+    """Score a single dealer. Returns (score, factors_dict).
 
     Scoring philosophy: proven buyers > speculation. A dealer already buying
     Smyrna with room to grow is a higher-probability sale than a dealer
     who's never bought. Growth signals matter more than raw size.
-
-    Opportunity types tell the rep WHAT to do:
-      conquest  — proven buyer <5% pen, go win the account
-      expand    — 5-15% pen, push deeper
-      grow      — 15-30% pen, nurture
-      defend    — 30%+ pen, protect the business
-      whitespace — zero Smyrna, qualify and pitch
-      at_risk   — lost Smyrna since last month, emergency retention
     """
 
     factors = {}
 
     # --- Guard: 0-vehicle dealers are not real leads ---
     if vehicles == 0:
-        return 0, {"note": "zero_inventory"}, "whitespace"
+        return 0, {"note": "zero_inventory"}
 
     # --- 1. Fleet Scale (0-MAX_FLEET_SCALE points) ---
     # Size is context, not strategy. Reduced weight vs old model.
@@ -229,20 +203,15 @@ def _score_dealer(
     pen_pct = smyrna / max(vehicles, 1)
 
     if smyrna == 0:
-        opp_type = "whitespace"
-        pen_pts = PEN_WHITESPACE
-    elif pen_pct < THRESH_CONQUEST:
-        opp_type = "conquest"
-        pen_pts = PEN_CONQUEST
-    elif pen_pct < THRESH_EXPAND:
-        opp_type = "expand"
-        pen_pts = PEN_EXPAND
-    elif pen_pct < THRESH_GROW:
-        opp_type = "grow"
-        pen_pts = PEN_GROW
+        pen_pts = PEN_ZERO
+    elif pen_pct < THRESH_LOW:
+        pen_pts = PEN_LOW
+    elif pen_pct < THRESH_MID_LOW:
+        pen_pts = PEN_MID_LOW
+    elif pen_pct < THRESH_MID:
+        pen_pts = PEN_MID
     else:
-        opp_type = "defend"
-        pen_pts = PEN_DEFEND
+        pen_pts = PEN_HIGH
     factors["smyrna_penetration"] = pen_pts
     factors["penetration_pct"] = round(pen_pct * 100)
 
@@ -272,22 +241,14 @@ def _score_dealer(
             factors["growth_pct"] = "new"
     factors["growth_signal"] = growth_pts
 
-    # --- At-Risk Override ---
-    # Had Smyrna last month, lost it this month = emergency retention
-    if prev and (prev.get("smyrna_units") or 0) > 0 and smyrna == 0:
-        opp_type = "at_risk"
-        # Moderate bonus (tier override to "hot" does the heavy lifting)
-        factors["at_risk_bonus"] = AT_RISK_BONUS
-
-    total = min(100, scale_pts + fit_pts + pen_pts + growth_pts + factors.get("at_risk_bonus", 0))
-    return total, factors, opp_type
+    total = min(100, scale_pts + fit_pts + pen_pts + growth_pts)
+    return total, factors
 
 
 @router.get("/leads")
 def get_lead_scores(
     state: str = Query(None, description="Filter by state"),
     tier: str = Query(None, description="Filter by tier: hot, warm, cold"),
-    opportunity_type: str = Query(None, description="Filter: whitespace, upsell, at_risk"),
     limit: int = Query(25, le=100),
 ):
     """Get scored leads ranked by opportunity value."""
@@ -300,7 +261,7 @@ def get_lead_scores(
     snap_id = snap.data[0]["id"]
 
     query = db.table("lead_scores").select(
-        "score, tier, opportunity_type, factors, "
+        "score, tier, factors, "
         "dealers!inner(id, name, city, state, latitude, longitude)"
     ).eq("snapshot_id", snap_id).order("score", desc=True)
 
@@ -308,8 +269,6 @@ def get_lead_scores(
         query = query.eq("dealers.state", state.upper())
     if tier:
         query = query.eq("tier", tier)
-    if opportunity_type:
-        query = query.eq("opportunity_type", opportunity_type)
 
     query = query.limit(limit)
     result = query.execute()
@@ -326,7 +285,6 @@ def get_lead_scores(
             "lng": d["longitude"],
             "score": row["score"],
             "tier": row["tier"],
-            "type": row["opportunity_type"],
             "factors": row["factors"],
         })
 

@@ -238,7 +238,7 @@ def get_map_data(response: Response):
     score_map = {}
     if dealer_ids:
         scores = db.table("lead_scores").select(
-            "dealer_id, score, tier, opportunity_type"
+            "dealer_id, score, tier"
         ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).execute()
         score_map = {r["dealer_id"]: r for r in scores.data}
 
@@ -305,7 +305,6 @@ def get_map_data(response: Response):
             "rank": row["rank"],
             "score": sc.get("score"),
             "tier": sc.get("tier"),
-            "opportunity": sc.get("opportunity_type"),
             "rating": pl.get("rating"),
             "reviews": pl.get("review_count"),
             "hours": pl.get("hours_json"),
