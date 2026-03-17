@@ -60,6 +60,8 @@
             filter: blur(120px);
             opacity: 0.35;
             animation: drift 20s ease-in-out infinite alternate;
+            will-change: transform;
+            contain: strict;
         }
 
         .bg-canvas::before {
@@ -86,6 +88,8 @@
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             animation: drift2 18s ease-in-out infinite alternate;
+            will-change: transform;
+            contain: strict;
         }
 
         @keyframes drift {
@@ -687,7 +691,8 @@
             border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
             filter: blur(80px);
             pointer-events: none;
-            will-change: transform, border-radius;
+            will-change: transform;
+            contain: strict;
         }
         .greet-aurora-1 {
             width: 500px; height: 500px;
@@ -713,10 +718,10 @@
             opacity: 0;
             animation-fill-mode: forwards;
         }
-        /* Staggered aurora fade-in */
-        .greet-aurora-1 { animation: auroraFadeIn 2s ease 0.2s forwards, auroraDrift1 15s ease-in-out 2s infinite alternate, auroraMorph1 12s ease-in-out infinite; }
-        .greet-aurora-2 { animation: auroraFadeIn 2s ease 0.6s forwards, auroraDrift2 20s ease-in-out 2s infinite alternate, auroraMorph2 14s ease-in-out infinite; }
-        .greet-aurora-3 { animation: auroraFadeIn 2s ease 1.0s forwards, auroraDrift3 18s ease-in-out 2s infinite alternate, auroraMorph3 16s ease-in-out infinite; }
+        /* Staggered aurora fade-in — morph removed for perf (invisible through blur) */
+        .greet-aurora-1 { animation: auroraFadeIn 2s ease 0.2s forwards, auroraDrift1 15s ease-in-out 2s infinite alternate; }
+        .greet-aurora-2 { animation: auroraFadeIn 2s ease 0.6s forwards, auroraDrift2 20s ease-in-out 2s infinite alternate; }
+        .greet-aurora-3 { animation: auroraFadeIn 2s ease 1.0s forwards, auroraDrift3 18s ease-in-out 2s infinite alternate; }
 
         @keyframes auroraFadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes auroraDrift1 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(60px, 30px) scale(1.12); } }
@@ -4645,24 +4650,29 @@
 
             function initEyeTracking() { /* disabled for perf */ }
 
-            // Spotlight glow on cards
+            // Spotlight glow on cards — RAF-throttled
+            let _spotRAF = null;
             document.addEventListener('mousemove', e => {
-                document.querySelectorAll('.action-card, .hero-card').forEach(card => {
-                    const r = card.getBoundingClientRect();
-                    const x = e.clientX - r.left;
-                    const y = e.clientY - r.top;
-                    const nx = (e.clientX - r.left) / r.width - 0.5;
-                    const ny = (e.clientY - r.top) / r.height - 0.5;
-                    const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
-                    if (inside) {
-                        card.style.setProperty('--spot-x', x + 'px');
-                        card.style.setProperty('--spot-y', y + 'px');
-                        if (!card.classList.contains('expanded')) {
-                            card.style.transform = 'translateY(-2px) perspective(600px) rotateX(' + (-ny * 8) + 'deg) rotateY(' + (nx * 8) + 'deg)';
+                if (_spotRAF) return;
+                _spotRAF = requestAnimationFrame(() => {
+                    _spotRAF = null;
+                    document.querySelectorAll('.action-card, .hero-card').forEach(card => {
+                        const r = card.getBoundingClientRect();
+                        const x = e.clientX - r.left;
+                        const y = e.clientY - r.top;
+                        const nx = x / r.width - 0.5;
+                        const ny = y / r.height - 0.5;
+                        const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+                        if (inside) {
+                            card.style.setProperty('--spot-x', x + 'px');
+                            card.style.setProperty('--spot-y', y + 'px');
+                            if (!card.classList.contains('expanded')) {
+                                card.style.transform = 'translateY(-2px) perspective(600px) rotateX(' + (-ny * 8) + 'deg) rotateY(' + (nx * 8) + 'deg)';
+                            }
+                        } else if (!card.classList.contains('expanded')) {
+                            card.style.transform = '';
                         }
-                    } else if (!card.classList.contains('expanded')) {
-                        card.style.transform = '';
-                    }
+                    });
                 });
             });
 
@@ -5004,7 +5014,7 @@ ${eye}</div>
                 const eye = ottoEyeSvgFull();
                 const colors = ['rgba(79,143,255,', 'rgba(168,85,247,', 'rgba(0,212,255,'];
                 let particles = '';
-                for (let i = 0; i < 14; i++) {
+                for (let i = 0; i < 8; i++) {
                     const sz = 2 + Math.random() * 3;
                     const x = 10 + Math.random() * 80;
                     const y = 10 + Math.random() * 80;
@@ -6324,7 +6334,7 @@ ${eye}</div>
                     }).addTo(_map);
 
                     // Fouts/Comvoy office — La Grange TX (not in dealer DB, hard-coded)
-                    const _foutsLaGrange = { name: 'Fouts Bros Inc.', lat: 29.9088, lng: -96.8767, addr: '4495 W State Hwy 71, La Grange, TX' };
+                    const _foutsLaGrange = { name: 'Fouts Bros Inc.', lat: 29.9141, lng: -96.9458, addr: '4495 W State Hwy 71, La Grange, TX' };
                     L.marker([_foutsLaGrange.lat, _foutsLaGrange.lng], { icon: createTacticalIcon('comvoy'), zIndexOffset: 1000 })
                         .bindPopup(`<div style="font-weight:600;font-size:13px;margin-bottom:2px">${_foutsLaGrange.name}</div><div style="font-size:11px;color:#aaa">${_foutsLaGrange.addr}</div>`)
                         .bindTooltip(_foutsLaGrange.name, { direction: 'top', offset: [0, -14] })
