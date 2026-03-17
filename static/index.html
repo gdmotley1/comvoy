@@ -5741,15 +5741,14 @@ ${eye}</div>
                 }
             }
 
-            function viewOnMap(planId) {
+            async function viewOnMap(planId) {
                 var trip = _tmTrips.find(function(t) { return t.id === planId; });
                 if (!trip) return;
                 DealerMap.open();
-                setTimeout(function() {
-                    var rep = _reps.find(function(r) { return r.id === _selectedRepId; });
-                    if (rep) RouteOverlay.selectRep(_selectedRepId, rep.name);
-                    setTimeout(function() { RouteOverlay.selectTrip(planId); }, 500);
-                }, 300);
+                await new Promise(function(r) { setTimeout(r, 300); });
+                var rep = _reps.find(function(r) { return r.id === _selectedRepId; });
+                if (rep) await RouteOverlay.selectRep(_selectedRepId, rep.name);
+                await RouteOverlay.selectTrip(planId);
             }
 
             /* Inline chat */
@@ -6370,7 +6369,7 @@ ${eye}</div>
 
             return {
                 open, close, save,
-                highlightProximity, clearProximity,
+                highlightProximity, clearProximity, renderSummary,
             };
         })();
 
@@ -7318,9 +7317,15 @@ ${eye}</div>
             drawPolyline(trip);
             updateLegend(true);
 
-            // Highlight dealers near the confirmed route
-            const routeCoords = parseWkt(trip.route_polyline);
-            if (routeCoords.length >= 2) TripCreate.highlightProximity(routeCoords, 20);
+            // Highlight dealers near the confirmed route + show summary sidebar
+            let routeCoords = parseWkt(trip.route_polyline);
+            if (routeCoords.length < 2 && trip.start_lat && trip.end_lat) {
+                routeCoords = [[trip.start_lat, trip.start_lng], [trip.end_lat, trip.end_lng]];
+            }
+            if (routeCoords.length >= 2) {
+                const nearby = TripCreate.highlightProximity(routeCoords, 20);
+                TripCreate.renderSummary(nearby);
+            }
         }
 
             function drawPolyline(trip) {
@@ -7428,6 +7433,12 @@ ${eye}</div>
                     });
                 });
                 updateRouteStats(data.dealers);
+                // Also populate the "Top Dealers on Route" summary sidebar
+                const summaryDealers = data.dealers.map(d => ({
+                    name: d.name, city: d.city, state: d.state,
+                    vehicles: d.vehicles, score: d.lead_score, tier: d.lead_tier,
+                }));
+                TripCreate.renderSummary(summaryDealers);
             } catch(e) { console.error('Route dealers error:', e); }
         }
 
