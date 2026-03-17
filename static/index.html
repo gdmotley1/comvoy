@@ -2166,6 +2166,30 @@
         .otto-popup-messages .msg-orb { width: 28px; height: 28px; min-width: 28px; }
         .otto-popup-messages .thinking { gap: 10px; }
 
+        .otto-popup-quick {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 12px 14px;
+        }
+        .otto-popup-quick.hidden { display: none; }
+        .otto-quick-btn {
+            background: rgba(79,143,255,0.08);
+            border: 1px solid rgba(79,143,255,0.2);
+            color: rgba(255,255,255,0.85);
+            font-size: 12.5px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.15s ease;
+            line-height: 1.4;
+        }
+        .otto-quick-btn:hover {
+            background: rgba(79,143,255,0.15);
+            border-color: rgba(79,143,255,0.35);
+            transform: translateY(-1px);
+        }
         .otto-popup-input-bar {
             display: flex;
             align-items: center;
@@ -4247,6 +4271,11 @@
         </div>
         <div class="otto-popup-scroll" id="ottoPopupScroll">
             <div class="otto-popup-messages" id="ottoPopupMessages"></div>
+            <div class="otto-popup-quick" id="ottoPopupQuick">
+                <button class="otto-quick-btn" onclick="popupQuick(this)">Who are my hottest leads right now?</button>
+                <button class="otto-quick-btn" onclick="popupQuick(this)">Which dealers are gaining inventory?</button>
+                <button class="otto-quick-btn" onclick="popupQuick(this)">Plan a trip through my top prospects</button>
+            </div>
         </div>
         <div class="otto-popup-input-bar">
             <input type="text" class="otto-popup-input" id="ottoPopupInput" placeholder="Ask Otto..." aria-label="Message Otto"
@@ -5308,6 +5337,8 @@ ${eye}</div>
                 const inp = $('ottoPopupInput');
                 const text = inp?.value.trim();
                 if (!text || _popupBusy) return;
+                const q = $('ottoPopupQuick');
+                if (q) q.classList.add('hidden');
                 const msgs = $('ottoPopupMessages');
                 const userEl = document.createElement('div');
                 userEl.className = 'msg user';
@@ -8083,6 +8114,12 @@ ${eye}</div>
         window.selectSnapshot = (id, label) => Chat.selectSnapshot(id, label);
         window.toggleOttoPopup = () => OttoPopup.toggle();
         window.popupSend = () => OttoPopup.send();
+        window.popupQuick = (btn) => {
+            const q = document.getElementById('ottoPopupQuick');
+            if (q) q.classList.add('hidden');
+            const inp = document.getElementById('ottoPopupInput');
+            if (inp) { inp.value = btn.textContent; OttoPopup.send(); }
+        };
         window.toggleFilterRow = (row) => MapFilters.toggleRow(row);
         window.setAllFilter = (type, checked) => MapFilters.setAll(type, checked);
         window.resetFilters = () => MapFilters.reset();
