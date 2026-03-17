@@ -3946,13 +3946,14 @@
         .dash-lead-fill {
             height: 100%;
             border-radius: 6px;
-            display: flex;
-            align-items: center;
-            padding-left: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            color: rgba(255,255,255,0.9);
             transition: width 0.7s var(--ease-out-expo);
+        }
+        .dash-lead-count {
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.8);
+            min-width: 36px;
+            text-align: right;
         }
 
         /* New vs Used split */
@@ -7799,26 +7800,30 @@
 
                 // Lead score pipeline
                 const totalLeads = l.hot + l.warm + l.cold || 1;
+                const maxTier = Math.max(l.hot, l.warm, l.cold) || 1;
                 let leadHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
                     <div class="dash-card-title">Lead Score Pipeline</div>
                     <div style="font-size:11px;color:var(--text-tertiary);margin:-4px 0 20px 12px">${t.dealers} dealers scored</div>
                     <div class="dash-lead-bar">
                         <div class="dash-lead-label" style="color:#ef4444">Hot</div>
                         <div class="dash-lead-track">
-                            <div class="dash-lead-fill dash-bar" style="width:0%;background:linear-gradient(90deg,#ef4444,#f97316);box-shadow:0 0 12px rgba(239,68,68,0.3)" data-w="${(l.hot/totalLeads*100).toFixed(1)}%">${l.hot}</div>
+                            <div class="dash-lead-fill dash-bar" style="width:0%;background:linear-gradient(90deg,#ef4444,#f97316);box-shadow:0 0 12px rgba(239,68,68,0.3)" data-w="${(l.hot/maxTier*100).toFixed(1)}%"></div>
                         </div>
+                        <div class="dash-lead-count">${l.hot}</div>
                     </div>
                     <div class="dash-lead-bar">
                         <div class="dash-lead-label" style="color:#ff8c00">Warm</div>
                         <div class="dash-lead-track">
-                            <div class="dash-lead-fill dash-bar" style="width:0%;background:linear-gradient(90deg,#ff8c00,#fbbf24);box-shadow:0 0 8px rgba(255,140,0,0.2)" data-w="${(l.warm/totalLeads*100).toFixed(1)}%">${l.warm}</div>
+                            <div class="dash-lead-fill dash-bar" style="width:0%;background:linear-gradient(90deg,#ff8c00,#fbbf24);box-shadow:0 0 8px rgba(255,140,0,0.2)" data-w="${(l.warm/maxTier*100).toFixed(1)}%"></div>
                         </div>
+                        <div class="dash-lead-count">${l.warm}</div>
                     </div>
                     <div class="dash-lead-bar">
                         <div class="dash-lead-label" style="color:#4169e1">Cold</div>
                         <div class="dash-lead-track">
-                            <div class="dash-lead-fill dash-bar" style="width:0%;background:linear-gradient(90deg,#4169e1,#6366f1)" data-w="${(l.cold/totalLeads*100).toFixed(1)}%">${l.cold}</div>
+                            <div class="dash-lead-fill dash-bar" style="width:0%;background:linear-gradient(90deg,#4169e1,#6366f1)" data-w="${(l.cold/maxTier*100).toFixed(1)}%"></div>
                         </div>
+                        <div class="dash-lead-count">${l.cold}</div>
                     </div>
                     <div style="margin-top:20px;font-size:11px;color:var(--text-tertiary);text-align:center">${((l.hot/totalLeads)*100).toFixed(0)}% conversion-ready</div>
                 </div>`;
