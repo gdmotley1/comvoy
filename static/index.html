@@ -6416,9 +6416,9 @@ ${eye}</div>
                     ];
                     const _starIcon = L.divIcon({
                         className: 'office-star-marker',
-                        html: `<svg viewBox="0 0 12 12" width="12" height="12"><rect x="2" y="2" width="8" height="8" rx="1" transform="rotate(45 6 6)" fill="rgba(255,255,255,0.7)" stroke="rgba(255,255,255,0.4)" stroke-width="0.8"/></svg>`,
-                        iconSize: [12, 12],
-                        iconAnchor: [6, 6],
+                        html: `<svg viewBox="0 0 16 16" width="16" height="16"><rect x="3" y="3" width="10" height="10" rx="1.5" transform="rotate(45 8 8)" fill="rgba(255,255,255,0.7)" stroke="rgba(255,255,255,0.4)" stroke-width="0.8"/></svg>`,
+                        iconSize: [16, 16],
+                        iconAnchor: [8, 8],
                     });
                     _offices.forEach(o => {
                         L.marker([o.lat, o.lng], { icon: _starIcon, zIndexOffset: 1000 })
