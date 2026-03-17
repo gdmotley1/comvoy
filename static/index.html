@@ -5072,13 +5072,13 @@
             }
 
             function goHome() {
-                document.body.classList.remove('chatting', 'map-view', 'dashboard', 'trip-manager', 'greeting-mode');
-                messagesDiv = null;
-                scroll.innerHTML = buildWelcomeHTML();
-                // Move input bar back to its normal position
+                // Rescue input bar BEFORE overwriting scroll content (it may be inside #greetingInput)
                 const bar = document.querySelector('.input-bar');
                 const area = document.querySelector('.input-area');
                 if (bar && area) area.appendChild(bar);
+                document.body.classList.remove('chatting', 'map-view', 'dashboard', 'trip-manager', 'greeting-mode');
+                messagesDiv = null;
+                scroll.innerHTML = buildWelcomeHTML();
                 // Set greeting text (different from chat) and init eye tracking
                 const greetEl = Core.$('welcomeGreet');
                 if (greetEl) {
