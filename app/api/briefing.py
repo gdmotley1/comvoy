@@ -94,7 +94,7 @@ def generate_route_briefing(plan: dict) -> dict:
     score_map = {}
     if snap_id:
         scores = db.table("lead_scores").select(
-            "dealer_id, score, tier, opportunity_type, factors"
+            "dealer_id, score, tier, factors"
         ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).execute()
         score_map = {r["dealer_id"]: r for r in scores.data}
 
@@ -160,7 +160,6 @@ def generate_route_briefing(plan: dict) -> dict:
             "top_brand": inv.get("top_brand"),
             "score": sc.get("score"),
             "tier": sc.get("tier"),
-            "opportunity": sc.get("opportunity_type"),
             "factors": factors,
             "smyrna_overlap": smyrna_overlap,
             "bt_changes": bt_changes,
@@ -182,7 +181,7 @@ def generate_route_briefing(plan: dict) -> dict:
     # Summary stats (across all selected dealers)
     all_selected = top_pool
     hot_count = sum(1 for d in all_selected if d["tier"] == "hot")
-    ws_count = sum(1 for d in all_selected if d["opportunity"] == "whitespace")
+    zero_smyrna = sum(1 for d in all_selected if d.get("smyrna_units", 0) == 0)
     total_route_dealers = len(route_dealers.data)  # total before selection
 
     return {
@@ -193,7 +192,7 @@ def generate_route_briefing(plan: dict) -> dict:
             "total": len(all_selected),
             "total_on_route": total_route_dealers,
             "hot": hot_count,
-            "whitespace": ws_count,
+            "zero_smyrna": zero_smyrna,
         },
         "has_trends": has_trends,
     }
@@ -246,7 +245,6 @@ def _compute_bt_changes(current: dict, previous: dict) -> list[dict]:
 
 def _build_why_visit(d: dict) -> str:
     """Build a plain-English 'why visit' sentence for a dealer."""
-    opp = d.get("opportunity")
     vehicles = d.get("vehicles", 0)
     smyrna = d.get("smyrna_units", 0)
     match_pct = (d.get("factors") or {}).get("match_pct", 0) or 0
@@ -255,15 +253,12 @@ def _build_why_visit(d: dict) -> str:
     overlap = d.get("smyrna_overlap", {})
     overlap_units = sum(overlap.values()) if overlap else 0
 
-    if opp == "whitespace" and overlap_units > 0:
+    if smyrna == 0 and overlap_units > 0:
         return (f"Carries {overlap_units} trucks in body types Smyrna builds, "
                 f"but zero Smyrna product on the lot. Untapped opportunity.")
-    elif opp == "whitespace":
+    elif smyrna == 0:
         return (f"{vehicles:,} vehicles on lot, top brand {top_brand}. "
                 f"No Smyrna product today.")
-    elif opp == "at_risk":
-        return ("Had Smyrna product last month but dropped to zero. "
-                "Worth a check-in to find out what happened.")
     elif smyrna > 0 and match_pct >= 50:
         s_pct = round(smyrna / max(vehicles, 1) * 100)
         return (f"Currently {smyrna} Smyrna units ({s_pct}% of lot). "
@@ -332,14 +327,14 @@ def _render_top_stop(d: dict, show_trends: bool) -> str:
     # Score factor breakdown
     factors = d.get("factors") or {}
     factor_parts = []
-    if factors.get("inventory_size"):
-        factor_parts.append(f"Size {factors['inventory_size']}/30")
-    if factors.get("body_type_match") is not None:
-        factor_parts.append(f"Match {factors['body_type_match']}/30")
-    if factors.get("smyrna_opportunity") is not None:
-        factor_parts.append(f"Opp. {factors['smyrna_opportunity']}/25")
-    if factors.get("growth_momentum") is not None:
-        factor_parts.append(f"Growth {factors['growth_momentum']}/15")
+    if factors.get("fleet_scale") is not None:
+        factor_parts.append(f"Fleet {factors['fleet_scale']}/20")
+    if factors.get("product_fit") is not None:
+        factor_parts.append(f"Fit {factors['product_fit']}/25")
+    if factors.get("smyrna_penetration") is not None:
+        factor_parts.append(f"Pen {factors['smyrna_penetration']}/30")
+    if factors.get("growth_signal") is not None:
+        factor_parts.append(f"Growth {factors['growth_signal']}/25")
     score_line = f"Score: {score}/100 ({' + '.join(factor_parts)})" if factor_parts else f"Score: {score}/100"
 
     # Body types we build that they carry
@@ -420,15 +415,10 @@ def _render_compact_row(d: dict) -> str:
     tier_color = {"hot": "#ff6b35", "warm": "#22c55e", "cold": "#475569"}.get(tier, "#475569")
 
     score = d.get("score") or 0
-    opp = d.get("opportunity", "")
     smyrna = d.get("smyrna_units", 0)
 
     # Short reason
-    if opp == "whitespace":
-        reason = "Whitespace"
-    elif opp == "at_risk":
-        reason = "Dropped Smyrna"
-    elif smyrna > 0:
+    if smyrna > 0:
         reason = f"{smyrna} Smyrna units"
     else:
         reason = f"{d.get('vehicles', 0):,} vehicles"
@@ -501,8 +491,7 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
     total_smyrna = sum(d.get("smyrna_units", 0) for d in all_dealers)
     smyrna_pct = round(total_smyrna / max(total_vehicles, 1) * 100, 1)
     hot_dealers = [d for d in all_dealers if d.get("tier") == "hot"]
-    ws_dealers = [d for d in all_dealers if d.get("opportunity") == "whitespace"]
-    at_risk = [d for d in all_dealers if d.get("opportunity") == "at_risk"]
+    zero_smyrna_dealers = [d for d in all_dealers if d.get("smyrna_units", 0) == 0]
     total_on_route = summary.get("total_on_route", summary["total"])
 
     # ── Executive Summary (paragraph, not data dump) ──
@@ -523,15 +512,10 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
             f"<br><br><strong>{len(hot_dealers)} high-priority "
             f"stop{'s' if len(hot_dealers) != 1 else ''}:</strong> {names}."
         )
-    if ws_dealers:
+    if zero_smyrna_dealers:
         exec_parts.append(
-            f" {len(ws_dealers)} carry body types Smyrna builds but stock "
-            f"zero Smyrna product today -- fresh whitespace."
-        )
-    if at_risk:
-        names = " and ".join(d["name"] for d in at_risk[:2])
-        exec_parts.append(
-            f" Heads up: {names} dropped Smyrna since last month."
+            f" {len(zero_smyrna_dealers)} carry body types Smyrna builds but stock "
+            f"zero Smyrna product today."
         )
     if smyrna_pct > 0:
         exec_parts.append(
@@ -606,25 +590,25 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
             <tr>
                 <td width="50%" style="padding:6px 8px 6px 0;font-size:12px;color:#94a3b8;
                     border-bottom:1px solid #111827;vertical-align:top;">
-                    <strong style="color:#e2e8f0;">Inventory Size</strong><br>
-                    <span style="font-size:11px;color:#64748b;">0&ndash;30 pts &middot; Larger lot = more opportunity</span>
+                    <strong style="color:#e2e8f0;">Fleet Scale</strong><br>
+                    <span style="font-size:11px;color:#64748b;">0&ndash;20 pts &middot; Bigger fleet = bigger order potential</span>
                 </td>
                 <td width="50%" style="padding:6px 0 6px 8px;font-size:12px;color:#94a3b8;
                     border-bottom:1px solid #111827;vertical-align:top;">
-                    <strong style="color:#e2e8f0;">Body Type Match</strong><br>
-                    <span style="font-size:11px;color:#64748b;">0&ndash;30 pts &middot; % of trucks in types we build</span>
+                    <strong style="color:#e2e8f0;">Product Fit</strong><br>
+                    <span style="font-size:11px;color:#64748b;">0&ndash;25 pts &middot; % of inventory in types we build</span>
                 </td>
             </tr>
             <tr>
                 <td width="50%" style="padding:6px 8px 6px 0;font-size:12px;color:#94a3b8;
                     vertical-align:top;">
-                    <strong style="color:#e2e8f0;">Smyrna Opportunity</strong><br>
-                    <span style="font-size:11px;color:#64748b;">0&ndash;25 pts &middot; Whitespace &gt; Low pen. &gt; Established</span>
+                    <strong style="color:#e2e8f0;">Smyrna Penetration</strong><br>
+                    <span style="font-size:11px;color:#64748b;">0&ndash;30 pts &middot; Low penetration = more room to grow</span>
                 </td>
                 <td width="50%" style="padding:6px 0 6px 8px;font-size:12px;color:#94a3b8;
                     vertical-align:top;">
-                    <strong style="color:#e2e8f0;">Growth Momentum</strong><br>
-                    <span style="font-size:11px;color:#64748b;">0&ndash;15 pts &middot; Inventory growing MoM</span>
+                    <strong style="color:#e2e8f0;">Growth Signal</strong><br>
+                    <span style="font-size:11px;color:#64748b;">0&ndash;25 pts &middot; Inventory growing = active buyer</span>
                 </td>
             </tr>
         </table>
@@ -855,7 +839,144 @@ def send_briefing_email(to_email: str, subject: str, html_body: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# 4. Auto-brief entry point (called from BackgroundTask)
+# 4. Welcome email for new reps
+# ---------------------------------------------------------------------------
+
+def send_welcome_email(rep_name: str, rep_email: str,
+                       territory_states: list[str] | None = None) -> bool:
+    """Send branded welcome email to a newly added sales rep."""
+    first_name = rep_name.split()[0] if rep_name else "there"
+    territory = ", ".join(territory_states) if territory_states else "All territories"
+    otto_url = "https://gdmotley1.github.io/comvoy/"
+
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome to Otto</title>
+<!--[if mso]>
+<style>table,td {{font-family:Arial,Helvetica,sans-serif !important;}}</style>
+<![endif]-->
+</head>
+<body style="margin:0;padding:0;background-color:#0c0c18;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    -webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%"
+       style="background-color:#0c0c18;">
+<tr><td align="center" style="padding:0;">
+
+<table role="presentation" cellpadding="0" cellspacing="0" width="600"
+       style="max-width:600px;width:100%;border-collapse:collapse;
+              background-color:#0c0c18;">
+
+    <!-- Blue accent bar -->
+    <tr><td style="background:linear-gradient(90deg,#2563eb,#4f8fff,#2563eb);
+        height:3px;font-size:1px;line-height:1px;" bgcolor="#3b82f6">&nbsp;</td></tr>
+
+    <!-- Otto wordmark -->
+    <tr><td align="center" style="padding:32px 20px 8px 20px;">
+        <span style="font-size:36px;font-weight:700;color:#4f8fff;
+            letter-spacing:-1px;line-height:1;">Otto</span>
+    </td></tr>
+    <tr><td align="center" style="padding:0 20px 24px 20px;">
+        <span style="font-size:11px;font-weight:500;letter-spacing:1.5px;
+            color:#475569;text-transform:uppercase;">Comvoy Sales Intelligence</span>
+    </td></tr>
+
+    <!-- Welcome block -->
+    <tr><td style="padding:0 20px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%"
+               style="border-collapse:collapse;background-color:#111827;border-radius:6px;">
+            <tr><td style="padding:16px 20px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" width="100%"
+                       style="border-collapse:collapse;">
+                    <tr><td style="font-size:11px;font-weight:700;letter-spacing:1px;
+                        color:#4f8fff;text-transform:uppercase;padding-bottom:6px;">
+                        WELCOME
+                    </td></tr>
+                    <tr><td style="font-size:20px;font-weight:700;color:#f1f5f9;
+                        line-height:1.3;padding-bottom:4px;">
+                        Hey {first_name}, you&#39;re all set.
+                    </td></tr>
+                    <tr><td style="font-size:14px;color:#94a3b8;">
+                        Territory: {territory}
+                    </td></tr>
+                </table>
+            </td></tr>
+        </table>
+    </td></tr>
+
+    <tr><td style="height:16px;font-size:1px;line-height:1px;">&nbsp;</td></tr>
+
+    {_divider()}
+
+    <!-- What Otto does -->
+    <tr><td style="padding:20px 20px 0 20px;">
+        <span style="font-size:11px;font-weight:700;letter-spacing:1px;
+            color:#94a3b8;text-transform:uppercase;">WHAT OTTO DOES</span>
+    </td></tr>
+    <tr><td style="padding:10px 20px 20px 20px;font-size:14px;color:#cbd5e1;line-height:1.8;">
+        &#x1F4CA; <strong style="color:#f1f5f9;">Market Intelligence</strong>
+        &mdash; 597 dealers, 13 brands, 12 states<br>
+        &#x1F525; <strong style="color:#f1f5f9;">Lead Scoring</strong>
+        &mdash; Every dealer ranked by opportunity<br>
+        &#x1F4CB; <strong style="color:#f1f5f9;">Dealer Briefings</strong>
+        &mdash; Auto-generated before every trip<br>
+        &#x1F5FA; <strong style="color:#f1f5f9;">Territory Analytics</strong>
+        &mdash; Pricing, trends, competitive intel
+    </td></tr>
+
+    {_divider()}
+
+    <!-- Get started -->
+    <tr><td style="padding:20px 20px 0 20px;">
+        <span style="font-size:11px;font-weight:700;letter-spacing:1px;
+            color:#94a3b8;text-transform:uppercase;">GET STARTED</span>
+    </td></tr>
+    <tr><td style="padding:10px 20px 8px 20px;font-size:14px;color:#cbd5e1;line-height:1.8;">
+        1. Open Otto and try the chat &mdash; ask about any dealer or market<br>
+        2. Check the Dashboard for territory-wide analytics<br>
+        3. Explore the Map to see every dealer scored and color-coded
+    </td></tr>
+    <tr><td align="center" style="padding:16px 20px 24px 20px;">
+        <a href="{otto_url}" style="display:inline-block;background:#4f8fff;color:#ffffff;
+            font-size:14px;font-weight:600;padding:12px 32px;border-radius:6px;
+            text-decoration:none;letter-spacing:0.3px;">Open Otto</a>
+    </td></tr>
+
+    {_divider()}
+
+    <!-- Footer -->
+    <tr><td align="center" style="padding:24px 20px 12px 20px;">
+        <span style="font-size:26px;font-weight:700;color:#1e293b;
+            letter-spacing:-0.5px;">Otto</span>
+    </td></tr>
+    <tr><td align="center" style="padding:0 20px 6px 20px;
+        font-size:12px;color:#475569;">
+        Comvoy Sales Intelligence
+    </td></tr>
+    <tr><td align="center" style="padding:0 20px 28px 20px;
+        font-size:11px;color:#334155;">
+        You received this because you were added as a sales rep.
+    </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>"""
+
+    return send_briefing_email(
+        rep_email,
+        "Welcome to Otto — Comvoy Sales Intelligence",
+        html,
+    )
+
+
+# ---------------------------------------------------------------------------
+# 5. Auto-brief entry point (called from BackgroundTask)
 # ---------------------------------------------------------------------------
 
 def auto_brief_trip(plan_id: str):

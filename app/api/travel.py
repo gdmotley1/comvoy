@@ -19,7 +19,7 @@ from datetime import date
 
 from typing import Optional
 
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 
 from app.database import get_service_client
@@ -58,7 +58,7 @@ class RepCreate(BaseModel):
 
 
 @router.post("/reps")
-def create_rep(body: RepCreate):
+def create_rep(body: RepCreate, background_tasks: BackgroundTasks):
     """Create a new sales rep."""
     db = get_service_client()
     row = {
@@ -72,6 +72,17 @@ def create_rep(body: RepCreate):
     result = db.table("reps").insert(row).execute()
     if not result.data:
         raise HTTPException(500, "Failed to create rep")
+
+    # Send welcome email in background (best-effort)
+    if body.email:
+        try:
+            from app.api.briefing import send_welcome_email
+            background_tasks.add_task(
+                send_welcome_email, body.name, body.email, body.territory_states
+            )
+        except Exception as e:
+            logger.warning(f"Could not queue welcome email: {e}")
+
     return {"status": "created", "rep": result.data[0]}
 
 
@@ -221,7 +232,7 @@ async def get_route_dealers(
     score_map = {}
     if snap_id:
         scores = db.table("lead_scores").select(
-            "dealer_id, score, tier, opportunity_type"
+            "dealer_id, score, tier"
         ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).execute()
         score_map = {r["dealer_id"]: r for r in scores.data}
 
@@ -247,7 +258,6 @@ async def get_route_dealers(
             "top_brand": inv.get("top_brand"),
             "lead_score": sc.get("score"),
             "lead_tier": sc.get("tier"),
-            "opportunity": sc.get("opportunity_type"),
         })
 
     if is_day_trip:

@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     smtp_port: int = 587
     smtp_user: str = ""
     smtp_password: str = ""
-    smtp_from: str = "Otto <otto@comvoy.com>"
+    smtp_from: str = "Otto <otto.comvoy@gmail.com>"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
