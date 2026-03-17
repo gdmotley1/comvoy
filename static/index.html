@@ -886,6 +886,7 @@
             line-height: 1.3;
             letter-spacing: -0.5px;
             max-width: 520px;
+            text-align: center;
             background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(79,143,255,0.9) 50%, rgba(168,85,247,0.8) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -4972,32 +4973,32 @@ ${eye}</div>
                 "Dealers gaining vehicles"
             ];
 
-            /* Hourly greetings — 4 per hour so home & chat always differ */
+            /* Hourly greetings — 6 per hour so home & chat always differ */
             const _hourlyGreets = {
-                0: ["Burning the midnight oil? I'm here for it.", "The night shift — let's get ahead of everyone.", "Midnight moves. What's the plan?", "While they sleep, we strategize."],
-                1: ["Still at it? Respect. What do you need?", "1 AM grind — let's make it count.", "The world's quiet. Let's find opportunities.", "Night ops — I've got fresh data."],
-                2: ["Late night intel session? I'm ready.", "Can't sleep? Let's find some leads.", "2 AM — only the serious are still up.", "Quiet hours, big moves. What's next?"],
-                3: ["3 AM — this is when legends prep.", "The early bird catches the deal.", "Before the sun rises, we plan.", "3 AM hustle — let's build the pipeline."],
-                4: ["Up before the sun — let's move.", "4 AM hustle. What's the play?", "First light's coming. Let's get ready.", "The early advantage is yours."],
-                5: ["Early riser — your competitors are still sleeping.", "Dawn patrol. Let's scout the territory.", "5 AM — head start on the whole market.", "Up and at it. Where do we begin?"],
-                6: ["Morning — coffee and conquests.", "6 AM — time to plan the day's wins.", "Fresh start. What's the priority?", "Dawn's here — let's line up today's wins."],
-                7: ["Morning — let's find some opportunities.", "Rise and grind — who needs a visit today?", "7 AM — the day is wide open.", "Good morning. I've got leads waiting."],
-                8: ["New day, new leads. Where do we start?", "Morning — your territory's been busy overnight.", "8 AM — let's own this day.", "Coffee's hot, data's fresh. Let's go."],
-                9: ["Let's hit the ground running.", "9 AM — prime selling hours. Who's first?", "The market's moving. Stay ahead.", "Morning momentum — let's keep it rolling."],
-                10: ["Mid-morning momentum. What's the target?", "10 AM — deals don't close themselves.", "Who's next on the list?", "Let's turn this morning into numbers."],
-                11: ["Almost lunch — let's squeeze in one more move.", "11 AM — stay sharp, stay selling.", "One more win before noon.", "The morning's not over yet."],
-                12: ["Lunch break intel? Smart move.", "Noon — halfway through, let's check the scoreboard.", "Midday check-in. How's the pipeline?", "Refuel and refocus. What's next?"],
-                13: ["Afternoon — ready to dig into the data.", "Post-lunch push. Who's on the list?", "1 PM — second half starts now.", "Let's make this afternoon productive."],
-                14: ["Let's make this afternoon count.", "2 PM — the afternoon belongs to closers.", "Peak hours. Who needs attention?", "Afternoon push — I've got intel."],
-                15: ["What's on your radar this afternoon?", "3 PM — still time to make today a win.", "The day's not done. Neither are we.", "Afternoon check — any fires to put out?"],
-                16: ["Afternoon — I've got intel when you're ready.", "4 PM — one more play before the whistle.", "Last stretch. Make it count.", "4 PM — closers close late."],
-                17: ["It's five o'clock somewhere — but we're still closing.", "5 PM — clock out or lock in? Your call.", "End of day? Or just getting started?", "5 PM — the after-hours edge."],
-                18: ["Evening — prepping for tomorrow's wins?", "6 PM — the after-hours advantage.", "While others unwind, we plan.", "Evening intel session? Let's do it."],
-                19: ["Evening hustle — tomorrow's pipeline starts now.", "7 PM — quiet hours, loud strategy.", "Tonight's prep is tomorrow's win.", "The evening shift. What's the move?"],
-                20: ["Late session? Let's plan your next move.", "8 PM — getting ahead while others unwind.", "Night strategy. I like it.", "Tomorrow's calls start with tonight's prep."],
-                21: ["Night owl mode — I've got the data.", "9 PM — tomorrow's calls start with tonight's prep.", "Burning late? Let's make it worth it.", "The quiet hours — perfect for planning."],
-                22: ["10 PM — still grinding? Let's make it worthwhile.", "Late night strategy session. What do you need?", "Almost done? Or just warming up?", "10 PM intel drop. What do you need?"],
-                23: ["Almost midnight — one last look at the numbers?", "11 PM — the day's not over 'til you say so.", "Last call. What's on your mind?", "Midnight approaches. One more look?"]
+                0: ["Burning the midnight oil? I'm here for it.", "The night shift — let's get ahead of everyone.", "Midnight moves. What's the plan?", "While they sleep, we strategize.", "Zero hundred hours. Let's work.", "The market never sleeps. Neither do we."],
+                1: ["Still at it? Respect. What do you need?", "1 AM grind — let's make it count.", "The world's quiet. Let's find opportunities.", "Night ops — I've got fresh data.", "Most won't outwork 1 AM. You will.", "Silent hours, sharp moves."],
+                2: ["Late night intel session? I'm ready.", "Can't sleep? Let's find some leads.", "2 AM — only the serious are still up.", "Quiet hours, big moves. What's next?", "The territory's yours at this hour.", "Two in the morning and still hunting."],
+                3: ["3 AM — this is when legends prep.", "The early bird catches the deal.", "Before the sun rises, we plan.", "3 AM hustle — let's build the pipeline.", "Nobody's competing with you right now.", "Dark outside, bright ideas inside."],
+                4: ["Up before the sun — let's move.", "4 AM hustle. What's the play?", "First light's coming. Let's get ready.", "The early advantage is yours.", "Dawn's an hour out. We're already ahead.", "Four AM club. Exclusive and effective."],
+                5: ["Early riser — your competitors are still sleeping.", "Dawn patrol. Let's scout the territory.", "5 AM — head start on the whole market.", "Up and at it. Where do we begin?", "Sunrise hustle. Name the target.", "First ones up, first ones to close."],
+                6: ["Morning — coffee and conquests.", "6 AM — time to plan the day's wins.", "Fresh start. What's the priority?", "Dawn's here — let's line up today's wins.", "A new day just loaded. What's first?", "6 AM and the board is clear. Let's fill it."],
+                7: ["Morning — let's find some opportunities.", "Rise and grind — who needs a visit today?", "7 AM — the day is wide open.", "Good morning. I've got leads waiting.", "Phones start ringing in an hour. Prep now.", "Territory's waking up. So are the deals."],
+                8: ["New day, new leads. Where do we start?", "Morning — your territory's been busy overnight.", "8 AM — let's own this day.", "Coffee's hot, data's fresh. Let's go.", "The opening bell just rang.", "Eight sharp. Deals don't wait."],
+                9: ["Let's hit the ground running.", "9 AM — prime selling hours. Who's first?", "The market's moving. Stay ahead.", "Morning momentum — let's keep it rolling.", "Golden hours. Every minute counts.", "Phones are ringing — let's ride the wave."],
+                10: ["Mid-morning momentum. What's the target?", "10 AM — deals don't close themselves.", "Who's next on the list?", "Let's turn this morning into numbers.", "The pipeline won't fill itself.", "Half the morning gone — double the pace."],
+                11: ["Almost lunch — let's squeeze in one more move.", "11 AM — stay sharp, stay selling.", "One more win before noon.", "The morning's not over yet.", "Finish strong before the break.", "11 AM and still climbing. Keep going."],
+                12: ["Lunch break intel? Smart move.", "Noon — halfway through, let's check the scoreboard.", "Midday check-in. How's the pipeline?", "Refuel and refocus. What's next?", "Halftime. Let's review the numbers.", "High noon — perfect time to regroup."],
+                13: ["Afternoon — ready to dig into the data.", "Post-lunch push. Who's on the list?", "1 PM — second half starts now.", "Let's make this afternoon productive.", "Back from lunch? Back to winning.", "The afternoon belongs to the prepared."],
+                14: ["Let's make this afternoon count.", "2 PM — the afternoon belongs to closers.", "Peak hours. Who needs attention?", "Afternoon push — I've got intel.", "Two down, plenty left to play.", "The day's second wind. Feel it?"],
+                15: ["What's on your radar this afternoon?", "3 PM — still time to make today a win.", "The day's not done. Neither are we.", "Afternoon check — any fires to put out?", "Three o'clock thunder. Let's strike.", "Clock says 3. Pipeline says keep going."],
+                16: ["Afternoon — I've got intel when you're ready.", "4 PM — one more play before the whistle.", "Last stretch. Make it count.", "4 PM — closers close late.", "Wind-down? Not yet.", "The final push — this is where deals land."],
+                17: ["It's five o'clock somewhere — but we're still closing.", "5 PM — clock out or lock in? Your call.", "End of day? Or just getting started?", "5 PM — the after-hours edge.", "While they log off, we level up.", "Quitting time is for quitters."],
+                18: ["Evening — prepping for tomorrow's wins?", "6 PM — the after-hours advantage.", "While others unwind, we plan.", "Evening intel session? Let's do it.", "The smart money plans at 6 PM.", "Dinner can wait. This data can't."],
+                19: ["Evening hustle — tomorrow's pipeline starts now.", "7 PM — quiet hours, loud strategy.", "Tonight's prep is tomorrow's win.", "The evening shift. What's the move?", "7 PM edge — nobody else is prepping right now.", "Night planning, morning domination."],
+                20: ["Late session? Let's plan your next move.", "8 PM — getting ahead while others unwind.", "Night strategy. I like it.", "Tomorrow's calls start with tonight's prep.", "8 PM — the second office opens.", "Evening recon. What's the landscape?"],
+                21: ["Night owl mode — I've got the data.", "9 PM — the quiet hours are the sharpest.", "Burning late? Let's make it worth it.", "The quiet hours — perfect for planning.", "9 PM and still scheming. Respect.", "Late nights build early leads."],
+                22: ["10 PM — still grinding? Let's make it worthwhile.", "Late night strategy session. What do you need?", "Almost done? Or just warming up?", "10 PM intel drop. What do you need?", "Two hours to midnight. Make them count.", "The scoreboard doesn't care what time it is."],
+                23: ["Almost midnight — one last look at the numbers?", "11 PM — the day's not over 'til you say so.", "Last call. What's on your mind?", "Midnight approaches. One more look?", "The day ends when you say it does.", "Final hour. Let's close it strong."]
             };
 
             /* Track last-used greeting so home & chat never show the same one */
