@@ -2458,12 +2458,46 @@
 
         /* Mobile responsive */
         @media (max-width: 600px) {
-            .route-panel { right: 8px; top: 126px; }
-            .route-panel-body { width: min(200px, calc(100vw - 60px)); padding: 10px 12px; }
-            .map-filters { top: 82px; left: 54px; gap: 5px; flex-wrap: wrap; }
-            .map-stats { right: auto; left: 12px; right: 12px; transform: none; top: 62px; white-space: normal; flex-wrap: wrap; justify-content: center; font-size: 11px; gap: 4px 8px; }
+            /* Mobile map: stats bar — compact single row pinned below topbar */
+            .map-stats {
+                right: auto; left: 8px; right: 8px; transform: none;
+                top: 54px; padding: 5px 10px; border-radius: 10px;
+                font-size: 10px; gap: 3px 6px;
+                white-space: normal; flex-wrap: wrap; justify-content: center;
+            }
+            .map-stat { font-size: 10px; }
+            .map-stat-value { font-size: 11px; }
+
+            /* Mobile map: search bar — full width below stats */
+            .map-search { top: 86px; left: 8px; right: 8px; width: auto; }
+            .map-search-input-wrap { padding: 6px 10px; border-radius: 10px; }
+            .map-search-input { font-size: 13px; }
+
+            /* Mobile map: filters — compact row below search */
+            .map-filters { top: 122px; left: 8px; right: auto; gap: 5px; flex-wrap: wrap; }
+            .filter-pill { padding: 5px 10px; font-size: 11px; border-radius: 8px; }
+
+            /* Mobile map: route panel — smaller, below filters */
+            .route-panel { right: 8px; top: 122px; }
+            .route-panel-toggle { padding: 6px 12px; font-size: 12px; }
+            .route-panel-body { width: min(220px, calc(100vw - 24px)); padding: 10px 12px; }
+
+            /* Mobile map: legend — compact, above Plan a Trip */
+            .map-legend { bottom: 62px; left: 8px; padding: 5px 10px; border-radius: 8px; gap: 8px; }
+            .map-legend-item { font-size: 10px; gap: 3px; }
+            .map-legend-dot { width: 6px; height: 6px; }
+            .map-legend-title { font-size: 10px; }
+            .scoring-key { bottom: 36px; left: 0; }
+
+            /* Mobile map: Plan a Trip button — smaller, centered bottom */
+            .map-plan-trip-btn { bottom: 16px; padding: 8px 16px; font-size: 12px; border-radius: 10px; }
+
+            /* Mobile map: trip create panel full width */
             .trip-create-panel { width: 100vw; }
             body.map-view.trip-create-open .map-search { right: 20px; }
+
+            /* Mobile map: route stats overlay */
+            .route-stats { font-size: 10px; top: 54px; left: 8px; padding: 5px 10px; }
         }
 
         /* ========== MAP TRIP CREATION PANEL ========== */
