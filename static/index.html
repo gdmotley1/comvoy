@@ -277,11 +277,16 @@
 
         .orb-hero .otto-eye {
             width: 100%; height: 100%;
-            filter:
-                drop-shadow(0 0 20px rgba(79,143,255,0.5))
-                drop-shadow(0 0 50px rgba(79,143,255,0.35))
-                drop-shadow(0 0 100px rgba(79,143,255,0.2))
-                drop-shadow(0 0 150px rgba(168,85,247,0.1));
+            position: relative;
+            z-index: 1;
+        }
+        .eye-glow {
+            position: absolute;
+            inset: -80px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(79,143,255,0.45) 0%, rgba(79,143,255,0.2) 25%, rgba(168,85,247,0.08) 50%, transparent 70%);
+            z-index: 0;
+            pointer-events: none;
         }
 
         .orb-ring {
@@ -302,10 +307,9 @@
         }
         @keyframes orbRingPulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.06); opacity: 1; } }
 
-        /* Otto eye SVG animations */
+        /* Otto eye SVG animations — CSS transform only (GPU-composited) */
+        .otto-eye circle { transform-origin: 30px 30px; }
         @keyframes irisRotate { to { transform: rotate(360deg); } }
-        @keyframes pupilPulse { 0%, 100% { r: 6; } 50% { r: 7.5; } }
-        @keyframes pupilGlow { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
         @keyframes irisShift { 0%, 100% { stop-color: #4f8fff; } 33% { stop-color: #00d4ff; } 66% { stop-color: #a855f7; } }
 
         .welcome-title {
@@ -825,11 +829,16 @@
         .chat-greeting-eye .otto-eye {
             width: 100%; height: 100%;
             transition: opacity 0.6s ease;
-            filter:
-                drop-shadow(0 0 20px rgba(79,143,255,0.55))
-                drop-shadow(0 0 50px rgba(79,143,255,0.35))
-                drop-shadow(0 0 100px rgba(79,143,255,0.2))
-                drop-shadow(0 0 200px rgba(168,85,247,0.12));
+            position: relative;
+            z-index: 1;
+        }
+        .chat-greeting-eye .eye-glow {
+            position: absolute;
+            inset: -100px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(79,143,255,0.5) 0%, rgba(79,143,255,0.22) 25%, rgba(168,85,247,0.1) 45%, transparent 70%);
+            z-index: 0;
+            pointer-events: none;
         }
 
         /* 5 orb rings — expanding outward */
@@ -850,12 +859,9 @@
         .chat-greeting-eye.otto-shaken {
             animation: ottoShake 0.6s ease-out forwards;
         }
-        .chat-greeting-eye.otto-shaken .otto-eye {
-            filter:
-                drop-shadow(0 0 25px rgba(255,100,50,0.7))
-                drop-shadow(0 0 60px rgba(255,60,120,0.5))
-                drop-shadow(0 0 120px rgba(168,85,247,0.35))
-                drop-shadow(0 0 200px rgba(255,100,50,0.15));
+        .chat-greeting-eye.otto-shaken .eye-glow {
+            background: radial-gradient(circle, rgba(255,100,50,0.6) 0%, rgba(255,60,120,0.3) 30%, rgba(168,85,247,0.15) 50%, transparent 70%);
+            transition: background 0.3s;
         }
         .chat-greeting-eye.otto-shaken .orb-ring {
             border-color: rgba(255,100,50,0.35) !important;
@@ -990,7 +996,6 @@
 
         .msg-orb .otto-eye {
             width: 100%; height: 100%;
-            filter: drop-shadow(0 0 8px rgba(79,143,255,0.3));
         }
 
         .msg-bubble {
@@ -4412,7 +4417,8 @@
             <div class="welcome" id="welcome">
                 <div class="orb-hero">
                     <div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
-                    <svg class="otto-eye" viewBox="0 0 60 60"><defs><radialGradient id="irisGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"><animate attributeName="stop-color" values="#4f8fff;#00d4ff;#a855f7;#4f8fff" dur="6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#1a1a3e"/></radialGradient><radialGradient id="pupilGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient></defs><circle cx="30" cy="30" r="29" fill="none" stroke="url(#irisGrad)" stroke-width="0.5" opacity="0.3"><animate attributeName="opacity" values="0.3;0.5;0.3" dur="3s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="url(#irisGrad)" stroke-width="2" opacity="0.9"/><circle cx="30" cy="30" r="27" fill="url(#irisGrad)" opacity="0.06"/><circle cx="30" cy="30" r="22" fill="url(#irisGrad)" opacity="0.18"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="360 30 30" dur="12s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="16" fill="none" stroke="url(#irisGrad)" stroke-width="2.5" opacity="0.45"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="-360 30 30" dur="8s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="10" fill="url(#irisGrad)" opacity="0.6"><animate attributeName="r" values="10;12.5;10" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0.85;0.6" dur="3s" repeatCount="indefinite"/></circle><circle class="otto-pupil" cx="30" cy="30" r="6" fill="#060810"/><circle class="pupil-glow" cx="30" cy="30" r="4" fill="url(#pupilGlow)" opacity="0.8"><animate attributeName="opacity" values="0.8;0.35;0.8" dur="2.5s" repeatCount="indefinite"/><animate attributeName="r" values="4;5;4" dur="2.5s" repeatCount="indefinite"/></circle><circle class="specular-1" cx="23" cy="23" r="3" fill="white" opacity="0.25"/><circle class="specular-2" cx="25" cy="25" r="1.5" fill="white" opacity="0.45"/></svg>
+                    <div class="eye-glow"></div>
+                    <svg class="otto-eye" viewBox="0 0 60 60"><defs><radialGradient id="irisGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"><animate attributeName="stop-color" values="#4f8fff;#00d4ff;#a855f7;#4f8fff" dur="6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#1a1a3e"/></radialGradient><radialGradient id="pupilGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient></defs><circle cx="30" cy="30" r="29" fill="none" stroke="url(#irisGrad)" stroke-width="0.5" opacity="0.3"/><circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="url(#irisGrad)" stroke-width="2" opacity="0.9"/><circle cx="30" cy="30" r="27" fill="url(#irisGrad)" opacity="0.06"/><circle cx="30" cy="30" r="22" fill="url(#irisGrad)" opacity="0.18" style="animation:irisRotate 12s linear infinite"/><circle cx="30" cy="30" r="16" fill="none" stroke="url(#irisGrad)" stroke-width="2.5" opacity="0.45" style="animation:irisRotate 8s linear infinite reverse"/><circle cx="30" cy="30" r="11" fill="url(#irisGrad)" opacity="0.7"/><circle class="otto-pupil" cx="30" cy="30" r="6" fill="#060810"/><circle class="pupil-glow" cx="30" cy="30" r="4.5" fill="url(#pupilGlow)" opacity="0.6"/><circle class="specular-1" cx="23" cy="23" r="3" fill="white" opacity="0.25"/><circle class="specular-2" cx="25" cy="25" r="1.5" fill="white" opacity="0.45"/></svg>
                 </div>
                 <div class="chat-greeting-text welcome-greet-text" id="welcomeGreet"></div>
                 <div class="hero-cards">
@@ -4520,13 +4526,13 @@
 
             function ottoEyeSvg() {
                 const id = _uid();
-                return `<svg class="otto-eye" viewBox="0 0 60 60"><defs><radialGradient id="ig${id}" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"><animate attributeName="stop-color" values="#4f8fff;#00d4ff;#a855f7;#4f8fff" dur="6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#1a1a3e"/></radialGradient><radialGradient id="pg${id}" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient></defs><circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="url(#ig${id})" stroke-width="1.5" opacity="0.8"/><circle cx="30" cy="30" r="20" fill="url(#ig${id})" opacity="0.15"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="360 30 30" dur="12s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="14" fill="none" stroke="url(#ig${id})" stroke-width="2" opacity="0.4"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="-360 30 30" dur="8s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="8" fill="url(#ig${id})" opacity="0.6"><animate attributeName="r" values="8;9;8" dur="3s" repeatCount="indefinite"/></circle><circle class="otto-pupil" cx="30" cy="30" r="5" fill="#0a0e1a"/><circle cx="30" cy="30" r="3" fill="url(#pg${id})" opacity="0.8"><animate attributeName="opacity" values="0.8;0.4;0.8" dur="2.5s" repeatCount="indefinite"/></circle><circle cx="24" cy="25" r="2" fill="white" opacity="0.3"/></svg>`;
+                return `<svg class="otto-eye" viewBox="0 0 60 60"><defs><radialGradient id="ig${id}" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"><animate attributeName="stop-color" values="#4f8fff;#00d4ff;#a855f7;#4f8fff" dur="6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#1a1a3e"/></radialGradient><radialGradient id="pg${id}" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient></defs><circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="url(#ig${id})" stroke-width="1.5" opacity="0.8"/><circle cx="30" cy="30" r="20" fill="url(#ig${id})" opacity="0.15" style="animation:irisRotate 12s linear infinite"/><circle cx="30" cy="30" r="14" fill="none" stroke="url(#ig${id})" stroke-width="2" opacity="0.4" style="animation:irisRotate 8s linear infinite reverse"/><circle cx="30" cy="30" r="8" fill="url(#ig${id})" opacity="0.6"/><circle class="otto-pupil" cx="30" cy="30" r="5" fill="#0a0e1a"/><circle cx="30" cy="30" r="3" fill="url(#pg${id})" opacity="0.6"/><circle cx="24" cy="25" r="2" fill="white" opacity="0.3"/></svg>`;
             }
 
             /* Full-detail Otto eye matching the home page orb — with specular highlights for tracking */
             function ottoEyeSvgFull() {
                 const id = _uid();
-                return `<svg class="otto-eye" viewBox="0 0 60 60"><defs><radialGradient id="ig${id}" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"><animate attributeName="stop-color" values="#4f8fff;#00d4ff;#a855f7;#4f8fff" dur="6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#1a1a3e"/></radialGradient><radialGradient id="pg${id}" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient></defs><circle cx="30" cy="30" r="29" fill="none" stroke="url(#ig${id})" stroke-width="0.5" opacity="0.3"><animate attributeName="opacity" values="0.3;0.5;0.3" dur="3s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="url(#ig${id})" stroke-width="2" opacity="0.9"/><circle cx="30" cy="30" r="27" fill="url(#ig${id})" opacity="0.06"/><circle cx="30" cy="30" r="22" fill="url(#ig${id})" opacity="0.18"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="360 30 30" dur="12s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="16" fill="none" stroke="url(#ig${id})" stroke-width="2.5" opacity="0.45"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="-360 30 30" dur="8s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="10" fill="url(#ig${id})" opacity="0.6"><animate attributeName="r" values="10;12.5;10" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0.85;0.6" dur="3s" repeatCount="indefinite"/></circle><circle class="otto-pupil" cx="30" cy="30" r="6" fill="#060810"/><circle class="pupil-glow" cx="30" cy="30" r="4" fill="url(#pg${id})" opacity="0.8"><animate attributeName="opacity" values="0.8;0.35;0.8" dur="2.5s" repeatCount="indefinite"/><animate attributeName="r" values="4;5;4" dur="2.5s" repeatCount="indefinite"/></circle><circle class="specular-1" cx="23" cy="23" r="3" fill="white" opacity="0.25"/><circle class="specular-2" cx="25" cy="25" r="1.5" fill="white" opacity="0.45"/></svg>`;
+                return `<svg class="otto-eye" viewBox="0 0 60 60"><defs><radialGradient id="ig${id}" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"><animate attributeName="stop-color" values="#4f8fff;#00d4ff;#a855f7;#4f8fff" dur="6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#1a1a3e"/></radialGradient><radialGradient id="pg${id}" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient></defs><circle cx="30" cy="30" r="29" fill="none" stroke="url(#ig${id})" stroke-width="0.5" opacity="0.3"/><circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="url(#ig${id})" stroke-width="2" opacity="0.9"/><circle cx="30" cy="30" r="27" fill="url(#ig${id})" opacity="0.06"/><circle cx="30" cy="30" r="22" fill="url(#ig${id})" opacity="0.18" style="animation:irisRotate 12s linear infinite"/><circle cx="30" cy="30" r="16" fill="none" stroke="url(#ig${id})" stroke-width="2.5" opacity="0.45" style="animation:irisRotate 8s linear infinite reverse"/><circle cx="30" cy="30" r="11" fill="url(#ig${id})" opacity="0.7"/><circle class="otto-pupil" cx="30" cy="30" r="6" fill="#060810"/><circle class="pupil-glow" cx="30" cy="30" r="4.5" fill="url(#pg${id})" opacity="0.6"/><circle class="specular-1" cx="23" cy="23" r="3" fill="white" opacity="0.25"/><circle class="specular-2" cx="25" cy="25" r="1.5" fill="white" opacity="0.45"/></svg>`;
             }
 
             function loadScript(src) {
@@ -4921,7 +4927,7 @@
                 _lastHomeGreet = greet;
                 return `<div class="welcome" id="welcome">
 <div class="orb-hero"><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
-${eye}</div>
+<div class="eye-glow"></div>${eye}</div>
 <div class="chat-greeting-text welcome-greet-text">${greet}</div>
 <div class="hero-cards">
 <div class="hero-card" onclick="openDealerMap()">
@@ -5020,6 +5026,7 @@ ${eye}</div>
                     ${particles}
                     <div class="chat-greeting-eye">
                         <div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
+                        <div class="eye-glow"></div>
                         ${eye}
                         <div class="greet-reflection"></div>
                     </div>
