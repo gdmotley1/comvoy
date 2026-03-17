@@ -4643,68 +4643,7 @@
                 });
             }
 
-            let _eyeTrackingCleanup = null;
-            function initEyeTracking() {
-                // Clean up previous instance to prevent stacking
-                if (_eyeTrackingCleanup) _eyeTrackingCleanup();
-
-                const orb = document.querySelector('.orb-hero');
-                if (!orb) return;
-                const eye = orb.querySelector('.otto-eye');
-                if (!eye) return;
-                let _magX = 0, _magY = 0, _curMagX = 0, _curMagY = 0;
-                let _rafId = null;
-                const onMouseMove = e => {
-                    if (!document.contains(orb)) return;
-                    const rect = orb.getBoundingClientRect();
-                    const cx = rect.left + rect.width / 2;
-                    const cy = rect.top + rect.height / 2;
-                    const dx = e.clientX - cx;
-                    const dy = e.clientY - cy;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    const maxPupilShift = 4;
-                    const angle = Math.atan2(dy, dx);
-                    const pupilR = Math.min(dist / 8, maxPupilShift);
-                    const px = 30 + Math.cos(angle) * pupilR;
-                    const py = 30 + Math.sin(angle) * pupilR;
-                    const pupil = eye.querySelector('.otto-pupil');
-                    const glow = eye.querySelector('.pupil-glow');
-                    const spec1 = eye.querySelector('.specular-1');
-                    const spec2 = eye.querySelector('.specular-2');
-                    if (pupil) { pupil.setAttribute('cx', px); pupil.setAttribute('cy', py); }
-                    if (glow) { glow.setAttribute('cx', px); glow.setAttribute('cy', py); }
-                    if (spec1) { spec1.setAttribute('cx', px - 5); spec1.setAttribute('cy', py - 5); }
-                    if (spec2) { spec2.setAttribute('cx', px - 3.5); spec2.setAttribute('cy', py - 3.5); }
-                    const magnetRange = 350;
-                    if (dist < magnetRange) {
-                        const strength = (1 - dist / magnetRange) * 12;
-                        _magX = Math.cos(angle) * strength;
-                        _magY = Math.sin(angle) * strength;
-                    } else {
-                        _magX = 0;
-                        _magY = 0;
-                    }
-                };
-                document.addEventListener('mousemove', onMouseMove);
-                function magnetLoop() {
-                    if (!document.contains(orb)) { _rafId = null; return; }
-                    _curMagX += (_magX - _curMagX) * 0.08;
-                    _curMagY += (_magY - _curMagY) * 0.08;
-                    if (Math.abs(_curMagX) > 0.1 || Math.abs(_curMagY) > 0.1) {
-                        orb.style.translate = `${_curMagX}px ${_curMagY}px`;
-                    } else {
-                        orb.style.translate = '';
-                    }
-                    _rafId = requestAnimationFrame(magnetLoop);
-                }
-                _rafId = requestAnimationFrame(magnetLoop);
-                _eyeTrackingCleanup = () => {
-                    document.removeEventListener('mousemove', onMouseMove);
-                    if (_rafId) cancelAnimationFrame(_rafId);
-                    _rafId = null;
-                    _eyeTrackingCleanup = null;
-                };
-            }
+            function initEyeTracking() { /* disabled for perf */ }
 
             // Spotlight glow on cards
             document.addEventListener('mousemove', e => {
@@ -5099,65 +5038,7 @@ ${eye}</div>
                 </div>`;
             }
 
-            let _greetEyeCleanup = null;
-            function _initGreetingEye() {
-                if (_greetEyeCleanup) _greetEyeCleanup();
-                const container = document.querySelector('.chat-greeting-eye');
-                if (!container) return;
-
-                /* Pupil tracking + magnetic drift toward cursor */
-                const pupil = container.querySelector('.otto-pupil');
-                const glow = container.querySelector('.pupil-glow');
-                const spec1 = container.querySelector('.specular-1');
-                const spec2 = container.querySelector('.specular-2');
-                let _magX = 0, _magY = 0, _curMagX = 0, _curMagY = 0, _rafId = null;
-                const onMove = e => {
-                    if (!document.contains(container)) return;
-                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                    const rect = container.getBoundingClientRect();
-                    const cx = rect.left + rect.width / 2;
-                    const cy = rect.top + rect.height / 2;
-                    const dx = clientX - cx, dy = clientY - cy;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    const angle = Math.atan2(dy, dx);
-                    const maxShift = 4;
-                    const shift = Math.min(maxShift, dist / 40);
-                    const px = 30 + Math.cos(angle) * shift;
-                    const py = 30 + Math.sin(angle) * shift;
-                    if (pupil) { pupil.setAttribute('cx', px); pupil.setAttribute('cy', py); }
-                    if (glow)  { glow.setAttribute('cx', px); glow.setAttribute('cy', py); }
-                    if (spec1) { spec1.setAttribute('cx', 23 + Math.cos(angle) * shift * 0.5); spec1.setAttribute('cy', 23 + Math.sin(angle) * shift * 0.5); }
-                    if (spec2) { spec2.setAttribute('cx', 25 + Math.cos(angle) * shift * 0.5); spec2.setAttribute('cy', 25 + Math.sin(angle) * shift * 0.5); }
-                    const magnetRange = 300;
-                    if (dist < magnetRange) {
-                        const strength = (1 - dist / magnetRange) * 8;
-                        _magX = Math.cos(angle) * strength;
-                        _magY = Math.sin(angle) * strength;
-                    } else { _magX = 0; _magY = 0; }
-                };
-                document.addEventListener('mousemove', onMove);
-                document.addEventListener('touchmove', onMove, { passive: true });
-
-                function magLoop() {
-                    if (!document.contains(container)) { _rafId = null; return; }
-                    _curMagX += (_magX - _curMagX) * 0.08;
-                    _curMagY += (_magY - _curMagY) * 0.08;
-                    if (Math.abs(_curMagX) > 0.1 || Math.abs(_curMagY) > 0.1) {
-                        container.style.translate = `${_curMagX}px ${_curMagY}px`;
-                    } else { container.style.translate = ''; }
-                    _rafId = requestAnimationFrame(magLoop);
-                }
-                _rafId = requestAnimationFrame(magLoop);
-
-                _greetEyeCleanup = () => {
-                    document.removeEventListener('mousemove', onMove);
-                    document.removeEventListener('touchmove', onMove);
-                    if (_rafId) cancelAnimationFrame(_rafId);
-                    _rafId = null;
-                    _greetEyeCleanup = null;
-                };
-            }
+            function _initGreetingEye() { /* disabled for perf */ }
 
             function _showGreetingChat() {
                 document.body.classList.remove('map-view', 'dashboard', 'trip-manager');
