@@ -3923,25 +3923,29 @@
         .dash-lead-bar {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 14px;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .dash-lead-bar:last-of-type {
+            margin-bottom: 0;
         }
         .dash-lead-label {
-            width: 50px;
+            width: 54px;
             font-size: 13px;
             font-weight: 600;
             text-align: right;
+            letter-spacing: 0.02em;
         }
         .dash-lead-track {
             flex: 1;
-            height: 36px;
+            height: 28px;
             background: rgba(255,255,255,0.03);
-            border-radius: 8px;
+            border-radius: 6px;
             overflow: hidden;
         }
         .dash-lead-fill {
             height: 100%;
-            border-radius: 8px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             padding-left: 12px;
@@ -7797,7 +7801,7 @@
                 const totalLeads = l.hot + l.warm + l.cold || 1;
                 let leadHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
                     <div class="dash-card-title">Lead Score Pipeline</div>
-                    <div style="font-size:10px;color:var(--text-tertiary);margin:-8px 0 12px 12px">${t.dealers} dealers scored</div>
+                    <div style="font-size:11px;color:var(--text-tertiary);margin:-4px 0 20px 12px">${t.dealers} dealers scored</div>
                     <div class="dash-lead-bar">
                         <div class="dash-lead-label" style="color:#ef4444">Hot</div>
                         <div class="dash-lead-track">
@@ -7816,7 +7820,7 @@
                             <div class="dash-lead-fill dash-bar" style="width:0%;background:linear-gradient(90deg,#4169e1,#6366f1)" data-w="${(l.cold/totalLeads*100).toFixed(1)}%">${l.cold}</div>
                         </div>
                     </div>
-                    <div style="margin-top:16px;font-size:11px;color:var(--text-tertiary);text-align:center">${((l.hot/totalLeads)*100).toFixed(0)}% conversion-ready</div>
+                    <div style="margin-top:20px;font-size:11px;color:var(--text-tertiary);text-align:center">${((l.hot/totalLeads)*100).toFixed(0)}% conversion-ready</div>
                 </div>`;
 
                 // (New vs Used data merged into Pricing Intelligence panel above)
