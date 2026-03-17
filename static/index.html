@@ -317,6 +317,12 @@
             text-align: center;
         }
 
+        .welcome-greet-text {
+            margin-bottom: 32px;
+            opacity: 1;
+            animation: greetTextIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.3s both;
+        }
+
         .welcome-sub {
             font-size: 16px;
             color: rgba(255,255,255,0.45);
@@ -4352,8 +4358,7 @@
                     <div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
                     <svg class="otto-eye" viewBox="0 0 60 60"><defs><radialGradient id="irisGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"><animate attributeName="stop-color" values="#4f8fff;#00d4ff;#a855f7;#4f8fff" dur="6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#1a1a3e"/></radialGradient><radialGradient id="pupilGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient></defs><circle cx="30" cy="30" r="29" fill="none" stroke="url(#irisGrad)" stroke-width="0.5" opacity="0.3"><animate attributeName="opacity" values="0.3;0.5;0.3" dur="3s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="url(#irisGrad)" stroke-width="2" opacity="0.9"/><circle cx="30" cy="30" r="27" fill="url(#irisGrad)" opacity="0.06"/><circle cx="30" cy="30" r="22" fill="url(#irisGrad)" opacity="0.18"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="360 30 30" dur="12s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="16" fill="none" stroke="url(#irisGrad)" stroke-width="2.5" opacity="0.45"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="-360 30 30" dur="8s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="10" fill="url(#irisGrad)" opacity="0.6"><animate attributeName="r" values="10;12.5;10" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0.85;0.6" dur="3s" repeatCount="indefinite"/></circle><circle class="otto-pupil" cx="30" cy="30" r="6" fill="#060810"/><circle class="pupil-glow" cx="30" cy="30" r="4" fill="url(#pupilGlow)" opacity="0.8"><animate attributeName="opacity" values="0.8;0.35;0.8" dur="2.5s" repeatCount="indefinite"/><animate attributeName="r" values="4;5;4" dur="2.5s" repeatCount="indefinite"/></circle><circle class="specular-1" cx="23" cy="23" r="3" fill="white" opacity="0.25"/><circle class="specular-2" cx="25" cy="25" r="1.5" fill="white" opacity="0.45"/></svg>
                 </div>
-                <div class="welcome-title" id="welcomeTitle"></div>
-                <div class="welcome-sub welcome-sub-reveal">Real-time inventory, lead scoring, route planning — powered by AI.</div>
+                <div class="chat-greeting-text welcome-greet-text" id="welcomeGreet"></div>
                 <div class="hero-cards">
                     <div class="hero-card" onclick="openDealerMap()">
                         <div class="hero-card-icon"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
@@ -4918,11 +4923,14 @@
             }
 
             function buildWelcomeHTML() {
+                const eye = ottoEyeSvgFull();
+                const h = new Date().getHours();
+                const pool = _hourlyGreets[h] || ["Ready when you are."];
+                const greet = pool[Math.floor(Math.random() * pool.length)];
                 return `<div class="welcome" id="welcome">
 <div class="orb-hero"><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
-<svg class="otto-eye" viewBox="0 0 60 60"><defs><radialGradient id="irisGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"><animate attributeName="stop-color" values="#4f8fff;#00d4ff;#a855f7;#4f8fff" dur="6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#1a1a3e"/></radialGradient><radialGradient id="pupilGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient></defs><circle cx="30" cy="30" r="29" fill="none" stroke="url(#irisGrad)" stroke-width="0.5" opacity="0.3"><animate attributeName="opacity" values="0.3;0.5;0.3" dur="3s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="url(#irisGrad)" stroke-width="2" opacity="0.9"/><circle cx="30" cy="30" r="27" fill="url(#irisGrad)" opacity="0.06"/><circle cx="30" cy="30" r="22" fill="url(#irisGrad)" opacity="0.18"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="360 30 30" dur="12s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="16" fill="none" stroke="url(#irisGrad)" stroke-width="2.5" opacity="0.45"><animateTransform attributeName="transform" type="rotate" from="0 30 30" to="-360 30 30" dur="8s" repeatCount="indefinite"/></circle><circle cx="30" cy="30" r="10" fill="url(#irisGrad)" opacity="0.6"><animate attributeName="r" values="10;12.5;10" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0.85;0.6" dur="3s" repeatCount="indefinite"/></circle><circle class="otto-pupil" cx="30" cy="30" r="6" fill="#060810"/><circle class="pupil-glow" cx="30" cy="30" r="4" fill="url(#pupilGlow)" opacity="0.8"><animate attributeName="opacity" values="0.8;0.35;0.8" dur="2.5s" repeatCount="indefinite"/><animate attributeName="r" values="4;5;4" dur="2.5s" repeatCount="indefinite"/></circle><circle class="specular-1" cx="23" cy="23" r="3" fill="white" opacity="0.25"/><circle class="specular-2" cx="25" cy="25" r="1.5" fill="white" opacity="0.45"/></svg></div>
-<div class="welcome-title" id="welcomeTitle"></div>
-<div class="welcome-sub welcome-sub-reveal">Real-time inventory, lead scoring, route planning — powered by AI.</div>
+${eye}</div>
+<div class="chat-greeting-text welcome-greet-text">${greet}</div>
 <div class="hero-cards">
 <div class="hero-card" onclick="openDealerMap()">
 <div class="hero-card-icon"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
@@ -4991,13 +4999,7 @@
                 const h = new Date().getHours();
                 const pool = _hourlyGreets[h] || ["Ready when you are."];
                 const greet = pool[Math.floor(Math.random() * pool.length)];
-                const picks = [..._suggestions].sort(() => Math.random() - 0.5).slice(0, 3);
-                const chips = picks.map(s =>
-                    `<button class="chat-suggestion" onclick="window._askSuggestion(this.textContent)">${esc(s)}</button>`
-                ).join('');
                 const eye = ottoEyeSvgFull();
-
-                /* Generate floating particles */
                 const colors = ['rgba(79,143,255,', 'rgba(168,85,247,', 'rgba(0,212,255,'];
                 let particles = '';
                 for (let i = 0; i < 14; i++) {
@@ -5013,6 +5015,10 @@
                     const dx3 = -15 + Math.random() * 30, dy3 = -20 + Math.random() * 40;
                     particles += `<div class="greet-particle" style="width:${sz}px;height:${sz}px;left:${x}%;top:${y}%;background:${c}${opa});box-shadow:0 0 ${sz*3}px ${c}${opa*0.6});--opa:${opa};--dur:${dur}s;--delay:${delay}s;--dx1:${dx1}px;--dy1:${dy1}px;--dx2:${dx2}px;--dy2:${dy2}px;--dx3:${dx3}px;--dy3:${dy3}px"></div>`;
                 }
+                const picks = [..._suggestions].sort(() => Math.random() - 0.5).slice(0, 3);
+                const chips = picks.map(s =>
+                    `<button class="chat-suggestion" onclick="window._askSuggestion(this.textContent)">${esc(s)}</button>`
+                ).join('');
 
                 return `<div class="chat-greeting">
                     <div class="greet-aurora greet-aurora-1"></div>
@@ -5124,9 +5130,13 @@
                 const bar = document.querySelector('.input-bar');
                 const area = document.querySelector('.input-area');
                 if (bar && area) area.appendChild(bar);
-                // Re-init welcome title animation and eye tracking
-                const wtEl = Core.$('welcomeTitle');
-                if (wtEl) Effects.splitTextReveal(wtEl, 'Otto — Comvoy Sales Intelligence', 0.3);
+                // Set greeting text and init eye tracking
+                const greetEl = Core.$('welcomeGreet');
+                if (greetEl) {
+                    const h = new Date().getHours();
+                    const pool = _hourlyGreets[h] || ["Ready when you are."];
+                    greetEl.textContent = pool[Math.floor(Math.random() * pool.length)];
+                }
                 Effects.initEyeTracking();
                 checkApiStatus();
             }
@@ -5422,8 +5432,27 @@
         })();
 
         // Init effects on load
-        const wtEl = Core.$('welcomeTitle');
-        if (wtEl) Effects.splitTextReveal(wtEl, 'Otto — Comvoy Sales Intelligence', 0.3);
+        (function _initWelcomeGreet() {
+            const el = Core.$('welcomeGreet');
+            if (!el) return;
+            const h = new Date().getHours();
+            const pool = {
+                0:["Burning the midnight oil? I'm here for it."],1:["Still at it? Respect. What do you need?"],
+                2:["Late night intel session? I'm ready."],3:["3 AM — this is when legends prep."],
+                4:["Up before the sun — let's move."],5:["Early riser — your competitors are still sleeping."],
+                6:["Morning — coffee and conquests."],7:["Morning — let's find some opportunities."],
+                8:["New day, new leads. Where do we start?"],9:["Let's hit the ground running."],
+                10:["Mid-morning momentum. What's the target?"],11:["Almost lunch — let's squeeze in one more move."],
+                12:["Lunch break intel? Smart move."],13:["Afternoon — ready to dig into the data."],
+                14:["Let's make this afternoon count."],15:["What's on your radar this afternoon?"],
+                16:["Afternoon — I've got intel when you're ready."],17:["It's five o'clock somewhere — but we're still closing."],
+                18:["Evening — prepping for tomorrow's wins?"],19:["Evening hustle — tomorrow's pipeline starts now."],
+                20:["Late session? Let's plan your next move."],21:["Night owl mode — I've got the data."],
+                22:["10 PM — still grinding? Let's make it worthwhile."],23:["Almost midnight — one last look at the numbers?"]
+            };
+            const greets = pool[h] || ["Ready when you are."];
+            el.textContent = greets[Math.floor(Math.random() * greets.length)];
+        })();
         Effects.initEyeTracking();
 
         // =====================================================================
