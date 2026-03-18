@@ -6312,7 +6312,7 @@
                     // Fouts/Comvoy offices — hard-coded so they always appear
                     const _foutsOffices = [
                         { name: 'Fouts Bros Inc.', lat: 29.9141, lng: -96.9458, addr: '4495 W State Hwy 71, La Grange, TX 78945' },
-                        { name: 'Fouts Commercial Vehicles', lat: 33.0988, lng: -83.2580, addr: '138 Roberson Mill Rd, Milledgeville, GA 31061' },
+                        { name: 'Fouts Commercial Vehicles', lat: 33.1043, lng: -83.2570, addr: '138 Roberson Mill Rd, Milledgeville, GA 31061' },
                     ];
                     _foutsOffices.forEach(office => {
                         L.marker([office.lat, office.lng], { icon: createTacticalIcon('comvoy'), zIndexOffset: 1000 })
@@ -6590,6 +6590,8 @@
             dealers.forEach(d => {
                 if (!d.lat || !d.lng) return;
                 const isFouts = /fouts|smyrna\s*truck/i.test(d.name);
+                // Skip Fouts Milledgeville — rendered by hard-coded office marker
+                if (isFouts && /milledgeville/i.test(d.city)) return;
                 const displayTier = isFouts ? 'comvoy' : d.tier;
                 const color = tierColor(d.tier);
                 const marker = L.marker([d.lat, d.lng], { icon: createTacticalIcon(displayTier, color), zIndexOffset: isFouts ? 1000 : 0 });
