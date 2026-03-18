@@ -326,16 +326,27 @@ async def get_route_dealers(
 # Geocoding helper
 # ---------------------------------------------------------------------------
 
-async def _geocode_location(text: str) -> tuple[float, float] | None:
-    """Parse freeform text ('Hampton Inn, Macon GA') into (lat, lng).
+_US_STATES = {
+    "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
+    "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
+    "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+    "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
+    "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+    "DC",
+}
 
-    Extracts city/state, then calls Nominatim via geocode_single().
+
+async def _geocode_location(text: str) -> tuple[float, float] | None:
+    """Parse freeform text ('Hampton Inn, Macon GA' or just 'atlanta') into (lat, lng).
+
+    Extracts city/state if a valid US state abbreviation is found,
+    otherwise passes the full text as the city with no state.
     """
     parts = [p.strip().rstrip(",") for p in text.replace(",", " ").split() if p.strip()]
     city_parts = list(parts)
     state = ""
     for i in range(len(parts) - 1, -1, -1):
-        if len(parts[i]) == 2 and parts[i].isalpha():
+        if len(parts[i]) == 2 and parts[i].upper() in _US_STATES:
             state = parts[i].upper()
             city_parts = parts[:i]
             break

@@ -4341,11 +4341,11 @@
             </div>
             <div class="tc-field">
                 <label>Start Location</label>
-                <input type="text" id="tcStart" placeholder="e.g. Smyrna, GA or Hampton Inn, Macon GA">
+                <input type="text" id="tcStart" placeholder="e.g. Atlanta, GA">
             </div>
             <div class="tc-field">
                 <label>End Location</label>
-                <input type="text" id="tcEnd" placeholder="e.g. Atlanta, GA">
+                <input type="text" id="tcEnd" placeholder="e.g. Savannah, GA">
             </div>
             <div class="tc-field">
                 <label>Notes (optional)</label>
@@ -5773,8 +5773,8 @@
                 overlay.innerHTML = '<div class="tm-modal">' +
                     '<div class="tm-modal-title">' + (existing ? 'Edit Trip Day' : 'Plan a Trip') + '</div>' +
                     '<div class="tm-field"><label>Travel Date</label><input type="date" id="tmDate" value="' + (existing ? existing.travel_date : '') + '"></div>' +
-                    '<div class="tm-field"><label>Start Location</label><input type="text" id="tmStart" placeholder="e.g. Smyrna, GA" value="' + (existing ? esc(existing.start_location) : '') + '"></div>' +
-                    '<div class="tm-field"><label>End Location</label><input type="text" id="tmEnd" placeholder="e.g. Atlanta, GA" value="' + (existing ? esc(existing.end_location) : '') + '"></div>' +
+                    '<div class="tm-field"><label>Start Location</label><input type="text" id="tmStart" placeholder="e.g. Atlanta, GA" value="' + (existing ? esc(existing.start_location) : '') + '"></div>' +
+                    '<div class="tm-field"><label>End Location</label><input type="text" id="tmEnd" placeholder="e.g. Savannah, GA" value="' + (existing ? esc(existing.end_location) : '') + '"></div>' +
                     '<div class="tm-field"><label>Notes (optional)</label><textarea id="tmNotes" placeholder="Hotel info, dealer meeting times...">' + (existing ? esc(existing.notes || '') : '') + '</textarea></div>' +
                     '<div class="tm-modal-actions">' +
                         '<button class="tm-modal-btn secondary" onclick="closeTripForm()">Cancel</button>' +
@@ -6036,7 +6036,7 @@
             nearbyDealers.forEach(d => {
                 const color = Core.tierColor(d.tier);
                 const tier = d.tier || 'unscored';
-                const icon = createTacticalIcon(tier, color);
+                const icon = DealerMap.createTacticalIcon(tier, color);
                 // Override className for route markers
                 icon.options.className = 'route-marker';
 
@@ -7120,19 +7120,17 @@
             _routeActive = true;
             clearOverlay();
 
-            await loadDealers(trip);
-
             // Re-fetch trip data to get the (potentially backfilled) real driving polyline
+            // Do this BEFORE loadDealers so backend has polyline for corridor search
             if (!trip.route_polyline) {
                 try {
-                    const res = await fetchT(API_BASE + `/api/travel/plans/${_routeSelectedRep}`);
-                    if (res.ok) {
-                        const updated = await res.json();
-                        const freshTrip = updated.find(t => t.id === tripId);
-                        if (freshTrip && freshTrip.route_polyline) {
-                            trip = freshTrip;
+                    // Trigger backfill via preview-route (also geocodes if needed)
+                    const bfRes = await fetchT(API_BASE + `/api/travel/preview-route?start=${encodeURIComponent(trip.start_location)}&end=${encodeURIComponent(trip.end_location)}`);
+                    if (bfRes.ok) {
+                        const bfData = await bfRes.json();
+                        if (bfData.route_polyline) {
+                            trip.route_polyline = bfData.route_polyline;
                             _routeSelectedTrip = trip;
-                            // Update cached trip list too
                             const idx = _routeTrips.findIndex(t => t.id === tripId);
                             if (idx >= 0) _routeTrips[idx] = trip;
                         }
@@ -7140,18 +7138,15 @@
                 } catch(e) { /* proceed with straight line fallback */ }
             }
 
+            // Draw route polyline first so it's visible while dealers load
             drawPolyline(trip);
             updateLegend(true);
 
-            // Highlight dealers near the confirmed route + show summary sidebar
-            let routeCoords = parseWkt(trip.route_polyline);
-            if (routeCoords.length < 2 && trip.start_lat && trip.end_lat) {
-                routeCoords = [[trip.start_lat, trip.start_lng], [trip.end_lat, trip.end_lng]];
-            }
-            if (routeCoords.length >= 2) {
-                const nearby = TripCreate.highlightProximity(routeCoords, 20);
-                TripCreate.renderSummary(nearby);
-            }
+            // Dim non-route dealers via CSS (no duplicate markers needed)
+            document.body.classList.add('route-preview');
+
+            // Load backend-computed route dealers (definitive set with scores + distance)
+            await loadDealers(trip);
 
             // Fit bounds to include route + dealer markers
             const _map = DealerMap.getMap();
@@ -7311,7 +7306,7 @@
                 TripCreate.clearProximity();
                 _routeActive = false;
                 _routeSelectedTrip = null;
-                document.body.classList.remove('route-active');
+                document.body.classList.remove('route-active', 'route-preview');
                 _savedGlobalStats = '';
                 const _map = DealerMap.getMap();
                 const _allDealers = DealerMap.getAllDealers();

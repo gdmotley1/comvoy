@@ -55,8 +55,9 @@ async def geocode_dealers(dealers: list[dict]) -> list[dict]:
 async def _geocode_one(client: httpx.AsyncClient, city: str, state: str) -> tuple[float, float] | None:
     """Geocode a single city+state via Nominatim. Returns (lat, lng) or None."""
     try:
+        q = f"{city}, {state}, USA" if state else f"{city}, USA"
         resp = await client.get(NOMINATIM_URL, params={
-            "q": f"{city}, {state}, USA",
+            "q": q,
             "format": "json",
             "limit": 1,
             "countrycodes": "us",
