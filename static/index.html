@@ -6309,12 +6309,17 @@
                         subdomains: 'abcd', maxZoom: 18,
                     }).addTo(_map);
 
-                    // Fouts/Comvoy office — La Grange TX (not in dealer DB, hard-coded)
-                    const _foutsLaGrange = { name: 'Fouts Bros Inc.', lat: 29.9141, lng: -96.9458, addr: '4495 W State Hwy 71, La Grange, TX' };
-                    L.marker([_foutsLaGrange.lat, _foutsLaGrange.lng], { icon: createTacticalIcon('comvoy'), zIndexOffset: 1000 })
-                        .bindPopup(`<div style="font-weight:600;font-size:13px;margin-bottom:2px">${_foutsLaGrange.name}</div><div style="font-size:11px;color:#aaa">${_foutsLaGrange.addr}</div>`)
-                        .bindTooltip(_foutsLaGrange.name, { direction: 'top', offset: [0, -14] })
-                        .addTo(_map);
+                    // Fouts/Comvoy offices — hard-coded so they always appear
+                    const _foutsOffices = [
+                        { name: 'Fouts Bros Inc.', lat: 29.9141, lng: -96.9458, addr: '4495 W State Hwy 71, La Grange, TX 78945' },
+                        { name: 'Fouts Commercial Vehicles', lat: 33.0801, lng: -83.2321, addr: '138 Roberson Mill Rd, Milledgeville, GA 31061' },
+                    ];
+                    _foutsOffices.forEach(office => {
+                        L.marker([office.lat, office.lng], { icon: createTacticalIcon('comvoy'), zIndexOffset: 1000 })
+                            .bindPopup(`<div style="font-weight:600;font-size:13px;margin-bottom:2px">${office.name}</div><div style="font-size:11px;color:#aaa">${office.addr}</div>`)
+                            .bindTooltip(office.name, { direction: 'top', offset: [0, -14] })
+                            .addTo(_map);
+                    });
 
                     try {
                         const res = await fetchT(API_BASE + '/api/dealers/map');
