@@ -12,6 +12,7 @@ class Settings(BaseSettings):
 
     # --- Token budget guardrails ---
     agent_model: str = "claude-sonnet-4-20250514"
+    agent_model_fast: str = "claude-haiku-35-20241022"  # fast model for simple queries
     agent_max_tokens: int = 4096          # max output tokens per API call
     agent_max_loop: int = 5               # max tool-use iterations per request
     agent_max_history: int = 30           # max messages kept in conversation

@@ -7397,6 +7397,7 @@
 
             // Module-level state for price curve dropdown
             let _priceCurveState = {};
+            let _allStates = []; // preserved across filter changes
 
             async function open() {
                 document.body.classList.remove('chatting', 'map-view', 'trip-manager');
@@ -7419,6 +7420,10 @@
                     if (!res.ok) throw new Error('Dashboard load failed');
                     _data = await res.json();
                     _loaded = true;
+                    // Capture full state list on first (unfiltered) load
+                    if (!state && _data.by_state) {
+                        _allStates = _data.by_state.map(s => s.state).sort();
+                    }
                 } catch(e) {
                     console.error('Dashboard load error:', e);
                     $('dashboardWrap').innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-secondary)">Failed to load dashboard data. Check your connection.</div>';
@@ -7440,8 +7445,8 @@
                 const d = _data;
                 const wrap = $('dashboardWrap');
 
-                // Build filters
-                const states = (d.by_state || []).map(s => s.state).sort();
+                // Build filters — use preserved full state list so dropdown always has all states
+                const states = _allStates.length ? _allStates : (d.by_state || []).map(s => s.state).sort();
                 let filtersHTML = `<div class="dash-filters">
                     <span class="dash-filter-label">Territory</span>
                     <select class="dash-filter-select" id="dashStateSelect" onchange="dashFilterState(this.value)">

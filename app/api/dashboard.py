@@ -72,7 +72,9 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
         raise HTTPException(404, "No vehicle data found for this filter.")
 
     # Aggregate from vehicle data
-    prices = [v["price"] for v in vehicles if v["price"]]
+    # Filter out junk prices (placeholders, errors) — $5k floor for commercial trucks
+    PRICE_FLOOR = 5000
+    prices = [v["price"] for v in vehicles if v["price"] and v["price"] >= PRICE_FLOOR]
     brand_counter = Counter()
     body_type_counter = Counter()
     builder_counter = Counter()
@@ -97,7 +99,7 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
             trans_counter[v["transmission"]] += 1
         if v["is_smyrna"]:
             smyrna_count += 1
-            if v["price"]:
+            if v["price"] and v["price"] >= PRICE_FLOOR:
                 smyrna_prices.append(v["price"])
         did = v["dealer_id"]
         dealer_vehicles[did] += 1
@@ -125,7 +127,7 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
     brackets = {k: 0 for k in bracket_keys}
     bt_brackets = defaultdict(lambda: {k: 0 for k in bracket_keys})
     for v in vehicles:
-        if v["price"]:
+        if v["price"] and v["price"] >= PRICE_FLOOR:
             bk = _bracket(v["price"])
             brackets[bk] += 1
             if v["body_type"]:
@@ -134,7 +136,7 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
     # Build per-body-type bracket data for top body types
     price_by_body_type = {}
     for bt, counts in sorted(bt_brackets.items(), key=lambda x: sum(x[1].values()), reverse=True)[:12]:
-        bt_prices_list = [v["price"] for v in vehicles if v["price"] and v["body_type"] == bt]
+        bt_prices_list = [v["price"] for v in vehicles if v["price"] and v["price"] >= PRICE_FLOOR and v["body_type"] == bt]
         price_by_body_type[bt] = {
             "brackets": counts,
             "avg": round(sum(bt_prices_list) / len(bt_prices_list)) if bt_prices_list else 0,
@@ -193,14 +195,14 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
     by_state = [{"state": s, "vehicles": c} for s, c in state_vehicle_counter.most_common()]
 
     # Condition price comparison
-    new_prices = [v["price"] for v in vehicles if v["price"] and v.get("condition") == "New"]
-    used_prices = [v["price"] for v in vehicles if v["price"] and v.get("condition") == "Used"]
+    new_prices = [v["price"] for v in vehicles if v["price"] and v["price"] >= PRICE_FLOOR and v.get("condition") == "New"]
+    used_prices = [v["price"] for v in vehicles if v["price"] and v["price"] >= PRICE_FLOOR and v.get("condition") == "Used"]
 
     # Smyrna price position vs market by body type (New vs New only)
     bt_prices_all = defaultdict(list)
     bt_prices_smyrna = defaultdict(list)
     for v in vehicles:
-        if v["price"] and v["body_type"] and v.get("condition") == "New":
+        if v["price"] and v["price"] >= PRICE_FLOOR and v["body_type"] and v.get("condition") == "New":
             bt_prices_all[v["body_type"]].append(v["price"])
             if v["is_smyrna"]:
                 bt_prices_smyrna[v["body_type"]].append(v["price"])

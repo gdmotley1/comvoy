@@ -1736,6 +1736,7 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                     q = q.ilike("condition", tool_input["condition"])
                 return q.range(offset, offset + page_size - 1)
 
+            PRICE_FLOOR = 5000  # filter junk/placeholder prices
             market_prices = []
             offset = 0
             page_size = 1000
@@ -1744,7 +1745,7 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                 page = q.execute()
                 if not page.data:
                     break
-                market_prices.extend(r["price"] for r in page.data)
+                market_prices.extend(r["price"] for r in page.data if r["price"] >= PRICE_FLOOR)
                 if len(page.data) < page_size:
                     break
                 offset += page_size

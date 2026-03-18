@@ -48,6 +48,30 @@ TOOL_STATUS_MAP = {
     "get_upload_report": "Loading report data...",
 }
 
+import re
+
+# Simple query classifier — routes easy questions to Haiku for speed
+_SIMPLE_PATTERNS = [
+    r"^how many\b",
+    r"^what('?s| is) the (total|count|number)",
+    r"^(list|show|give me) .{0,30}(states?|brands?|dealers?)\s*$",
+    r"^(hi|hello|hey|thanks|thank you|ok|okay|got it|cool|bye)",
+    r"^what (do|can) you (do|help)",
+    r"^who (are|r) you",
+]
+_SIMPLE_RE = re.compile("|".join(_SIMPLE_PATTERNS), re.IGNORECASE)
+
+
+def _pick_model(message: str) -> str:
+    """Route simple queries to Haiku, complex ones to Sonnet."""
+    msg = message.strip()
+    # Short off-topic / greeting / simple count queries → fast model
+    if len(msg) < 60 and _SIMPLE_RE.search(msg):
+        logger.info(f"Routing to fast model (Haiku): {msg[:50]}")
+        return settings.agent_model_fast
+    return settings.agent_model
+
+
 # In-memory conversation history (per-session) with timestamps for expiry
 _conversations: dict[str, list] = {}
 _session_last_active: dict[str, float] = {}
@@ -144,8 +168,9 @@ def _prepare_chat(msg: ChatMessage, session_id: str):
     _conversations[session_id] = history
 
     system_prompt = f"TODAY: {date.today().isoformat()}\n\n{SALES_KNOWLEDGE_BASE}\n\n{SALES_AGENT_SYSTEM_PROMPT}"
+    model = _pick_model(msg.message)
 
-    return history, system_prompt, client
+    return history, system_prompt, client, model
 
 
 @router.post("/chat")
@@ -159,7 +184,7 @@ async def chat(msg: ChatMessage, session_id: str = "default"):
             "error_message": "Otto needs an Anthropic API key to work. Add ANTHROPIC_API_KEY to your .env file and restart the server.",
         }
 
-    history, system_prompt, client = result
+    history, system_prompt, client, model = result
     start_time = time.time()
     total_input_tokens = 0
     total_output_tokens = 0
@@ -168,7 +193,7 @@ async def chat(msg: ChatMessage, session_id: str = "default"):
     for iteration in range(settings.agent_max_loop):
         try:
             response = client.messages.create(
-                model=settings.agent_model,
+                model=model,
                 max_tokens=settings.agent_max_tokens,
                 system=system_prompt,
                 tools=TOOL_DEFINITIONS,
@@ -260,7 +285,7 @@ async def chat_stream(msg: ChatMessage, session_id: str = "default"):
             media_type="text/event-stream",
         )
 
-    history, system_prompt, client = result
+    history, system_prompt, client, model = result
 
     async def generate():
         start_time = time.time()
@@ -282,7 +307,7 @@ async def chat_stream(msg: ChatMessage, session_id: str = "default"):
                 def _make_stream_runner(msgs, tools):
                     def _run():
                         kwargs = dict(
-                            model=settings.agent_model,
+                            model=model,
                             max_tokens=settings.agent_max_tokens,
                             system=system_prompt,
                             messages=msgs,
