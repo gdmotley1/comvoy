@@ -4343,7 +4343,12 @@
                 <label>Start Location</label>
                 <input type="text" id="tcStart" placeholder="e.g. Atlanta, GA">
             </div>
-            <div class="tc-field">
+            <div class="tc-field" style="flex-direction:row;align-items:center;gap:8px;padding:2px 0;">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;letter-spacing:0.04em;opacity:0.7;margin:0;">
+                    <input type="checkbox" id="tcRoundTrip" style="accent-color:#4f8fff;width:14px;height:14px;cursor:pointer;"> Round trip (return to start)
+                </label>
+            </div>
+            <div class="tc-field" id="tcEndField">
                 <label>End Location</label>
                 <input type="text" id="tcEnd" placeholder="e.g. Savannah, GA">
             </div>
@@ -5502,7 +5507,7 @@
                         '<span class="tm-card-badge ' + badgeClass + '">' + badgeText + '</span>' +
                         '<span class="tm-card-date">' + (trip.start_location || '?') + '</span>' +
                     '</div>' +
-                    '<div class="tm-card-route">' + arrow + ' ' + esc(trip.start_location || '') + '  →  ' + esc(trip.end_location || '') + '</div>' +
+                    '<div class="tm-card-route">' + (trip.is_round_trip ? '&#x21BB; ' + esc(trip.start_location || '') + '  (round trip)' : arrow + ' ' + esc(trip.start_location || '') + '  →  ' + esc(trip.end_location || '')) + '</div>' +
                     (trip.notes ? '<div class="tm-card-notes">' + esc(trip.notes) + '</div>' : '') +
                     '<div class="tm-card-actions">' +
                         '<button class="tm-card-act primary" onclick="tmExpandDealers(\'' + trip.id + '\')">' + (expanded ? 'Hide Dealers' : 'View Dealers') + '</button>' +
@@ -5774,7 +5779,8 @@
                     '<div class="tm-modal-title">' + (existing ? 'Edit Trip Day' : 'Plan a Trip') + '</div>' +
                     '<div class="tm-field"><label>Travel Date</label><input type="date" id="tmDate" value="' + (existing ? existing.travel_date : '') + '"></div>' +
                     '<div class="tm-field"><label>Start Location</label><input type="text" id="tmStart" placeholder="e.g. Atlanta, GA" value="' + (existing ? esc(existing.start_location) : '') + '"></div>' +
-                    '<div class="tm-field"><label>End Location</label><input type="text" id="tmEnd" placeholder="e.g. Savannah, GA" value="' + (existing ? esc(existing.end_location) : '') + '"></div>' +
+                    '<div class="tm-field" style="flex-direction:row;align-items:center;gap:8px;padding:2px 0;"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;letter-spacing:0.04em;opacity:0.7;margin:0;"><input type="checkbox" id="tmRoundTrip" style="accent-color:#4f8fff;width:14px;height:14px;cursor:pointer;"' + (existing && existing.is_round_trip ? ' checked' : '') + ' onchange="document.getElementById(\'tmEndField\').style.display=this.checked?\'none\':\'\'"> Round trip (return to start)</label></div>' +
+                    '<div class="tm-field" id="tmEndField"' + (existing && existing.is_round_trip ? ' style="display:none"' : '') + '><label>End Location</label><input type="text" id="tmEnd" placeholder="e.g. Savannah, GA" value="' + (existing ? esc(existing.end_location) : '') + '"></div>' +
                     '<div class="tm-field"><label>Notes (optional)</label><textarea id="tmNotes" placeholder="Hotel info, dealer meeting times...">' + (existing ? esc(existing.notes || '') : '') + '</textarea></div>' +
                     '<div class="tm-modal-actions">' +
                         '<button class="tm-modal-btn secondary" onclick="closeTripForm()">Cancel</button>' +
@@ -5795,9 +5801,10 @@
                 var startVal = document.getElementById('tmStart') ? document.getElementById('tmStart').value.trim() : '';
                 var endVal = document.getElementById('tmEnd') ? document.getElementById('tmEnd').value.trim() : '';
                 var notesVal = document.getElementById('tmNotes') ? document.getElementById('tmNotes').value.trim() : '';
+                var isRoundTrip = document.getElementById('tmRoundTrip') ? document.getElementById('tmRoundTrip').checked : false;
                 if (!dateVal) { var d = document.getElementById('tmDate'); if (d) d.focus(); return; }
                 if (!startVal) { var s = document.getElementById('tmStart'); if (s) s.focus(); return; }
-                if (!endVal) { var e2 = document.getElementById('tmEnd'); if (e2) e2.focus(); return; }
+                if (!isRoundTrip && !endVal) { var e2 = document.getElementById('tmEnd'); if (e2) e2.focus(); return; }
                 var btn = document.getElementById('tmSaveBtn');
                 if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
                 try {
@@ -5807,8 +5814,10 @@
                         var body = {};
                         if (dateVal !== (ex ? ex.travel_date : '')) body.travel_date = dateVal;
                         if (startVal !== (ex ? ex.start_location : '')) body.start_location = startVal;
-                        if (endVal !== (ex ? ex.end_location : '')) body.end_location = endVal;
+                        var effectiveEnd = isRoundTrip ? startVal : endVal;
+                        if (effectiveEnd !== (ex ? ex.end_location : '')) body.end_location = effectiveEnd;
                         if (notesVal !== (ex ? (ex.notes || '') : '')) body.notes = notesVal;
+                        body.is_round_trip = isRoundTrip;
                         res = await fetchT(API_BASE + '/api/travel/plans/' + _tmEditId, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
@@ -5822,7 +5831,8 @@
                                 rep_id: _selectedRepId,
                                 travel_date: dateVal,
                                 start_location: startVal,
-                                end_location: endVal,
+                                end_location: isRoundTrip ? startVal : endVal,
+                                is_round_trip: isRoundTrip,
                                 notes: notesVal || null
                             })
                         });
@@ -5894,6 +5904,16 @@
                     endEl.addEventListener('blur', () => debouncePreview());
                     endEl._tcBound = true;
                 }
+                const rtEl = document.getElementById('tcRoundTrip');
+                if (rtEl && !rtEl._tcBound) {
+                    rtEl.addEventListener('change', () => {
+                        const endField = document.getElementById('tcEndField');
+                        if (endField) endField.style.display = rtEl.checked ? 'none' : '';
+                        if (rtEl.checked) debouncePreview();
+                        else clearPreview();
+                    });
+                    rtEl._tcBound = true;
+                }
             }
 
             function close() {
@@ -5908,6 +5928,10 @@
                 if (status) { status.textContent = ''; status.className = 'tc-preview-status'; }
                 const btn = document.getElementById('tcSaveBtn');
                 if (btn) { btn.disabled = false; btn.textContent = 'Save Trip'; }
+                const rtEl = document.getElementById('tcRoundTrip');
+                if (rtEl) rtEl.checked = false;
+                const endField = document.getElementById('tcEndField');
+                if (endField) endField.style.display = '';
             }
 
             function debouncePreview() {
@@ -5918,14 +5942,22 @@
             async function previewRoute() {
             const startVal = document.getElementById('tcStart')?.value.trim();
             const endVal = document.getElementById('tcEnd')?.value.trim();
+            const isRoundTrip = document.getElementById('tcRoundTrip')?.checked || false;
             const status = document.getElementById('tcPreviewStatus');
 
-            if (!startVal || !endVal) return;
+            if (!startVal) return;
+            if (!isRoundTrip && !endVal) return;
 
-            if (status) { status.textContent = 'Previewing route...'; status.className = 'tc-preview-status'; }
+            if (status) { status.textContent = isRoundTrip ? 'Finding nearby dealers...' : 'Previewing route...'; status.className = 'tc-preview-status'; }
 
             try {
-                const res = await fetchT(API_BASE + `/api/travel/preview-route?start=${encodeURIComponent(startVal)}&end=${encodeURIComponent(endVal)}`);
+                let url = API_BASE + `/api/travel/preview-route?start=${encodeURIComponent(startVal)}`;
+                if (isRoundTrip) {
+                    url += `&round_trip=true`;
+                } else {
+                    url += `&end=${encodeURIComponent(endVal)}`;
+                }
+                const res = await fetchT(url);
 
                 if (!res.ok) {
                     const err = await res.json().catch(() => ({}));
@@ -5938,50 +5970,90 @@
 
                 const _map = DealerMap.getMap();
                 if (_map) {
-                    let coords;
-                    if (data.route_polyline) {
-                        coords = RouteOverlay.parseWkt(data.route_polyline);
+                    if (data.is_round_trip) {
+                        // Round trip: show base marker + radius circle + nearby dealers
+                        const center = [data.start.lat, data.start.lng];
+                        const bufferMiles = 25;
+                        const bufferMeters = bufferMiles * 1609.34;
+
+                        // Radius circle
+                        const circle = L.circle(center, {
+                            radius: bufferMeters, color: '#ff6b35', weight: 2, opacity: 0.5,
+                            fillColor: '#ff6b35', fillOpacity: 0.06, dashArray: '8 6',
+                        }).addTo(_map);
+                        _tcPreviewMarkers.push(circle);
+
+                        // Base marker
+                        const baseIcon = L.divIcon({
+                            html: '<div class="route-endpoint start" style="font-size:11px;">&#x21BB;</div>',
+                            className: 'route-marker', iconSize: [28, 28], iconAnchor: [14, 14],
+                        });
+                        _tcPreviewMarkers.push(L.marker(center, { icon: baseIcon, zIndexOffset: 1000 }).addTo(_map));
+
+                        // Create a dummy polyline layer for fitBounds
+                        _tcPreviewLayer = L.polyline([center, center], { opacity: 0 }).addTo(_map);
+
+                        _map.setView(center, 9, { animate: true });
+
+                        // Generate circle coords for highlightProximity
+                        const circleCoords = [];
+                        for (let a = 0; a < 360; a += 15) {
+                            const rad = a * Math.PI / 180;
+                            const dlat = (bufferMiles / 69.0) * Math.cos(rad);
+                            const dlng = (bufferMiles / (69.0 * Math.cos(center[0] * Math.PI / 180))) * Math.sin(rad);
+                            circleCoords.push([center[0] + dlat, center[1] + dlng]);
+                        }
+                        circleCoords.push(circleCoords[0]);
+                        const nearbyDealers = highlightProximity(circleCoords, bufferMiles);
+                        renderSummary(nearbyDealers);
+
+                        if (status) { status.textContent = `Showing ${nearbyDealers?.length || 0} dealers near base`; status.className = 'tc-preview-status success'; }
+                    } else {
+                        // Normal A→B route
+                        let coords;
+                        if (data.route_polyline) {
+                            coords = RouteOverlay.parseWkt(data.route_polyline);
+                        }
+                        if (!coords || coords.length < 2) {
+                            coords = [[data.start.lat, data.start.lng], [data.end.lat, data.end.lng]];
+                        }
+
+                        // Outer glow
+                        const glow = L.polyline(coords, {
+                            color: '#ff6b35', weight: 8, opacity: 0.15,
+                            smoothFactor: 1, lineCap: 'round', lineJoin: 'round',
+                        }).addTo(_map);
+                        _tcPreviewMarkers.push(glow);
+
+                        // Main line (dashed orange for preview distinction)
+                        _tcPreviewLayer = L.polyline(coords, {
+                            color: '#ff6b35', weight: 3.5, opacity: 0.8,
+                            smoothFactor: 1, lineCap: 'round', lineJoin: 'round',
+                            dashArray: '10 6',
+                        }).addTo(_map);
+
+                        // Start marker (green S)
+                        const startIcon = L.divIcon({
+                            html: '<div class="route-endpoint start">S</div>',
+                            className: 'route-marker', iconSize: [28, 28], iconAnchor: [14, 14],
+                        });
+                        const endIcon = L.divIcon({
+                            html: '<div class="route-endpoint end">E</div>',
+                            className: 'route-marker', iconSize: [28, 28], iconAnchor: [14, 14],
+                        });
+
+                        _tcPreviewMarkers.push(
+                            L.marker(coords[0], { icon: startIcon }).addTo(_map),
+                            L.marker(coords[coords.length - 1], { icon: endIcon }).addTo(_map)
+                        );
+
+                        _map.fitBounds(_tcPreviewLayer.getBounds(), { padding: [60, 380], maxZoom: 10 });
+
+                        const nearbyDealers = highlightProximity(coords, 20);
+                        renderSummary(nearbyDealers);
+
+                        if (status) { status.textContent = 'Driving route preview shown on map'; status.className = 'tc-preview-status success'; }
                     }
-                    if (!coords || coords.length < 2) {
-                        coords = [[data.start.lat, data.start.lng], [data.end.lat, data.end.lng]];
-                    }
-
-                    // Outer glow
-                    const glow = L.polyline(coords, {
-                        color: '#ff6b35', weight: 8, opacity: 0.15,
-                        smoothFactor: 1, lineCap: 'round', lineJoin: 'round',
-                    }).addTo(_map);
-                    _tcPreviewMarkers.push(glow);
-
-                    // Main line (dashed orange for preview distinction)
-                    _tcPreviewLayer = L.polyline(coords, {
-                        color: '#ff6b35', weight: 3.5, opacity: 0.8,
-                        smoothFactor: 1, lineCap: 'round', lineJoin: 'round',
-                        dashArray: '10 6',
-                    }).addTo(_map);
-
-                    // Start marker (green S)
-                    const startIcon = L.divIcon({
-                        html: '<div class="route-endpoint start">S</div>',
-                        className: 'route-marker', iconSize: [28, 28], iconAnchor: [14, 14],
-                    });
-                    const endIcon = L.divIcon({
-                        html: '<div class="route-endpoint end">E</div>',
-                        className: 'route-marker', iconSize: [28, 28], iconAnchor: [14, 14],
-                    });
-
-                    _tcPreviewMarkers.push(
-                        L.marker(coords[0], { icon: startIcon }).addTo(_map),
-                        L.marker(coords[coords.length - 1], { icon: endIcon }).addTo(_map)
-                    );
-
-                    // Fit bounds to the full route
-                    _map.fitBounds(_tcPreviewLayer.getBounds(), { padding: [60, 380], maxZoom: 10 });
-
-                    const nearbyDealers = highlightProximity(coords, 20);
-                    renderSummary(nearbyDealers);
-
-                    if (status) { status.textContent = 'Driving route preview shown on map'; status.className = 'tc-preview-status success'; }
                 }
             } catch(e) {
                 console.error('Preview route error:', e);
@@ -6150,11 +6222,12 @@
             const startVal = document.getElementById('tcStart')?.value.trim();
             const endVal = document.getElementById('tcEnd')?.value.trim();
             const notesVal = document.getElementById('tcNotes')?.value.trim();
+            const isRoundTrip = document.getElementById('tcRoundTrip')?.checked || false;
 
             if (!repId) { document.getElementById('tcRep')?.focus(); return; }
             if (!dateVal) { document.getElementById('tcDate')?.focus(); return; }
             if (!startVal) { document.getElementById('tcStart')?.focus(); return; }
-            if (!endVal) { document.getElementById('tcEnd')?.focus(); return; }
+            if (!isRoundTrip && !endVal) { document.getElementById('tcEnd')?.focus(); return; }
 
             const btn = document.getElementById('tcSaveBtn');
             if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
@@ -6167,7 +6240,8 @@
                         rep_id: repId,
                         travel_date: dateVal,
                         start_location: startVal,
-                        end_location: endVal,
+                        end_location: isRoundTrip ? startVal : endVal,
+                        is_round_trip: isRoundTrip,
                         notes: notesVal || null
                     })
                 });
@@ -7094,7 +7168,7 @@
                     const dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
                     return `<div class="route-dropdown-item" data-id="${t.id}" onclick="selectRouteTrip('${t.id}')">
                         <div>${dateStr}</div>
-                        <div class="route-dropdown-item-sub">${esc(t.start_location)} → ${esc(t.end_location)}</div>
+                        <div class="route-dropdown-item-sub">${t.is_round_trip ? '↻ ' + esc(t.start_location) + ' (round trip)' : esc(t.start_location) + ' → ' + esc(t.end_location)}</div>
                     </div>`;
                 }).join('');
             } catch(e) {
@@ -7109,7 +7183,7 @@
             _routeSelectedTrip = trip;
             const d = new Date(trip.travel_date + 'T12:00:00');
             const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-            $('routeTripLabel').textContent = `${dateStr} — ${trip.start_location.split(',')[0]} → ${trip.end_location.split(',')[0]}`;
+            $('routeTripLabel').textContent = trip.is_round_trip ? `${dateStr} — ↻ ${trip.start_location.split(',')[0]}` : `${dateStr} — ${trip.start_location.split(',')[0]} → ${trip.end_location.split(',')[0]}`;
             $('routeTripDropdown').classList.remove('open');
             _routeTripDdOpen = false;
             $('routeTripMenu').querySelectorAll('.route-dropdown-item').forEach(el => {

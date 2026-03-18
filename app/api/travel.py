@@ -98,15 +98,24 @@ async def geocode_location_endpoint(q: str = Query(..., description="Location te
 @router.get("/preview-route")
 async def preview_route(
     start: str = Query(..., description="Start location text"),
-    end: str = Query(..., description="End location text"),
+    end: str = Query("", description="End location text"),
+    round_trip: bool = Query(False, description="Round trip (end = start)"),
 ):
     """Geocode start + end, fetch driving route polyline for live map preview."""
-    start_coords, end_coords = await asyncio.gather(
-        _geocode_location(start),
-        _geocode_location(end),
-    )
+    start_coords = await _geocode_location(start)
     if not start_coords:
         raise HTTPException(422, f"Could not geocode start: {start}")
+
+    if round_trip or not end:
+        # Round trip: end = start, no driving route needed
+        return {
+            "start": {"lat": start_coords[0], "lng": start_coords[1]},
+            "end": {"lat": start_coords[0], "lng": start_coords[1]},
+            "route_polyline": None,
+            "is_round_trip": True,
+        }
+
+    end_coords = await _geocode_location(end)
     if not end_coords:
         raise HTTPException(422, f"Could not geocode end: {end}")
 
@@ -368,22 +377,27 @@ async def create_travel_plan(body: TravelPlanCreate):
     if not rep.data:
         raise HTTPException(404, "Rep not found")
 
-    # Geocode start + end concurrently
-    start_coords, end_coords = await asyncio.gather(
-        _geocode_location(body.start_location),
-        _geocode_location(body.end_location),
-    )
+    # Round trip: end = start
+    if body.is_round_trip:
+        body.end_location = body.start_location
 
+    # Geocode start
+    start_coords = await _geocode_location(body.start_location)
     if not start_coords:
         raise HTTPException(422, f"Could not geocode start location: {body.start_location}")
-    if not end_coords:
-        raise HTTPException(422, f"Could not geocode end location: {body.end_location}")
 
-    # Fetch real driving route polyline (falls back gracefully if unavailable)
-    route_wkt = await get_driving_route(
-        start_coords[0], start_coords[1],
-        end_coords[0], end_coords[1],
-    )
+    if body.is_round_trip:
+        end_coords = start_coords
+        route_wkt = None
+    else:
+        end_coords = await _geocode_location(body.end_location)
+        if not end_coords:
+            raise HTTPException(422, f"Could not geocode end location: {body.end_location}")
+        # Fetch real driving route polyline (falls back gracefully if unavailable)
+        route_wkt = await get_driving_route(
+            start_coords[0], start_coords[1],
+            end_coords[0], end_coords[1],
+        )
 
     record = {
         "rep_id": body.rep_id,
@@ -396,6 +410,7 @@ async def create_travel_plan(body: TravelPlanCreate):
         "end_lng": end_coords[1],
         "notes": body.notes,
         "route_polyline": route_wkt,
+        "is_round_trip": body.is_round_trip,
     }
 
     try:
@@ -451,14 +466,29 @@ async def update_travel_plan(plan_id: str, body: TravelPlanUpdate):
     if body.notes is not None:
         updates["notes"] = body.notes
 
-    # Re-fetch driving route if either location changed
+    if body.is_round_trip is not None:
+        updates["is_round_trip"] = body.is_round_trip
+        if body.is_round_trip:
+            # Round trip: sync end to start
+            merged = {**old, **updates}
+            updates["end_location"] = merged["start_location"]
+            updates["end_lat"] = merged["start_lat"]
+            updates["end_lng"] = merged["start_lng"]
+            updates["route_polyline"] = None
+            locations_changed = False  # skip route fetch below
+
+    # Re-fetch driving route if either location changed (non-round-trip only)
     if locations_changed:
         merged = {**old, **updates}
-        route_wkt = await get_driving_route(
-            merged["start_lat"], merged["start_lng"],
-            merged["end_lat"], merged["end_lng"],
-        )
-        updates["route_polyline"] = route_wkt
+        is_rt = merged.get("is_round_trip", old.get("is_round_trip", False))
+        if is_rt:
+            updates["route_polyline"] = None
+        else:
+            route_wkt = await get_driving_route(
+                merged["start_lat"], merged["start_lng"],
+                merged["end_lat"], merged["end_lng"],
+            )
+            updates["route_polyline"] = route_wkt
 
     if not updates:
         return {"status": "no_changes", "plan": old}

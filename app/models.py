@@ -146,8 +146,9 @@ class TravelPlanCreate(BaseModel):
     rep_id: str
     travel_date: date
     start_location: str = Field(..., max_length=200)
-    end_location: str = Field(..., max_length=200)
+    end_location: str = Field("", max_length=200)
     notes: str | None = Field(None, max_length=500)
+    is_round_trip: bool = False
 
 
 class TravelPlanUpdate(BaseModel):
@@ -156,3 +157,4 @@ class TravelPlanUpdate(BaseModel):
     start_location: str | None = Field(None, max_length=200)
     end_location: str | None = Field(None, max_length=200)
     notes: str | None = Field(None, max_length=500)
+    is_round_trip: bool | None = None
