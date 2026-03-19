@@ -167,14 +167,12 @@ def generate_route_briefing(plan: dict) -> dict:
         }
         dealers.append(dealer)
 
-    # Smart selection: pick top dealers by score, then display in route order.
-    # This ensures a long route (e.g. Orlando→Nashville) shows the BEST
-    # opportunities from FL, GA, and TN — not just the first 15 near the start.
+    # Rank by score — highest opportunity dealers shown first.
     dealers.sort(key=lambda x: -(x.get("score") or 0))
     top_pool = dealers[:20]  # Top 20 by opportunity score
-    top_pool.sort(key=lambda x: x["route_position"])  # Re-sort in travel order
 
     # Split: Top 5 get full-detail cards, next 15 get compact rows
+    # Both sections stay in score order (best first)
     top_stops = top_pool[:5]
     also_on_route = top_pool[5:]
 
