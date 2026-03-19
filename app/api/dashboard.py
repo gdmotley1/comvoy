@@ -31,7 +31,7 @@ def _latest_snapshot_id(db) -> str:
     return result.data[0]["id"], result.data[0]["report_date"]
 
 
-def _paginate_vehicles(db, snap_id, state=None):
+def _paginate_vehicles(db, snap_id, state=None, body_type=None):
     """Fetch all vehicles for a snapshot, paginating past Supabase 1000-row limit."""
     vehicles = []
     offset = 0
@@ -47,6 +47,8 @@ def _paginate_vehicles(db, snap_id, state=None):
                 "vin, brand, body_type, body_builder, price, condition, fuel_type, "
                 "transmission, is_smyrna, dealer_id, first_seen_date, dealers!inner(name, city, state)"
             ).eq("snapshot_id", snap_id)
+        if body_type:
+            q = q.eq("body_type", body_type)
         page = q.range(offset, offset + page_size - 1).execute()
         if not page.data:
             break
@@ -62,12 +64,16 @@ def _paginate_vehicles(db, snap_id, state=None):
 
 
 @router.get("/dashboard")
-def get_dashboard(response: Response, state: str = Query(None, description="Filter by state code")):
+def get_dashboard(
+    response: Response,
+    state: str = Query(None, description="Filter by state code"),
+    body_type: str = Query(None, description="Filter by body type (exact match)"),
+):
     """Single endpoint returning all dashboard analytics."""
     response.headers["Cache-Control"] = "public, s-maxage=300, stale-while-revalidate=60"
 
     # Check cache
-    cache_key = f"dashboard:{state or 'all'}"
+    cache_key = f"dashboard:{state or 'all'}:{body_type or 'all'}"
     now = time.time()
     if cache_key in _cache:
         ts, cached = _cache[cache_key]
@@ -78,7 +84,7 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
     snap_id, snap_date = _latest_snapshot_id(db)
 
     # Fetch all vehicles (paginated)
-    vehicles = _paginate_vehicles(db, snap_id, state)
+    vehicles = _paginate_vehicles(db, snap_id, state, body_type)
 
     if not vehicles:
         raise HTTPException(404, "No vehicle data found for this filter.")
@@ -286,6 +292,7 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
 
     result = {
         "snapshot_date": snap_date,
+        "active_filters": {k: v for k, v in {"state": state, "body_type": body_type}.items() if v},
         "totals": {
             "vehicles": total,
             "dealers": len(dealer_vehicles),

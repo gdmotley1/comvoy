@@ -7427,6 +7427,7 @@
             let _data = null;
             let _loaded = false;
             let _activeState = '';
+            let _activeBodyType = '';
             const COLORS = ['#4f8fff','#00d4ff','#a855f7','#ec4899','#34d399','#fbbf24','#f97316','#8b95a5','#06b6d4','#84cc16'];
 
             function fmtK(n) {
@@ -7439,6 +7440,7 @@
             // Module-level state for price curve dropdown
             let _priceCurveState = {};
             let _allStates = []; // preserved across filter changes
+            let _allBodyTypes = []; // preserved across filter changes
 
             async function open() {
                 document.body.classList.remove('chatting', 'map-view', 'trip-manager');
@@ -7452,18 +7454,21 @@
                 render();
             }
 
-            async function loadData(state) {
+            async function loadData(state, bodyType) {
                 try {
-                    const url = state
-                        ? `${API_BASE}/api/dashboard?state=${state}`
-                        : `${API_BASE}/api/dashboard`;
+                    const params = new URLSearchParams();
+                    if (state) params.set('state', state);
+                    if (bodyType) params.set('body_type', bodyType);
+                    const qs = params.toString();
+                    const url = `${API_BASE}/api/dashboard${qs ? '?' + qs : ''}`;
                     const res = await fetchT(url, {}, 30000);
                     if (!res.ok) throw new Error('Dashboard load failed');
                     _data = await res.json();
                     _loaded = true;
-                    // Capture full state list on first (unfiltered) load
-                    if (!state && _data.by_state) {
-                        _allStates = _data.by_state.map(s => s.state).sort();
+                    // Capture full lists on first (unfiltered) load so dropdowns always show all options
+                    if (!state && !bodyType) {
+                        if (_data.by_state) _allStates = _data.by_state.map(s => s.state).sort();
+                        if (_data.by_body_type) _allBodyTypes = _data.by_body_type.map(b => b.body_type).sort();
                     }
                 } catch(e) {
                     console.error('Dashboard load error:', e);
@@ -7488,11 +7493,18 @@
 
                 // Build filters — use preserved full state list so dropdown always has all states
                 const states = _allStates.length ? _allStates : (d.by_state || []).map(s => s.state).sort();
+                const bodyTypes = _allBodyTypes.length ? _allBodyTypes : (d.by_body_type || []).map(b => b.body_type).sort();
                 let filtersHTML = `<div class="dash-filters">
                     <span class="dash-filter-label">Territory</span>
                     <select class="dash-filter-select" id="dashStateSelect" onchange="dashFilterState(this.value)">
                         <option value="">All States</option>
                         ${states.map(s => `<option value="${s}" ${s === _activeState ? 'selected' : ''}>${s}</option>`).join('')}
+                    </select>
+                    <div class="dash-filter-sep"></div>
+                    <span class="dash-filter-label">Body Type</span>
+                    <select class="dash-filter-select" id="dashBodyTypeSelect" onchange="dashFilterBodyType(this.value)" style="min-width:140px">
+                        <option value="">All Body Types</option>
+                        ${bodyTypes.map(bt => `<option value="${bt}" ${bt === _activeBodyType ? 'selected' : ''}>${bt}</option>`).join('')}
                     </select>
                     <div class="dash-filter-sep"></div>
                     <span class="dash-filter-label">Snapshot</span>
@@ -7959,7 +7971,16 @@
                 _loaded = false;
                 const wrap = $('dashboardWrap');
                 wrap.innerHTML = buildLoadingHTML();
-                await loadData(state || undefined);
+                await loadData(state || undefined, _activeBodyType || undefined);
+                render();
+            }
+
+            async function filterBodyType(bodyType) {
+                _activeBodyType = bodyType;
+                _loaded = false;
+                const wrap = $('dashboardWrap');
+                wrap.innerHTML = buildLoadingHTML();
+                await loadData(_activeState || undefined, bodyType || undefined);
                 render();
             }
 
@@ -8064,7 +8085,7 @@
                 });
             }
 
-            return { open, filterState };
+            return { open, filterState, filterBodyType };
         })();
 
         // =====================================================================
@@ -8073,6 +8094,7 @@
         window.openDealerMap = () => DealerMap.open();
         window.openDashboard = () => Dashboard.open();
         window.dashFilterState = (s) => Dashboard.filterState(s);
+        window.dashFilterBodyType = (bt) => Dashboard.filterBodyType(bt);
         window.openTripManager = () => TripManager.open();
         window.clearChat = () => Chat.clearChat();
         window.goHome = () => Chat.goHome();
