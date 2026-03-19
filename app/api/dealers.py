@@ -26,6 +26,26 @@ def _is_excluded(name: str) -> bool:
     return any(pat in n for pat in EXCLUDED_DEALER_PATTERNS)
 
 
+def _new_vehicle_counts(db, snap_id) -> dict[str, int]:
+    """Count new-only vehicles per dealer (dealer_snapshots includes used)."""
+    counts: dict[str, int] = {}
+    offset = 0
+    page_size = 1000
+    while True:
+        vc = db.table("vehicles").select(
+            "dealer_id"
+        ).eq("snapshot_id", snap_id).eq("condition", "New").range(offset, offset + page_size - 1).execute()
+        if not vc.data:
+            break
+        for r in vc.data:
+            did = r["dealer_id"]
+            counts[did] = counts.get(did, 0) + 1
+        if len(vc.data) < page_size:
+            break
+        offset += page_size
+    return counts
+
+
 def _latest_snapshot_id(db) -> str:
     """Get the most recent snapshot ID."""
     result = db.table("report_snapshots").select("id").order("report_date", desc=True).limit(1).execute()
@@ -55,18 +75,19 @@ def search_dealers(
     db = get_service_client()
     snap_id = _latest_snapshot_id(db)
 
+    # Get new-only vehicle counts
+    new_counts = _new_vehicle_counts(db, snap_id)
+
     query = db.table("dealer_snapshots").select(
         "*, dealers!inner(id, name, city, state, latitude, longitude)"
     ).eq("snapshot_id", snap_id)
 
     if state:
         query = query.eq("dealers.state", state.upper())
-    if min_vehicles:
-        query = query.gte("total_vehicles", min_vehicles)
     if has_smyrna:
         query = query.gt("smyrna_units", 0)
 
-    query = query.order("total_vehicles", desc=True).limit(limit)
+    query = query.order("total_vehicles", desc=True).limit(limit * 3)  # over-fetch to account for filtering
     result = query.execute()
 
     dealers = []
@@ -78,6 +99,14 @@ def search_dealers(
         # Skip excluded dealers (Penske, MHC, etc.)
         if _is_excluded(d["name"]):
             continue
+        nc = new_counts.get(d["id"], 0)
+        # Apply min_vehicles filter against new-only count
+        if min_vehicles and nc < min_vehicles:
+            continue
+        if nc == 0:
+            continue
+        if len(dealers) >= limit:
+            break
         dealers.append(DealerSummary(
             id=d["id"],
             name=d["name"],
@@ -85,7 +114,7 @@ def search_dealers(
             state=d["state"],
             latitude=d.get("latitude"),
             longitude=d.get("longitude"),
-            total_vehicles=row["total_vehicles"],
+            total_vehicles=nc,
             brand_count=row["brand_count"],
             body_type_count=row["body_type_count"],
             top_brand=row["top_brand"],
@@ -117,6 +146,9 @@ def find_nearby(query: NearbyQuery):
     dealer_ids = [r["dealer_id"] for r in result.data]
     distance_map = {r["dealer_id"]: r["distance_miles"] for r in result.data}
 
+    # Get new-only vehicle counts
+    new_counts = _new_vehicle_counts(db, snap_id)
+
     snapshots = db.table("dealer_snapshots").select(
         "*, dealers!inner(id, name, city, state, latitude, longitude)"
     ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).execute()
@@ -127,6 +159,9 @@ def find_nearby(query: NearbyQuery):
         # Skip excluded dealers (Penske, MHC, etc.)
         if _is_excluded(d["name"]):
             continue
+        nc = new_counts.get(d["id"], 0)
+        if nc == 0:
+            continue
         dealers.append(DealerSummary(
             id=d["id"],
             name=d["name"],
@@ -134,7 +169,7 @@ def find_nearby(query: NearbyQuery):
             state=d["state"],
             latitude=d.get("latitude"),
             longitude=d.get("longitude"),
-            total_vehicles=row["total_vehicles"],
+            total_vehicles=nc,
             brand_count=row["brand_count"],
             body_type_count=row["body_type_count"],
             top_brand=row["top_brand"],
@@ -164,6 +199,12 @@ def get_dealer_briefing(dealer_id: str):
         "dealer_id", dealer_id
     ).eq("snapshot_id", snap_id).single().execute()
 
+    # Get new-only vehicle count for this dealer
+    nc_result = db.table("vehicles").select("id", count="exact").eq(
+        "snapshot_id", snap_id
+    ).eq("dealer_id", dealer_id).eq("condition", "New").execute()
+    new_count = nc_result.count if nc_result.count is not None else 0
+
     summary = DealerSummary(
         id=dealer.data["id"],
         name=dealer.data["name"],
@@ -171,7 +212,7 @@ def get_dealer_briefing(dealer_id: str):
         state=dealer.data["state"],
         latitude=dealer.data.get("latitude"),
         longitude=dealer.data.get("longitude"),
-        total_vehicles=snapshot.data["total_vehicles"] if snapshot.data else 0,
+        total_vehicles=new_count,
         brand_count=snapshot.data["brand_count"] if snapshot.data else None,
         body_type_count=snapshot.data["body_type_count"] if snapshot.data else None,
         top_brand=snapshot.data["top_brand"] if snapshot.data else None,
@@ -251,6 +292,9 @@ def get_map_data(response: Response):
 
     dealer_ids = [r["dealers"]["id"] for r in result.data if r["dealers"].get("latitude")]
 
+    # Get accurate new-only vehicle counts (dealer_snapshots includes used)
+    new_counts = _new_vehicle_counts(db, snap_id)
+
     score_map = {}
     if dealer_ids:
         scores = db.table("lead_scores").select(
@@ -310,6 +354,9 @@ def get_map_data(response: Response):
             continue
         sc = score_map.get(d["id"], {})
         pl = places_map.get(d["id"], {})
+        new_count = new_counts.get(d["id"], 0)
+        if new_count == 0:
+            continue  # Skip dealers with no new vehicles
         markers.append({
             "id": d["id"],
             "name": d["name"],
@@ -317,7 +364,7 @@ def get_map_data(response: Response):
             "state": d["state"],
             "lat": d["latitude"],
             "lng": d["longitude"],
-            "vehicles": row["total_vehicles"],
+            "vehicles": new_count,
             "smyrna": row["smyrna_units"] or 0,
             "smyrna_pct": float(row["smyrna_percentage"] or 0),
             "top_brand": row["top_brand"],
@@ -352,6 +399,9 @@ def get_territory_summary(state: str):
     db = get_service_client()
     snap_id = _latest_snapshot_id(db)
 
+    # Get new-only vehicle counts
+    new_counts = _new_vehicle_counts(db, snap_id)
+
     # Get all dealers in state with their snapshot data
     result = db.table("dealer_snapshots").select(
         "total_vehicles, smyrna_units, smyrna_percentage, rank, dealers!inner(id, name, city, state)"
@@ -362,11 +412,20 @@ def get_territory_summary(state: str):
     if not result.data:
         raise HTTPException(404, f"No dealers found in {state.upper()}")
 
-    # Filter out excluded dealers (Penske, MHC, etc.)
-    filtered = [r for r in result.data if not _is_excluded(r["dealers"]["name"])]
+    # Filter out excluded dealers (Penske, MHC, etc.) and use new-only counts
+    filtered = []
+    for r in result.data:
+        if _is_excluded(r["dealers"]["name"]):
+            continue
+        nc = new_counts.get(r["dealers"]["id"], 0)
+        if nc == 0:
+            continue
+        r["_new_vehicles"] = nc
+        filtered.append(r)
+    filtered.sort(key=lambda r: r["_new_vehicles"], reverse=True)
 
     total_dealers = len(filtered)
-    total_vehicles = sum(r["total_vehicles"] or 0 for r in filtered)
+    total_vehicles = sum(r["_new_vehicles"] for r in filtered)
     total_smyrna = sum(r["smyrna_units"] or 0 for r in filtered)
     dealers_with_smyrna = sum(1 for r in filtered if (r["smyrna_units"] or 0) > 0)
 
@@ -374,7 +433,7 @@ def get_territory_summary(state: str):
         {
             "name": r["dealers"]["name"],
             "city": r["dealers"]["city"],
-            "total_vehicles": r["total_vehicles"],
+            "total_vehicles": r["_new_vehicles"],
             "smyrna_units": r["smyrna_units"] or 0,
             "rank": r["rank"],
         }
