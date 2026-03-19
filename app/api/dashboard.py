@@ -158,16 +158,11 @@ def get_dashboard(
             "count": len(bt_prices_list),
         }
 
-    # Lead scores
-    lead_query = db.table("lead_scores").select("tier, score, dealer_id")
-    if state:
-        lead_query = lead_query.eq("snapshot_id", snap_id)
-        # Filter by state via dealer lookup
-        dealer_ids_in_state = list(dealer_info.keys())
-        if dealer_ids_in_state:
-            lead_query = lead_query.in_("dealer_id", dealer_ids_in_state)
-    else:
-        lead_query = lead_query.eq("snapshot_id", snap_id)
+    # Lead scores — filter to dealers present in the current (filtered) vehicle set
+    lead_query = db.table("lead_scores").select("tier, score, dealer_id").eq("snapshot_id", snap_id)
+    filtered_dealer_ids = list(dealer_info.keys())
+    if filtered_dealer_ids and (state or body_type):
+        lead_query = lead_query.in_("dealer_id", filtered_dealer_ids)
     leads_data = lead_query.execute().data or []
     lead_tiers = Counter(l["tier"] for l in leads_data)
     lead_by_dealer = {l["dealer_id"]: l for l in leads_data}
@@ -272,10 +267,15 @@ def get_dashboard(
         ).order("report_date", desc=True).limit(2).execute()
         if prev_snap.data and len(prev_snap.data) > 1:
             prev = prev_snap.data[1]
-            # Quick diff summary
+            # Quick diff summary — filter by body_type and/or dealer set if filters active
             diffs_q = db.table("vehicle_diffs").select("diff_type").eq(
                 "snapshot_id", snap_id
-            ).execute()
+            )
+            if body_type:
+                diffs_q = diffs_q.eq("body_type", body_type)
+            if state and filtered_dealer_ids:
+                diffs_q = diffs_q.in_("dealer_id", filtered_dealer_ids)
+            diffs_q = diffs_q.execute()
             if diffs_q.data:
                 sold = sum(1 for d in diffs_q.data if d["diff_type"] == "sold")
                 added = sum(1 for d in diffs_q.data if d["diff_type"] == "new")
