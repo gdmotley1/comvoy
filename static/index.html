@@ -7795,6 +7795,54 @@
                     </div>
                 </div>`;
 
+                // Velocity metrics panel
+                const vel = d.velocity || {};
+                const aging = vel.aging || {};
+                const turnover = vel.turnover || {};
+                let velocityHTML = '';
+                if (aging.avg_days !== undefined || turnover.sold !== undefined) {
+                    velocityHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
+                        <div class="dash-card-title" style="color:#00d4ff">Velocity Metrics</div>
+                        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">
+                            ${aging.avg_days !== undefined ? `<div style="flex:1;min-width:100px;text-align:center;padding:12px;background:rgba(0,212,255,0.06);border-radius:12px;border:1px solid rgba(0,212,255,0.12)">
+                                <div style="font-size:28px;font-weight:700;color:#00d4ff">${aging.avg_days}</div>
+                                <div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px">Avg Days on Lot</div>
+                            </div>` : ''}
+                            ${aging.median_days !== undefined ? `<div style="flex:1;min-width:100px;text-align:center;padding:12px;background:rgba(0,212,255,0.06);border-radius:12px;border:1px solid rgba(0,212,255,0.12)">
+                                <div style="font-size:28px;font-weight:700;color:#00d4ff">${aging.median_days}</div>
+                                <div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px">Median Days</div>
+                            </div>` : ''}
+                            ${aging.over_30d !== undefined ? `<div style="flex:1;min-width:100px;text-align:center;padding:12px;background:rgba(0,212,255,0.06);border-radius:12px;border:1px solid rgba(0,212,255,0.12)">
+                                <div style="font-size:28px;font-weight:700;color:${aging.over_30d > 0 ? '#f97316' : '#34d399'}">${aging.over_30d}</div>
+                                <div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px">Over 30 Days</div>
+                            </div>` : ''}
+                            ${aging.over_60d !== undefined ? `<div style="flex:1;min-width:100px;text-align:center;padding:12px;background:rgba(0,212,255,0.06);border-radius:12px;border:1px solid rgba(0,212,255,0.12)">
+                                <div style="font-size:28px;font-weight:700;color:${aging.over_60d > 0 ? '#ef4444' : '#34d399'}">${aging.over_60d}</div>
+                                <div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px">Over 60 Days</div>
+                            </div>` : ''}
+                        </div>
+                        ${turnover.sold !== undefined ? `<div style="display:flex;gap:12px;flex-wrap:wrap">
+                            <div style="flex:1;min-width:80px;text-align:center;padding:10px;background:rgba(239,68,68,0.06);border-radius:10px;border:1px solid rgba(239,68,68,0.12)">
+                                <div style="font-size:22px;font-weight:700;color:#ef4444">${turnover.sold}</div>
+                                <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase">Sold</div>
+                            </div>
+                            <div style="flex:1;min-width:80px;text-align:center;padding:10px;background:rgba(52,211,153,0.06);border-radius:10px;border:1px solid rgba(52,211,153,0.12)">
+                                <div style="font-size:22px;font-weight:700;color:#34d399">${turnover.added}</div>
+                                <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase">Added</div>
+                            </div>
+                            <div style="flex:1;min-width:80px;text-align:center;padding:10px;background:rgba(168,85,247,0.06);border-radius:10px;border:1px solid rgba(168,85,247,0.12)">
+                                <div style="font-size:22px;font-weight:700;color:#a855f7">${turnover.price_changes}</div>
+                                <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase">Price Changes</div>
+                            </div>
+                            <div style="flex:1;min-width:80px;text-align:center;padding:10px;background:rgba(79,143,255,0.06);border-radius:10px;border:1px solid rgba(79,143,255,0.12)">
+                                <div style="font-size:22px;font-weight:700;color:${turnover.net_change >= 0 ? '#34d399' : '#ef4444'}">${turnover.net_change >= 0 ? '+' : ''}${turnover.net_change}</div>
+                                <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase">Net Change</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:8px;font-size:10px;color:var(--text-tertiary);text-align:center">${turnover.period || ''}</div>` : ''}
+                    </div>`;
+                }
+
                 // Smyrna intel
                 const sm = d.smyrna_intel;
                 const gaugeR = 50, gaugeCX = 60, gaugeCY = 60, gaugeC = Math.PI * gaugeR;
@@ -7843,7 +7891,7 @@
 
                 wrap.innerHTML = filtersHTML + '<div class="dash-grid">' +
                     kpiHTML + brandHTML + priceHTML + bodyHTML + smyrnaPriceHTML +
-                    builderHTML + stateHTML + dealersHTML + smyrnaHTML + leadHTML +
+                    builderHTML + stateHTML + dealersHTML + velocityHTML + smyrnaHTML + leadHTML +
                 '</div>';
 
                 // Animate bars and arcs after paint

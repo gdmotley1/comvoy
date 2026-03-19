@@ -40,12 +40,12 @@ def _paginate_vehicles(db, snap_id, state=None):
         if state:
             q = db.table("vehicles").select(
                 "vin, brand, body_type, body_builder, price, condition, fuel_type, "
-                "transmission, is_smyrna, dealer_id, dealers!inner(name, city, state)"
+                "transmission, is_smyrna, dealer_id, first_seen_date, dealers!inner(name, city, state)"
             ).eq("snapshot_id", snap_id).eq("dealers.state", state.upper())
         else:
             q = db.table("vehicles").select(
                 "vin, brand, body_type, body_builder, price, condition, fuel_type, "
-                "transmission, is_smyrna, dealer_id, dealers!inner(name, city, state)"
+                "transmission, is_smyrna, dealer_id, first_seen_date, dealers!inner(name, city, state)"
             ).eq("snapshot_id", snap_id)
         page = q.range(offset, offset + page_size - 1).execute()
         if not page.data:
@@ -234,6 +234,56 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
                 city_counter[v["dealers"]["city"]] += 1
         by_city = [{"city": c, "vehicles": n} for c, n in city_counter.most_common(12)]
 
+    # ── Velocity metrics (aging + turnover summary) ──────────────────
+    velocity_summary = {}
+    try:
+        from app.api.velocity import compute_days_on_lot, compute_turnover, _get_snapshots
+        # Aging — use the vehicles we already fetched to compute average
+        from datetime import datetime, date as date_type
+        report_date = datetime.strptime(str(snap_date), "%Y-%m-%d").date() if isinstance(snap_date, str) else snap_date
+        ages = []
+        for v in vehicles:
+            fsd = v.get("first_seen_date")
+            if fsd:
+                if isinstance(fsd, str):
+                    fsd = datetime.strptime(fsd, "%Y-%m-%d").date()
+                age = (report_date - fsd).days
+                if age >= 0:
+                    ages.append(age)
+        if ages:
+            ages.sort()
+            n = len(ages)
+            velocity_summary["aging"] = {
+                "avg_days": round(sum(ages) / n, 1),
+                "median_days": ages[n // 2],
+                "over_30d": sum(1 for a in ages if a > 30),
+                "over_60d": sum(1 for a in ages if a > 60),
+            }
+
+        # Turnover — fetch from vehicle_diffs
+        prev_snap = db.table("report_snapshots").select(
+            "id, report_date"
+        ).order("report_date", desc=True).limit(2).execute()
+        if prev_snap.data and len(prev_snap.data) > 1:
+            prev = prev_snap.data[1]
+            # Quick diff summary
+            diffs_q = db.table("vehicle_diffs").select("diff_type").eq(
+                "snapshot_id", snap_id
+            ).execute()
+            if diffs_q.data:
+                sold = sum(1 for d in diffs_q.data if d["diff_type"] == "sold")
+                added = sum(1 for d in diffs_q.data if d["diff_type"] == "new")
+                price_changes = sum(1 for d in diffs_q.data if d["diff_type"] == "price_change")
+                velocity_summary["turnover"] = {
+                    "period": f"{prev['report_date']} → {snap_date}",
+                    "sold": sold,
+                    "added": added,
+                    "price_changes": price_changes,
+                    "net_change": added - sold,
+                }
+    except Exception as e:
+        logger.debug(f"Velocity summary skipped: {e}")
+
     result = {
         "snapshot_date": snap_date,
         "totals": {
@@ -275,6 +325,7 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
         "top_dealers": top_dealer_list,
         "smyrna_price_position": smyrna_price_position,
         "by_city": by_city,
+        "velocity": velocity_summary,
         "smyrna_intel": {
             "total_units": smyrna_count,
             "dealer_count": len(smyrna_by_dealer),

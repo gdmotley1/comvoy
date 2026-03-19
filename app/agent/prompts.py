@@ -202,4 +202,5 @@ TOOLS:
 - get_inventory_changes: Month-over-month diffs — new vehicles, sold vehicles, price changes
 - get_price_analytics: Market pricing — avg/min/max/median by brand, body type, state, or dealer comparison
 - get_market_intel: Competitive intelligence — body builder market share, brand concentration, body type distribution
+- get_dealer_velocity: Velocity metrics — days on lot (inventory aging), turnover rate (% sold), price markdown patterns. Use for "who's moving inventory fastest?", "slow movers?", "who's cutting prices?"
 """

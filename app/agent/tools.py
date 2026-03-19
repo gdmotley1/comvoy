@@ -561,6 +561,42 @@ TOOL_DEFINITIONS = [
             "required": ["report_type"],
         },
     },
+    {
+        "name": "get_dealer_velocity",
+        "description": (
+            "Get velocity metrics for dealers: inventory aging (days on lot), turnover rate "
+            "(% of inventory sold per period), and price markdown patterns. Use for "
+            "'which dealers are moving inventory fastest?', 'how long are trucks sitting?', "
+            "'who's cutting prices?', 'show me slow-moving dealers', 'turnover rate in Texas', "
+            "'aging inventory at this dealer'. Powerful for identifying hot prospects "
+            "(high turnover = needs restocking) and struggling dealers (heavy markdowns)."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "metric": {
+                    "type": "string",
+                    "description": "Which metric: 'aging' (days on lot), 'turnover' (sold/added rates), 'markdown' (price changes), or 'all'. Default 'all'.",
+                    "enum": ["aging", "turnover", "markdown", "all"],
+                    "default": "all",
+                },
+                "dealer_id": {
+                    "type": "string",
+                    "description": "Focus on a specific dealer (UUID). Optional.",
+                },
+                "state": {
+                    "type": "string",
+                    "description": "Two-letter state code filter. Optional.",
+                },
+                "top_n": {
+                    "type": "integer",
+                    "description": "Top N dealers to return (default 10).",
+                    "default": 10,
+                },
+            },
+            "required": [],
+        },
+    },
 ]
 
 
@@ -751,6 +787,37 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                     briefing["smyrna_body_types"] = result.smyrna_details.get("top_smyrna_body_types")
             else:
                 briefing["smyrna"] = "NONE — zero Smyrna products"
+            # Enrich with velocity metrics (aging + turnover)
+            try:
+                from app.api.velocity import (
+                    compute_days_on_lot, compute_turnover, _get_snapshots,
+                )
+                db_v = get_service_client()
+                curr_snap, prev_snap = _get_snapshots(db_v)
+                # Days on lot for this dealer
+                aging = compute_days_on_lot(
+                    db_v, curr_snap["id"], curr_snap["report_date"],
+                    dealer_id=tool_input["dealer_id"]
+                )
+                if "market" in aging and aging["market"]:
+                    briefing["avg_days_on_lot"] = aging["market"].get("avg_days")
+                    briefing["max_days_on_lot"] = aging["market"].get("max_days")
+                    briefing["over_30d"] = aging["market"].get("over_30d", 0)
+                # Turnover for this dealer
+                if prev_snap:
+                    turnover = compute_turnover(
+                        db_v, curr_snap, prev_snap,
+                        dealer_id=tool_input["dealer_id"]
+                    )
+                    dealers_t = turnover.get("dealers", [])
+                    if dealers_t:
+                        t = dealers_t[0]
+                        briefing["turnover_pct"] = t.get("turnover_pct", 0)
+                        briefing["sold_last_period"] = t.get("sold", 0)
+                        briefing["added_last_period"] = t.get("added", 0)
+            except Exception as e:
+                logger.debug(f"Velocity enrichment skipped for briefing: {e}")
+
             # Enrich with cached Google Places data (sync DB read, no API call)
             try:
                 db_p = get_service_client()
@@ -1894,6 +1961,73 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                     if info["smyrna"]:
                         entry["smyrna_units"] = info["smyrna"]
                     output["top"].append(entry)
+
+            return json.dumps(output, default=str)
+
+        elif tool_name == "get_dealer_velocity":
+            from app.api.velocity import (
+                compute_days_on_lot, compute_turnover,
+                compute_markdown_velocity, _get_snapshots,
+            )
+            db = get_service_client()
+            current, previous = _get_snapshots(db)
+
+            metric = tool_input.get("metric", "all")
+            dealer_id = tool_input.get("dealer_id")
+            state = tool_input.get("state")
+            top_n = min(tool_input.get("top_n", 10), 20)
+
+            output = {}
+
+            if metric in ("aging", "all"):
+                aging = compute_days_on_lot(
+                    db, current["id"], current["report_date"], dealer_id, state
+                )
+                # Compact for token efficiency
+                if "dealers" in aging:
+                    aging["dealers"] = [
+                        {k: v for k, v in d.items() if k != "dealer_id"}
+                        for d in aging["dealers"][:top_n]
+                    ]
+                if "by_body_type" in aging:
+                    aging["by_body_type"] = aging["by_body_type"][:8]
+                output["aging"] = aging
+
+            if metric in ("turnover", "all") and previous:
+                turnover = compute_turnover(db, current, previous, dealer_id, state)
+                if "dealers" in turnover:
+                    # Only show dealers with activity
+                    active = [d for d in turnover["dealers"] if d["sold"] > 0 or d["added"] > 0]
+                    turnover["dealers"] = [
+                        {k: v for k, v in d.items() if k != "dealer_id"}
+                        for d in active[:top_n]
+                    ]
+                output["turnover"] = turnover
+
+            if metric in ("markdown", "all") and previous:
+                markdown = compute_markdown_velocity(db, current, previous, dealer_id, state)
+                if "dealers" in markdown:
+                    markdown["dealers"] = [
+                        {k: v for k, v in d.items() if k != "dealer_id"}
+                        for d in markdown["dealers"][:top_n]
+                    ]
+                if "by_body_type" in markdown:
+                    markdown["by_body_type"] = markdown["by_body_type"][:8]
+                # Strip individual VIN details from market.biggest_drop/increase for token savings
+                mkt = markdown.get("market", {})
+                for key in ("biggest_drop", "biggest_increase"):
+                    if mkt.get(key):
+                        mkt[key] = {
+                            "dealer": mkt[key].get("brand", ""),
+                            "body_type": mkt[key].get("body_type", ""),
+                            "change_pct": mkt[key].get("change_pct"),
+                            "old": mkt[key].get("old_price"),
+                            "new": mkt[key].get("new_price"),
+                        }
+                output["markdown"] = markdown
+
+            if not previous and metric in ("turnover", "markdown", "all"):
+                output["note"] = "Turnover and markdown need 2+ snapshots."
 
             return json.dumps(output, default=str)
 
