@@ -652,9 +652,21 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Route Briefing &mdash; {date_short}</title>
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
 <!--[if mso]>
 <style>table,td {{font-family:Arial,Helvetica,sans-serif !important;}}</style>
 <![endif]-->
+<style>
+  :root {{ color-scheme: light dark; }}
+  [data-ogsc] body, [data-ogsb] body {{ background-color: #0c0c18 !important; color: #e2e8f0 !important; }}
+  [data-ogsc] td {{ color: inherit !important; }}
+  [data-ogsc] span {{ color: inherit !important; }}
+  [data-ogsc] a {{ color: #4f8fff !important; }}
+  @media (prefers-color-scheme: dark) {{
+    body, .body {{ background-color: #0c0c18 !important; }}
+  }}
+</style>
 </head>
 <body style="margin:0;padding:0;background-color:#0c0c18;
     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
@@ -855,9 +867,21 @@ def send_welcome_email(rep_name: str, rep_email: str,
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Welcome to Otto</title>
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
 <!--[if mso]>
 <style>table,td {{font-family:Arial,Helvetica,sans-serif !important;}}</style>
 <![endif]-->
+<style>
+  :root {{ color-scheme: light dark; }}
+  [data-ogsc] body, [data-ogsb] body {{ background-color: #0c0c18 !important; color: #e2e8f0 !important; }}
+  [data-ogsc] td {{ color: inherit !important; }}
+  [data-ogsc] span {{ color: inherit !important; }}
+  [data-ogsc] a {{ color: #4f8fff !important; }}
+  @media (prefers-color-scheme: dark) {{
+    body, .body {{ background-color: #0c0c18 !important; }}
+  }}
+</style>
 </head>
 <body style="margin:0;padding:0;background-color:#0c0c18;
     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
