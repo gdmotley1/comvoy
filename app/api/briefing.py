@@ -299,7 +299,7 @@ def _render_places_line(places: dict) -> str:
     if not parts:
         return ""
     return f"""
-        <tr><td style="padding:4px 20px 0 20px;font-size:12px;color:#8b95a5;line-height:1.5;">
+        <tr><td style="padding:4px 20px 0 20px;font-size:12px;color:#94a3b8;line-height:1.5;">
             {' &middot; '.join(parts)}
         </td></tr>"""
 
@@ -345,8 +345,8 @@ def _render_top_stop(d: dict, show_trends: bool) -> str:
         )[:4]]
         if items:
             overlap_html = f"""
-            <tr><td style="padding:4px 20px 0 20px;font-size:12px;color:#8b95a5;line-height:1.5;">
-                <strong style="color:#9ca3af;">Types we build on their lot:</strong> {', '.join(items)}
+            <tr><td style="padding:4px 20px 0 20px;font-size:12px;color:#94a3b8;line-height:1.5;">
+                <strong style="color:#cbd5e1;">Types we build on their lot:</strong> {', '.join(items)}
             </td></tr>"""
 
     # MoM changes
@@ -358,8 +358,8 @@ def _render_top_stop(d: dict, show_trends: bool) -> str:
             parts.append(f"{ch['name']} {arrow} ({ch['prev']} to {ch['curr']})")
         if parts:
             changes_html = f"""
-            <tr><td style="padding:4px 20px 0 20px;font-size:12px;color:#8b95a5;line-height:1.5;">
-                <strong style="color:#9ca3af;">Month-over-month:</strong> {' / '.join(parts)}
+            <tr><td style="padding:4px 20px 0 20px;font-size:12px;color:#94a3b8;line-height:1.5;">
+                <strong style="color:#cbd5e1;">Month-over-month:</strong> {' / '.join(parts)}
             </td></tr>"""
 
     return f"""
@@ -371,7 +371,7 @@ def _render_top_stop(d: dict, show_trends: bool) -> str:
                 <td style="background:{tier_bg};color:#fff;font-size:10px;
                     font-weight:700;letter-spacing:0.8px;padding:3px 8px;
                     border-radius:3px;mso-line-height-rule:exactly;line-height:16px;">{tier_label}</td>
-                <td style="padding-left:10px;font-size:11px;color:#64748b;">
+                <td style="padding-left:10px;font-size:11px;color:#8b95a5;">
                     {dist_text}{rank_text}
                 </td>
             </tr></table>
@@ -379,19 +379,19 @@ def _render_top_stop(d: dict, show_trends: bool) -> str:
         <!-- Dealer name -->
         <tr><td style="padding:8px 20px 0 20px;">
             <span style="font-size:16px;font-weight:700;color:#e2e8f0;">{d['name']}</span><br>
-            <span style="font-size:13px;color:#64748b;">{d['city']}, {d['state']}</span>
+            <span style="font-size:13px;color:#8b95a5;">{d['city']}, {d['state']}</span>
         </td></tr>
         {_render_places_line(d.get('places', {}))}
         <!-- Why visit -->
-        <tr><td style="padding:8px 20px 0 20px;font-size:14px;color:#b0bac7;line-height:1.55;">
+        <tr><td style="padding:8px 20px 0 20px;font-size:14px;color:#cbd5e1;line-height:1.55;">
             {why}
         </td></tr>
         <!-- Quick stats -->
-        <tr><td style="padding:8px 20px 0 20px;font-size:13px;color:#8b95a5;">
+        <tr><td style="padding:8px 20px 0 20px;font-size:13px;color:#94a3b8;">
             {d['vehicles']:,} vehicles &middot; Top brand: {d.get('top_brand', 'N/A')}{smyrna_text}
         </td></tr>
         <!-- Score breakdown -->
-        <tr><td style="padding:4px 20px 0 20px;font-size:11px;color:#64748b;">
+        <tr><td style="padding:4px 20px 0 20px;font-size:11px;color:#8b95a5;">
             {score_line}
         </td></tr>
         {overlap_html}
@@ -399,7 +399,7 @@ def _render_top_stop(d: dict, show_trends: bool) -> str:
         <!-- Card bottom border -->
         <tr><td style="padding:16px 20px 0 20px;">
             <table role="presentation" width="100%" style="border-collapse:collapse;">
-                <tr><td style="border-bottom:1px solid #1e293b;font-size:1px;line-height:1px;">&nbsp;</td></tr>
+                <tr><td style="border-bottom:1px solid #334155;font-size:1px;line-height:1px;">&nbsp;</td></tr>
             </table>
         </td></tr>
     </table>"""
@@ -424,16 +424,16 @@ def _render_compact_row(d: dict) -> str:
         reason = f"{d.get('vehicles', 0):,} vehicles"
 
     return f"""
-    <tr><td style="padding:8px 20px;border-bottom:1px solid #111827;">
+    <tr><td style="padding:8px 20px;border-bottom:1px solid #1e293b;">
         <table role="presentation" cellpadding="0" cellspacing="0" width="100%"
                style="border-collapse:collapse;">
             <tr>
                 <td style="font-size:13px;color:#e2e8f0;padding:0;">
                     <span style="color:{tier_color};font-size:8px;line-height:1;">&#9632;</span>&nbsp;
                     <strong>{d['name']}</strong>
-                    <span style="color:#64748b;font-size:12px;">&nbsp;&mdash; {d['city']}, {d['state']}</span>
+                    <span style="color:#8b95a5;font-size:12px;">&nbsp;&mdash; {d['city']}, {d['state']}</span>
                 </td>
-                <td style="font-size:12px;color:#64748b;padding:0;white-space:nowrap;" align="right" width="100">
+                <td style="font-size:12px;color:#8b95a5;padding:0;white-space:nowrap;" align="right" width="100">
                     {score}/100 &middot; {reason}
                 </td>
             </tr>
@@ -446,7 +446,7 @@ def _divider() -> str:
     return """
     <tr><td style="padding:0 20px;">
         <table role="presentation" width="100%" style="border-collapse:collapse;">
-            <tr><td style="border-bottom:1px solid #1e293b;font-size:1px;line-height:1px;">&nbsp;</td></tr>
+            <tr><td style="border-bottom:1px solid #334155;font-size:1px;line-height:1px;">&nbsp;</td></tr>
         </table>
     </td></tr>"""
 
@@ -532,7 +532,7 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
     else:
         top_stops_html = """
         <table role="presentation" width="100%"><tr>
-            <td style="padding:24px 20px;color:#64748b;font-size:14px;">
+            <td style="padding:24px 20px;color:#8b95a5;font-size:14px;">
                 No dealers found along this route.
             </td>
         </tr></table>"""
@@ -545,8 +545,8 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
     {_divider()}
     <tr><td style="padding:20px 20px 10px 20px;">
         <span style="font-size:11px;font-weight:700;letter-spacing:1px;
-            color:#94a3b8;text-transform:uppercase;">ALSO ON YOUR ROUTE</span>
-        <span style="font-size:11px;color:#475569;">
+            color:#cbd5e1;text-transform:uppercase;">ALSO ON YOUR ROUTE</span>
+        <span style="font-size:11px;color:#64748b;">
             &nbsp;&mdash; {len(also_on_route)} more dealers</span>
     </td></tr>
     <tr><td style="padding:0;">
@@ -561,7 +561,7 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
     if total_on_route > summary["total"]:
         remaining = total_on_route - summary["total"]
         remaining_note = f"""
-    <tr><td style="padding:12px 20px;font-size:12px;color:#475569;">
+    <tr><td style="padding:12px 20px;font-size:12px;color:#64748b;">
         {remaining} additional dealer{'s' if remaining != 1 else ''} on this route
         available in Otto.
     </td></tr>"""
@@ -570,7 +570,7 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
     trends_note = ""
     if not has_trends:
         trends_note = """
-    <tr><td style="padding:8px 20px;font-size:11px;color:#475569;">
+    <tr><td style="padding:8px 20px;font-size:11px;color:#64748b;">
         Month-over-month trends available after 2+ monthly data uploads.
     </td></tr>"""
 
@@ -579,36 +579,36 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
     {_divider()}
     <tr><td style="padding:20px 20px 8px 20px;">
         <span style="font-size:11px;font-weight:700;letter-spacing:1px;
-            color:#94a3b8;text-transform:uppercase;">HOW SCORING WORKS</span>
+            color:#cbd5e1;text-transform:uppercase;">HOW SCORING WORKS</span>
     </td></tr>
-    <tr><td style="padding:4px 20px 0 20px;font-size:13px;color:#8b95a5;line-height:1.6;">
+    <tr><td style="padding:4px 20px 0 20px;font-size:13px;color:#94a3b8;line-height:1.6;">
         Each dealer is scored 0&ndash;100 based on four factors:
     </td></tr>
     <tr><td style="padding:8px 20px 0 20px;">
         <table role="presentation" cellpadding="0" cellspacing="0" width="100%"
                style="border-collapse:collapse;">
             <tr>
-                <td width="50%" style="padding:6px 8px 6px 0;font-size:12px;color:#94a3b8;
-                    border-bottom:1px solid #111827;vertical-align:top;">
+                <td width="50%" style="padding:6px 8px 6px 0;font-size:12px;color:#cbd5e1;
+                    border-bottom:1px solid #1e293b;vertical-align:top;">
                     <strong style="color:#e2e8f0;">Fleet Scale</strong><br>
-                    <span style="font-size:11px;color:#64748b;">0&ndash;20 pts &middot; Bigger fleet = bigger order potential</span>
+                    <span style="font-size:11px;color:#8b95a5;">0&ndash;20 pts &middot; Bigger fleet = bigger order potential</span>
                 </td>
-                <td width="50%" style="padding:6px 0 6px 8px;font-size:12px;color:#94a3b8;
-                    border-bottom:1px solid #111827;vertical-align:top;">
+                <td width="50%" style="padding:6px 0 6px 8px;font-size:12px;color:#cbd5e1;
+                    border-bottom:1px solid #1e293b;vertical-align:top;">
                     <strong style="color:#e2e8f0;">Product Fit</strong><br>
-                    <span style="font-size:11px;color:#64748b;">0&ndash;25 pts &middot; % of inventory in types we build</span>
+                    <span style="font-size:11px;color:#8b95a5;">0&ndash;25 pts &middot; % of inventory in types we build</span>
                 </td>
             </tr>
             <tr>
-                <td width="50%" style="padding:6px 8px 6px 0;font-size:12px;color:#94a3b8;
+                <td width="50%" style="padding:6px 8px 6px 0;font-size:12px;color:#cbd5e1;
                     vertical-align:top;">
                     <strong style="color:#e2e8f0;">Smyrna Penetration</strong><br>
-                    <span style="font-size:11px;color:#64748b;">0&ndash;30 pts &middot; Low penetration = more room to grow</span>
+                    <span style="font-size:11px;color:#8b95a5;">0&ndash;30 pts &middot; Low penetration = more room to grow</span>
                 </td>
-                <td width="50%" style="padding:6px 0 6px 8px;font-size:12px;color:#94a3b8;
+                <td width="50%" style="padding:6px 0 6px 8px;font-size:12px;color:#cbd5e1;
                     vertical-align:top;">
                     <strong style="color:#e2e8f0;">Growth Signal</strong><br>
-                    <span style="font-size:11px;color:#64748b;">0&ndash;25 pts &middot; Inventory growing = active buyer</span>
+                    <span style="font-size:11px;color:#8b95a5;">0&ndash;25 pts &middot; Inventory growing = active buyer</span>
                 </td>
             </tr>
         </table>
@@ -623,7 +623,7 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
                             font-weight:700;letter-spacing:0.5px;padding:3px 7px;
                             mso-line-height-rule:exactly;line-height:14px;">HIGH PRIORITY</td></tr>
                     </table>
-                    <span style="font-size:11px;color:#64748b;">70&ndash;100</span>
+                    <span style="font-size:11px;color:#8b95a5;">70&ndash;100</span>
                 </td>
                 <td style="padding:0 12px 0 0;">
                     <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
@@ -631,7 +631,7 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
                             font-weight:700;letter-spacing:0.5px;padding:3px 7px;
                             mso-line-height-rule:exactly;line-height:14px;">OPPORTUNITY</td></tr>
                     </table>
-                    <span style="font-size:11px;color:#64748b;">40&ndash;69</span>
+                    <span style="font-size:11px;color:#8b95a5;">40&ndash;69</span>
                 </td>
                 <td style="padding:0;">
                     <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
@@ -639,7 +639,7 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
                             font-weight:700;letter-spacing:0.5px;padding:3px 7px;
                             mso-line-height-rule:exactly;line-height:14px;">MONITOR</td></tr>
                     </table>
-                    <span style="font-size:11px;color:#64748b;">0&ndash;39</span>
+                    <span style="font-size:11px;color:#8b95a5;">0&ndash;39</span>
                 </td>
             </tr>
         </table>
@@ -682,7 +682,7 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
     </td></tr>
     <tr><td align="center" style="padding:0 20px 24px 20px;">
         <span style="font-size:11px;font-weight:500;letter-spacing:1.5px;
-            color:#475569;text-transform:uppercase;">Comvoy Sales Intelligence</span>
+            color:#64748b;text-transform:uppercase;">Comvoy Sales Intelligence</span>
     </td></tr>
 
     <!-- Route info block -->
@@ -700,7 +700,7 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
                         line-height:1.3;padding-bottom:4px;">
                         {day_of_week}, {date_str}
                     </td></tr>
-                    <tr><td style="font-size:14px;color:#94a3b8;">
+                    <tr><td style="font-size:14px;color:#cbd5e1;">
                         {start} &rarr; {end}
                     </td></tr>
                 </table>
@@ -719,25 +719,25 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
                 <td width="25%" align="center" style="padding:12px 0;">
                     <span style="font-size:24px;font-weight:700;color:#f1f5f9;
                         line-height:1;">{summary['total']}</span><br>
-                    <span style="font-size:10px;color:#64748b;text-transform:uppercase;
+                    <span style="font-size:10px;color:#8b95a5;text-transform:uppercase;
                         letter-spacing:0.5px;">Dealers</span>
                 </td>
                 <td width="25%" align="center" style="padding:12px 0;">
                     <span style="font-size:24px;font-weight:700;color:#f1f5f9;
                         line-height:1;">{total_vehicles:,}</span><br>
-                    <span style="font-size:10px;color:#64748b;text-transform:uppercase;
+                    <span style="font-size:10px;color:#8b95a5;text-transform:uppercase;
                         letter-spacing:0.5px;">Vehicles</span>
                 </td>
                 <td width="25%" align="center" style="padding:12px 0;">
                     <span style="font-size:24px;font-weight:700;color:#4f8fff;
                         line-height:1;">{smyrna_pct}%</span><br>
-                    <span style="font-size:10px;color:#64748b;text-transform:uppercase;
+                    <span style="font-size:10px;color:#8b95a5;text-transform:uppercase;
                         letter-spacing:0.5px;">Smyrna Pen.</span>
                 </td>
                 <td width="25%" align="center" style="padding:12px 0;">
                     <span style="font-size:24px;font-weight:700;color:#ff6b35;
                         line-height:1;">{summary.get('hot', 0)}</span><br>
-                    <span style="font-size:10px;color:#64748b;text-transform:uppercase;
+                    <span style="font-size:10px;color:#8b95a5;text-transform:uppercase;
                         letter-spacing:0.5px;">High Priority</span>
                 </td>
             </tr>
@@ -749,9 +749,9 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
     <!-- ═══════ EXECUTIVE SUMMARY ═══════ -->
     <tr><td style="padding:20px 20px 0 20px;">
         <span style="font-size:11px;font-weight:700;letter-spacing:1px;
-            color:#94a3b8;text-transform:uppercase;">EXECUTIVE SUMMARY</span>
+            color:#cbd5e1;text-transform:uppercase;">EXECUTIVE SUMMARY</span>
     </td></tr>
-    <tr><td style="padding:10px 20px 20px 20px;font-size:14px;color:#cbd5e1;line-height:1.6;">
+    <tr><td style="padding:10px 20px 20px 20px;font-size:14px;color:#e2e8f0;line-height:1.6;">
         {exec_html}
     </td></tr>
 
@@ -762,8 +762,8 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
     <!-- ═══════ TOP STOPS ═══════ -->
     <tr><td style="padding:20px 20px 8px 20px;">
         <span style="font-size:11px;font-weight:700;letter-spacing:1px;
-            color:#94a3b8;text-transform:uppercase;">TOP STOPS</span>
-        <span style="font-size:11px;color:#475569;">
+            color:#cbd5e1;text-transform:uppercase;">TOP STOPS</span>
+        <span style="font-size:11px;color:#64748b;">
             &nbsp;&mdash; {len(top_stops)} highest-opportunity dealers</span>
     </td></tr>
 
@@ -782,15 +782,15 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
     <!-- ═══════ FOOTER ═══════ -->
     {_divider()}
     <tr><td align="center" style="padding:24px 20px 12px 20px;">
-        <span style="font-size:26px;font-weight:700;color:#1e293b;
+        <span style="font-size:26px;font-weight:700;color:#334155;
             letter-spacing:-0.5px;">Otto</span>
     </td></tr>
     <tr><td align="center" style="padding:0 20px 6px 20px;
-        font-size:12px;color:#475569;">
+        font-size:12px;color:#64748b;">
         Comvoy Sales Intelligence
     </td></tr>
     <tr><td align="center" style="padding:0 20px 28px 20px;
-        font-size:11px;color:#334155;">
+        font-size:11px;color:#475569;">
         Open Otto for the full interactive briefing
     </td></tr>
 
@@ -882,7 +882,7 @@ def send_welcome_email(rep_name: str, rep_email: str,
     </td></tr>
     <tr><td align="center" style="padding:0 20px 24px 20px;">
         <span style="font-size:11px;font-weight:500;letter-spacing:1.5px;
-            color:#475569;text-transform:uppercase;">Comvoy Sales Intelligence</span>
+            color:#64748b;text-transform:uppercase;">Comvoy Sales Intelligence</span>
     </td></tr>
 
     <!-- Welcome block -->
@@ -900,7 +900,7 @@ def send_welcome_email(rep_name: str, rep_email: str,
                         line-height:1.3;padding-bottom:4px;">
                         Hey {first_name}, you&#39;re all set.
                     </td></tr>
-                    <tr><td style="font-size:14px;color:#94a3b8;">
+                    <tr><td style="font-size:14px;color:#cbd5e1;">
                         Territory: {territory}
                     </td></tr>
                 </table>
@@ -915,9 +915,9 @@ def send_welcome_email(rep_name: str, rep_email: str,
     <!-- What Otto does -->
     <tr><td style="padding:20px 20px 0 20px;">
         <span style="font-size:11px;font-weight:700;letter-spacing:1px;
-            color:#94a3b8;text-transform:uppercase;">WHAT OTTO DOES</span>
+            color:#cbd5e1;text-transform:uppercase;">WHAT OTTO DOES</span>
     </td></tr>
-    <tr><td style="padding:10px 20px 20px 20px;font-size:14px;color:#cbd5e1;line-height:1.8;">
+    <tr><td style="padding:10px 20px 20px 20px;font-size:14px;color:#e2e8f0;line-height:1.8;">
         &#x1F4CA; <strong style="color:#f1f5f9;">Market Intelligence</strong>
         &mdash; 597 dealers, 13 brands, 12 states<br>
         &#x1F525; <strong style="color:#f1f5f9;">Lead Scoring</strong>
@@ -933,9 +933,9 @@ def send_welcome_email(rep_name: str, rep_email: str,
     <!-- Get started -->
     <tr><td style="padding:20px 20px 0 20px;">
         <span style="font-size:11px;font-weight:700;letter-spacing:1px;
-            color:#94a3b8;text-transform:uppercase;">GET STARTED</span>
+            color:#cbd5e1;text-transform:uppercase;">GET STARTED</span>
     </td></tr>
-    <tr><td style="padding:10px 20px 8px 20px;font-size:14px;color:#cbd5e1;line-height:1.8;">
+    <tr><td style="padding:10px 20px 8px 20px;font-size:14px;color:#e2e8f0;line-height:1.8;">
         1. Open Otto and try the chat &mdash; ask about any dealer or market<br>
         2. Check the Dashboard for territory-wide analytics<br>
         3. Explore the Map to see every dealer scored and color-coded
@@ -950,15 +950,15 @@ def send_welcome_email(rep_name: str, rep_email: str,
 
     <!-- Footer -->
     <tr><td align="center" style="padding:24px 20px 12px 20px;">
-        <span style="font-size:26px;font-weight:700;color:#1e293b;
+        <span style="font-size:26px;font-weight:700;color:#334155;
             letter-spacing:-0.5px;">Otto</span>
     </td></tr>
     <tr><td align="center" style="padding:0 20px 6px 20px;
-        font-size:12px;color:#475569;">
+        font-size:12px;color:#64748b;">
         Comvoy Sales Intelligence
     </td></tr>
     <tr><td align="center" style="padding:0 20px 28px 20px;
-        font-size:11px;color:#334155;">
+        font-size:11px;color:#475569;">
         You received this because you were added as a sales rep.
     </td></tr>
 
