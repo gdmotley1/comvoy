@@ -134,6 +134,7 @@ def compute_lead_scores(snapshot_id: str, prev_snapshot_id: str | None = None) -
             "snapshot_id": snapshot_id,
             "score": score,
             "tier": tier,
+            "opportunity_type": "whitespace" if smyrna == 0 else "upsell",  # legacy CHECK constraint
             "factors": factors,
         })
 
