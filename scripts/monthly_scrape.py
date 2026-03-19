@@ -275,6 +275,9 @@ def extract_vehicles_from_jsonld(soup, body_type_name, state):
 
             name = v.get('name', '')
             condition = 'New' if name.lower().startswith('new') else 'Used'
+            # Skip used vehicles — Comvoy only sells new
+            if condition != 'New':
+                continue
             year_match = re.search(r'(\d{4})', name)
             year = year_match.group(1) if year_match else ''
 

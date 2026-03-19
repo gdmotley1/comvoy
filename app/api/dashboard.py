@@ -50,8 +50,12 @@ def _paginate_vehicles(db, snap_id, state=None):
         page = q.range(offset, offset + page_size - 1).execute()
         if not page.data:
             break
-        # Filter out excluded dealers (Penske, MHC, etc.)
-        vehicles.extend(v for v in page.data if not _is_excluded(v.get("dealers", {}).get("name", "")))
+        # Filter out excluded dealers and used vehicles
+        vehicles.extend(
+            v for v in page.data
+            if not _is_excluded(v.get("dealers", {}).get("name", ""))
+            and v.get("condition", "").lower() != "used"
+        )
         if len(page.data) < page_size:
             break
         offset += page_size

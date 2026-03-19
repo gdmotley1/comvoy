@@ -218,6 +218,10 @@ def load_vehicles(db, csv_path, snapshot_id, dealer_map, smyrna_vins):
         if _is_excluded(row.get("dealer_name", "")):
             skipped += 1
             continue
+        # Skip used vehicles — Comvoy only sells new
+        if row.get("condition", "").strip().lower() != "new":
+            skipped += 1
+            continue
 
         key = (row["dealer_name"], row["city"], row["state"])
         dealer_id = dealer_map.get(key)
