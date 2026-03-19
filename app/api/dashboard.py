@@ -91,7 +91,6 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
     brand_counter = Counter()
     body_type_counter = Counter()
     builder_counter = Counter()
-    condition_counter = Counter()
     fuel_counter = Counter()
     trans_counter = Counter()
     smyrna_count = 0
@@ -104,8 +103,6 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
         body_type_counter[v["body_type"]] += 1
         if v["body_builder"]:
             builder_counter[v["body_builder"]] += 1
-        if v["condition"]:
-            condition_counter[v["condition"]] += 1
         if v["fuel_type"]:
             fuel_counter[v["fuel_type"]] += 1
         if v["transmission"]:
@@ -207,15 +204,11 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
             state_vehicle_counter[v["dealers"]["state"]] += 1
     by_state = [{"state": s, "vehicles": c} for s, c in state_vehicle_counter.most_common()]
 
-    # Condition price comparison
-    new_prices = [v["price"] for v in vehicles if v["price"] and v["price"] >= PRICE_FLOOR and v.get("condition") == "New"]
-    used_prices = [v["price"] for v in vehicles if v["price"] and v["price"] >= PRICE_FLOOR and v.get("condition") == "Used"]
-
-    # Smyrna price position vs market by body type (New vs New only)
+    # Smyrna price position vs market by body type
     bt_prices_all = defaultdict(list)
     bt_prices_smyrna = defaultdict(list)
     for v in vehicles:
-        if v["price"] and v["price"] >= PRICE_FLOOR and v["body_type"] and v.get("condition") == "New":
+        if v["price"] and v["price"] >= PRICE_FLOOR and v["body_type"]:
             bt_prices_all[v["body_type"]].append(v["price"])
             if v["is_smyrna"]:
                 bt_prices_smyrna[v["body_type"]].append(v["price"])
@@ -271,10 +264,6 @@ def get_dashboard(response: Response, state: str = Query(None, description="Filt
         ],
         "price_brackets": brackets,
         "price_by_body_type": price_by_body_type,
-        "by_condition": {
-            "New": {"count": condition_counter.get("New", 0), "avg_price": round(sum(new_prices) / len(new_prices)) if new_prices else 0},
-            "Used": {"count": condition_counter.get("Used", 0), "avg_price": round(sum(used_prices) / len(used_prices)) if used_prices else 0},
-        },
         "by_state": by_state,
         "by_fuel": [
             {"fuel": f, "count": c, "share": round(c / total * 100, 1)}

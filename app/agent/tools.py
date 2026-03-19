@@ -524,10 +524,6 @@ TOOL_DEFINITIONS = [
                     "type": "string",
                     "description": "Compare this dealer's pricing vs the market. Optional — returns both dealer and market stats.",
                 },
-                "condition": {
-                    "type": "string",
-                    "description": "Filter by condition ('New' or 'Used'). Optional.",
-                },
             },
             "required": [],
         },
@@ -1529,8 +1525,6 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                     entry["builder"] = v["body_builder"]
                 if v.get("price"):
                     entry["price"] = v["price"]
-                if v.get("condition"):
-                    entry["cond"] = v["condition"]
                 if v.get("is_smyrna"):
                     entry["smyrna"] = True
                 if v.get("listing_url"):
@@ -1579,8 +1573,6 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                     entry["builder"] = v["body_builder"]
                 if v.get("price"):
                     entry["price"] = v["price"]
-                if v.get("condition"):
-                    entry["cond"] = v["condition"]
                 if v.get("transmission"):
                     entry["trans"] = v["transmission"]
                 if v.get("fuel_type"):
@@ -1735,8 +1727,6 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                     q = q.ilike("brand", tool_input["brand"])
                 if tool_input.get("body_type"):
                     q = q.ilike("body_type", f"%{tool_input['body_type']}%")
-                if tool_input.get("condition"):
-                    q = q.ilike("condition", tool_input["condition"])
                 return q.range(offset, offset + page_size - 1)
 
             PRICE_FLOOR = 5000  # filter junk/placeholder prices
@@ -1761,7 +1751,6 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                     "brand": tool_input.get("brand"),
                     "body_type": tool_input.get("body_type"),
                     "state": tool_input.get("state"),
-                    "condition": tool_input.get("condition"),
                 }.items() if v},
                 "market": _price_stats(market_prices),
                 "brackets": _brackets(market_prices),
@@ -1779,8 +1768,6 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                     dealer_q = dealer_q.ilike("brand", tool_input["brand"])
                 if tool_input.get("body_type"):
                     dealer_q = dealer_q.ilike("body_type", f"%{tool_input['body_type']}%")
-                if tool_input.get("condition"):
-                    dealer_q = dealer_q.ilike("condition", tool_input["condition"])
 
                 dealer_result = dealer_q.limit(500).execute()
                 dealer_prices = [r["price"] for r in (dealer_result.data or [])]

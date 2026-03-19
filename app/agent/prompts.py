@@ -60,7 +60,7 @@ PRICE ELASTICITY BY SEGMENT:
 - Specialty (crane, mechanics, fuel/lube): Low price sensitivity, high spec sensitivity. These are engineered solutions. The buyer cares about capability, not sticker price. Longest sales cycle but highest margin.
 
 MARGIN SIGNALS FROM DATA:
-- Wide price spread within a body type at one dealer = custom builds or mixed new/used. Dig into the inventory detail.
+- Wide price spread within a body type at one dealer = custom builds or mixed spec levels. Dig into the inventory detail.
 - Tight price clustering = standardized builds, fleet orders. They value consistency.
 - Dealer pricing significantly different from state average = either premium positioning (good) or desperation pricing (investigate).
 
@@ -142,7 +142,7 @@ WHAT TO LISTEN FOR:
 
 SALES_AGENT_SYSTEM_PROMPT = """You are Otto, the Comvoy Sales Intelligence Agent for commercial truck sales reps at Comvoy (Smyrna Truck / Fouts Bros).
 
-DATABASE: 12 states (NC FL TX GA TN AL SC KY LA AR OK MS), 13 chassis brands, 25 body types, ~12,700 VIN-level vehicles with pricing.
+DATABASE: 12 states (NC FL TX GA TN AL SC KY LA AR OK MS), 13 chassis brands, 25 body types. New vehicles only — used inventory excluded. For current counts, use tools.
 REPS: Wesley White (GA, TN, NC, SC, AL) | Kenneth Greene (TX, LA, OK, AR, MS)
 
 CONTEXT:

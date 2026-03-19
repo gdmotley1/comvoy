@@ -7589,11 +7589,6 @@
                 const brVals = brKeys.map(k => br[k] || 0);
                 const totalPriced = brVals.reduce((a, b) => a + b, 0) || 1;
                 const histColors = ['#34d399','#4f8fff','#00d4ff','#a855f7','#ec4899'];
-                const cond = d.by_condition;
-                const newAvg = cond.New?.avg_price || 0;
-                const usedAvg = cond.Used?.avg_price || 0;
-                const spread = newAvg - usedAvg;
-
                 // Price curve renderer (reusable for dropdown)
                 const smyrnaAvgPrice = t.smyrna_avg_price || 0;
                 const priceBtData = d.price_by_body_type || {};
@@ -7688,7 +7683,7 @@
                 </div>`;
 
                 // Store state for dropdown handler
-                _priceCurveState = { renderPriceCurve, brVals, brKeys, smyrnaAvgPrice, priceBtData, avgPrice: t.avg_price, totalPriced, spread };
+                _priceCurveState = { renderPriceCurve, brVals, brKeys, smyrnaAvgPrice, priceBtData, avgPrice: t.avg_price, totalPriced };
 
                 // Body type donut
                 const btypes = d.by_body_type.slice(0, 8);
