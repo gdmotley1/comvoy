@@ -15,6 +15,16 @@ logger = logging.getLogger(__name__)
 _cache: dict[str, tuple[float, dict]] = {}
 _CACHE_TTL = 300  # 5 minutes
 
+# ── Excluded Dealers ─────────────────────────────────────────────────────────
+# Rental/national chains — not sales prospects, excluded from all results
+EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc kenworth', 'mhc truck']
+
+
+def _is_excluded(name: str) -> bool:
+    """Check if dealer name matches an excluded pattern."""
+    n = name.lower()
+    return any(pat in n for pat in EXCLUDED_DEALER_PATTERNS)
+
 
 def _latest_snapshot_id(db) -> str:
     """Get the most recent snapshot ID."""
@@ -65,6 +75,9 @@ def search_dealers(
         # Apply name filter in Python (Supabase text search on joined tables is limited)
         if q and q.lower() not in d["name"].lower():
             continue
+        # Skip excluded dealers (Penske, MHC, etc.)
+        if _is_excluded(d["name"]):
+            continue
         dealers.append(DealerSummary(
             id=d["id"],
             name=d["name"],
@@ -111,6 +124,9 @@ def find_nearby(query: NearbyQuery):
     dealers = []
     for row in snapshots.data:
         d = row["dealers"]
+        # Skip excluded dealers (Penske, MHC, etc.)
+        if _is_excluded(d["name"]):
+            continue
         dealers.append(DealerSummary(
             id=d["id"],
             name=d["name"],
@@ -289,6 +305,9 @@ def get_map_data(response: Response):
         d = row["dealers"]
         if not d.get("latitude") or not d.get("longitude"):
             continue
+        # Skip excluded dealers (Penske, MHC, etc.)
+        if _is_excluded(d["name"]):
+            continue
         sc = score_map.get(d["id"], {})
         pl = places_map.get(d["id"], {})
         markers.append({
@@ -343,10 +362,13 @@ def get_territory_summary(state: str):
     if not result.data:
         raise HTTPException(404, f"No dealers found in {state.upper()}")
 
-    total_dealers = len(result.data)
-    total_vehicles = sum(r["total_vehicles"] or 0 for r in result.data)
-    total_smyrna = sum(r["smyrna_units"] or 0 for r in result.data)
-    dealers_with_smyrna = sum(1 for r in result.data if (r["smyrna_units"] or 0) > 0)
+    # Filter out excluded dealers (Penske, MHC, etc.)
+    filtered = [r for r in result.data if not _is_excluded(r["dealers"]["name"])]
+
+    total_dealers = len(filtered)
+    total_vehicles = sum(r["total_vehicles"] or 0 for r in filtered)
+    total_smyrna = sum(r["smyrna_units"] or 0 for r in filtered)
+    dealers_with_smyrna = sum(1 for r in filtered if (r["smyrna_units"] or 0) > 0)
 
     top_dealers = [
         {
@@ -356,7 +378,7 @@ def get_territory_summary(state: str):
             "smyrna_units": r["smyrna_units"] or 0,
             "rank": r["rank"],
         }
-        for r in result.data[:10]
+        for r in filtered[:10]
     ]
 
     resp = {

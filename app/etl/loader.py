@@ -22,6 +22,16 @@ logger = logging.getLogger(__name__)
 # Supabase batch insert limit
 BATCH_SIZE = 500
 
+# ── Excluded Dealers ─────────────────────────────────────────────────────────
+# Rental/national chains — not sales prospects, excluded from all loads
+EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc kenworth', 'mhc truck']
+
+
+def _is_excluded_dealer(name: str) -> bool:
+    """Check if dealer name matches an excluded pattern."""
+    n = name.lower()
+    return any(pat in n for pat in EXCLUDED_DEALER_PATTERNS)
+
 
 async def load_report(parsed: dict, file_name: str) -> dict:
     """Load a fully parsed report into the database. Returns summary stats.
@@ -147,6 +157,8 @@ def _upsert_body_types(db, body_types: list[dict]) -> dict[str, int]:
 
 def _upsert_dealers(db, dealers: list[dict]) -> dict[tuple, str]:
     """Upsert dealer rows in batches, return {(name, city, state): id} map."""
+    # Filter out excluded dealers (Penske, MHC, etc.)
+    dealers = [d for d in dealers if not _is_excluded_dealer(d["name"])]
     rows = []
     for d in dealers:
         row = {

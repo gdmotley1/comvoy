@@ -65,6 +65,14 @@ MAX_EMPTY = 3            # consecutive empty JSON-LD pages before stopping
 REQUEST_TIMEOUT = 30
 PROGRESS_SAVE_EVERY = 10 # save progress every N combos
 
+# ── Excluded Dealers ─────────────────────────────────────────────────────────
+# Dealers to exclude from scrape results (rental/national chains, not prospects)
+EXCLUDED_DEALER_PATTERNS = [
+    'penske',
+    'mhc kenworth',
+    'mhc truck',
+]
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(BASE_DIR, '..', 'scrape_output')
 
@@ -91,27 +99,27 @@ BRANDS = {
 BODY_TYPES = {
     'box-trucks-1al0': 'Box Trucks',
     'box-vans-18fs': 'Box Vans',
-    'bucket-trucks-for-sale-464k': 'Bucket Trucks',
+    'bucket-trucks-464k': 'Bucket Trucks',
     'chipper-trucks-17cg': 'Chipper Trucks',
-    'combo-trucks-for-sale-17k0': 'Combo Trucks',
+    'combo-trucks-17k0': 'Combo Trucks',
     'contractor-trucks-17or': 'Contractor Trucks',
     'crane-trucks-189l': 'Crane Trucks',
-    'cutaway-vans-for-sale-18eh': 'Cutaways',
+    'cutaway-vans-18eh': 'Cutaways',
     'landscape-trucks-1a96': 'Dovetail Landscapes',
     'dump-trucks-1das': 'Dump Trucks',
     'enclosed-service-trucks-5jzo': 'Enclosed Service',
-    'flatbed-dump-trucks-for-sale-5fvx': 'Flatbed Dump',
+    'flatbed-dump-trucks-5fvx': 'Flatbed Dump',
     'flatbed-trucks-1fcd': 'Flatbed Trucks',
-    'hauler-trucks-for-sale-1dpb': 'Hauler Body',
+    'hauler-trucks-1dpb': 'Hauler Body',
     'hooklift-trucks-1dwy': 'Hooklift',
     'landscape-dump-trucks-1e7a': 'Landscape Dumps',
-    'mechanic-trucks-for-sale-1eww': 'Mechanic Body',
+    'mechanic-trucks-1eww': 'Mechanic Body',
     'refrigerated-trucks-1gta': 'Refrigerated',
     'roll-off-trucks-1hee': 'Roll-Off',
     'rollback-trucks-1hgc': 'Rollback',
-    'service-trucks-for-sale-1hmi': 'Service Trucks',
+    'service-trucks-1hmi': 'Service Trucks',
     'stake-bed-trucks-1lk7': 'Stake Beds',
-    'utility-vans-for-sale-1jlo': 'Service Utility Vans',
+    'utility-vans-1jlo': 'Service Utility Vans',
     'welding-trucks-1n67': 'Welder',
     'tow-trucks-1nbp': 'Wrecker',
 }
@@ -535,6 +543,10 @@ def run_comvoy_scrape(date_str, inventory_path, resume=False):
                 new_count = 0
                 for v in vehicles:
                     vin = v['vin']
+                    # Skip excluded dealers (Penske, MHC, etc.)
+                    dn = v.get('dealer_name', '').lower()
+                    if any(pat in dn for pat in EXCLUDED_DEALER_PATTERNS):
+                        continue
                     if vin not in all_vehicles:
                         v['scrape_date'] = date_str
                         all_vehicles[vin] = v

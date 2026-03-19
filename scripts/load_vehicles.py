@@ -28,6 +28,14 @@ from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
+# ── Excluded Dealers ─────────────────────────────────────────────────────────
+EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc kenworth', 'mhc truck']
+
+
+def _is_excluded(name: str) -> bool:
+    n = name.lower()
+    return any(pat in n for pat in EXCLUDED_DEALER_PATTERNS)
+
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(message)s", datefmt="%H:%M:%S")
 logger = logging.getLogger(__name__)
 
@@ -102,6 +110,8 @@ def upsert_dealers_from_csv(db, csv_path):
         for row in reader:
             dealers.add((row["dealer_name"], row["city"], row["state"]))
 
+    # Filter out excluded dealers (Penske, MHC, etc.)
+    dealers = {d for d in dealers if not _is_excluded(d[0])}
     rows = [{"name": d[0], "city": d[1], "state": d[2]} for d in dealers]
     for i in range(0, len(rows), BATCH_SIZE):
         batch = rows[i:i + BATCH_SIZE]
@@ -203,6 +213,11 @@ def load_vehicles(db, csv_path, snapshot_id, dealer_map, smyrna_vins):
         if not vin or vin in seen_vins:
             continue
         seen_vins.add(vin)
+
+        # Skip excluded dealers (Penske, MHC, etc.)
+        if _is_excluded(row.get("dealer_name", "")):
+            skipped += 1
+            continue
 
         key = (row["dealer_name"], row["city"], row["state"])
         dealer_id = dealer_map.get(key)

@@ -23,6 +23,14 @@ from app.database import get_service_client
 router = APIRouter(prefix="/api/scoring", tags=["scoring"])
 logger = logging.getLogger(__name__)
 
+# ── Excluded Dealers ─────────────────────────────────────────────────────────
+EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc kenworth', 'mhc truck']
+
+
+def _is_excluded(name: str) -> bool:
+    n = name.lower()
+    return any(pat in n for pat in EXCLUDED_DEALER_PATTERNS)
+
 # ═══════════════════════════════════════════════════════════════════════
 # SCORING CONFIGURATION — CEO-adjustable weights
 # Change any value here and re-run scoring to update all dealer ranks.
@@ -276,6 +284,9 @@ def get_lead_scores(
     leads = []
     for row in result.data:
         d = row["dealers"]
+        # Skip excluded dealers (Penske, MHC, etc.)
+        if _is_excluded(d["name"]):
+            continue
         leads.append({
             "dealer_id": d["id"],
             "name": d["name"],

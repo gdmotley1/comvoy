@@ -15,6 +15,14 @@ _CACHE_TTL = 300  # 5 minutes
 router = APIRouter(prefix="/api", tags=["dashboard"])
 logger = logging.getLogger(__name__)
 
+# ── Excluded Dealers ─────────────────────────────────────────────────────────
+EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc kenworth', 'mhc truck']
+
+
+def _is_excluded(name: str) -> bool:
+    n = name.lower()
+    return any(pat in n for pat in EXCLUDED_DEALER_PATTERNS)
+
 
 def _latest_snapshot_id(db) -> str:
     result = db.table("report_snapshots").select("id, report_date").order("report_date", desc=True).limit(1).execute()
@@ -42,7 +50,8 @@ def _paginate_vehicles(db, snap_id, state=None):
         page = q.range(offset, offset + page_size - 1).execute()
         if not page.data:
             break
-        vehicles.extend(page.data)
+        # Filter out excluded dealers (Penske, MHC, etc.)
+        vehicles.extend(v for v in page.data if not _is_excluded(v.get("dealers", {}).get("name", "")))
         if len(page.data) < page_size:
             break
         offset += page_size
