@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api", tags=["dashboard"])
 logger = logging.getLogger(__name__)
 
 # ── Excluded Dealers ─────────────────────────────────────────────────────────
-EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc kenworth', 'mhc truck']
+EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc ']
 
 
 def _is_excluded(name: str) -> bool:

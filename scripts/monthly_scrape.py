@@ -69,8 +69,7 @@ PROGRESS_SAVE_EVERY = 10 # save progress every N combos
 # Dealers to exclude from scrape results (rental/national chains, not prospects)
 EXCLUDED_DEALER_PATTERNS = [
     'penske',
-    'mhc kenworth',
-    'mhc truck',
+    'mhc ',
 ]
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

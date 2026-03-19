@@ -29,7 +29,7 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 # ── Excluded Dealers ─────────────────────────────────────────────────────────
-EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc kenworth', 'mhc truck']
+EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc ']
 
 
 def _is_excluded(name: str) -> bool:
@@ -289,6 +289,12 @@ def load_aggregate_snapshots(db, csv_path, snapshot_id, dealer_map):
         if not vin or vin in seen_vins:
             continue
         seen_vins.add(vin)
+
+        # Skip excluded dealers and used vehicles (same filters as vehicle insert)
+        if _is_excluded(row.get("dealer_name", "")):
+            continue
+        if row.get("condition", "").strip().lower() != "new":
+            continue
 
         key = (row["dealer_name"], row["city"], row["state"])
         if key not in dealer_map:
