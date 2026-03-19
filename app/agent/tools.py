@@ -1508,9 +1508,6 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
             result = db.rpc("search_vehicles", params).execute()
             vehicles = []
             for v in (result.data or []):
-                # Skip used vehicles — Comvoy only sells new
-                if v.get("condition", "").lower() == "used":
-                    continue
                 entry = {
                     "vin": v["vin"],
                     "brand": v["brand"],
@@ -1543,15 +1540,14 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                 return json.dumps({"error": "No data snapshots found."})
             snap_id = snap.data[0]["id"]
 
-            # Count total matching vehicles first (new only)
             count_query = db.table("vehicles").select(
                 "id", count="exact"
-            ).eq("snapshot_id", snap_id).eq("dealer_id", dealer_id).eq("condition", "New")
+            ).eq("snapshot_id", snap_id).eq("dealer_id", dealer_id)
 
             query = db.table("vehicles").select(
-                "vin, brand, model, body_type, body_builder, price, condition, "
+                "vin, brand, model, body_type, body_builder, price, "
                 "transmission, fuel_type, color, is_smyrna, listing_url"
-            ).eq("snapshot_id", snap_id).eq("dealer_id", dealer_id).eq("condition", "New").order("price", desc=False, nulls_last=True)
+            ).eq("snapshot_id", snap_id).eq("dealer_id", dealer_id).order("price", desc=False, nulls_last=True)
 
             if tool_input.get("brand"):
                 count_query = count_query.ilike("brand", tool_input["brand"])
@@ -1716,13 +1712,13 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                 if tool_input.get("state"):
                     q = db.table("vehicles").select(
                         "price, dealers!inner(state)"
-                    ).eq("snapshot_id", snap_id).eq("condition", "New").not_.is_("price", "null").eq(
+                    ).eq("snapshot_id", snap_id).not_.is_("price", "null").eq(
                         "dealers.state", tool_input["state"].upper()
                     )
                 else:
                     q = db.table("vehicles").select("price").eq(
                         "snapshot_id", snap_id
-                    ).eq("condition", "New").not_.is_("price", "null")
+                    ).not_.is_("price", "null")
                 if tool_input.get("brand"):
                     q = q.ilike("brand", tool_input["brand"])
                 if tool_input.get("body_type"):
@@ -1763,7 +1759,7 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
             if tool_input.get("dealer_id"):
                 dealer_q = db.table("vehicles").select("price").eq(
                     "snapshot_id", snap_id
-                ).eq("dealer_id", tool_input["dealer_id"]).eq("condition", "New").not_.is_("price", "null")
+                ).eq("dealer_id", tool_input["dealer_id"]).not_.is_("price", "null")
                 if tool_input.get("brand"):
                     dealer_q = dealer_q.ilike("brand", tool_input["brand"])
                 if tool_input.get("body_type"):
@@ -1805,11 +1801,11 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                 if tool_input.get("state"):
                     q = db.table("vehicles").select(
                         "brand, body_type, body_builder, price, is_smyrna, dealers!inner(state)"
-                    ).eq("snapshot_id", snap_id).eq("condition", "New").eq("dealers.state", tool_input["state"].upper())
+                    ).eq("snapshot_id", snap_id).eq("dealers.state", tool_input["state"].upper())
                 else:
                     q = db.table("vehicles").select(
                         "brand, body_type, body_builder, price, is_smyrna"
-                    ).eq("snapshot_id", snap_id).eq("condition", "New")
+                    ).eq("snapshot_id", snap_id)
                 if tool_input.get("body_type"):
                     q = q.ilike("body_type", f"%{tool_input['body_type']}%")
                 q = q.range(offset, offset + page_size - 1)

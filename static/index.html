@@ -3901,41 +3901,6 @@
             text-align: right;
         }
 
-        /* New vs Used split */
-        .dash-condition-row {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-top: 12px;
-        }
-        .dash-condition-item {
-            flex: 1;
-            padding: 12px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.04);
-            text-align: center;
-        }
-        .dash-condition-count {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text-primary);
-            font-variant-numeric: tabular-nums;
-        }
-        .dash-condition-label {
-            font-size: 10px;
-            color: var(--text-tertiary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 2px;
-        }
-        .dash-condition-price {
-            font-size: 13px;
-            color: var(--accent-cyan);
-            margin-top: 4px;
-            font-variant-numeric: tabular-nums;
-        }
-
         /* Loading skeleton */
         .dash-skeleton {
             background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 75%);
@@ -7806,7 +7771,6 @@
                     <div style="margin-top:20px;font-size:11px;color:var(--text-tertiary);text-align:center">${((l.hot/totalLeads)*100).toFixed(0)}% conversion-ready</div>
                 </div>`;
 
-                // (New vs Used data merged into Pricing Intelligence panel above)
 
                 // Top 10 Movers (inventory changes — needs 2+ snapshots)
                 const dealers = d.top_dealers.slice(0, 10);
