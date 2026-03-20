@@ -690,6 +690,133 @@ def list_trips(
     return trips
 
 
+@router.get("/trips/estimate-days")
+async def estimate_trip_days(
+    start: str = Query(...),
+    end: str = Query(...),
+    buffer_miles: float = Query(20),
+    visit_minutes: int = Query(VISIT_DURATION_MIN),
+    max_hours: int = Query(MAX_DAY_HOURS),
+):
+    """Estimate how many days a route needs and suggest day breakpoints."""
+    start_coords = await _geocode_location(start)
+    if not start_coords:
+        raise HTTPException(422, f"Could not geocode: {start}")
+    end_coords = await _geocode_location(end)
+    if not end_coords:
+        raise HTTPException(422, f"Could not geocode: {end}")
+
+    route_wkt = await get_driving_route(
+        start_coords[0], start_coords[1], end_coords[0], end_coords[1]
+    )
+
+    db = get_service_client()
+    rpc_params = {
+        "p_start_lat": start_coords[0],
+        "p_start_lng": start_coords[1],
+        "p_end_lat": end_coords[0],
+        "p_end_lng": end_coords[1],
+        "p_buffer_miles": buffer_miles,
+    }
+    if route_wkt:
+        rpc_params["p_polyline_wkt"] = route_wkt
+
+    route_dealers = db.rpc("find_dealers_along_route", rpc_params).execute()
+    all_dealers = route_dealers.data or []
+
+    if not all_dealers:
+        return {
+            "total_dealers": 0,
+            "suggested_days": 1,
+            "day_splits": [{"day": 1, "dealer_count": 0, "start": start, "end": end}],
+        }
+
+    all_dealers.sort(key=lambda d: d.get("route_position", 0))
+
+    dealer_ids = [d["dealer_id"] for d in all_dealers]
+    snap = db.table("report_snapshots").select("id").order("report_date", desc=True).limit(1).execute()
+    score_map = {}
+    if snap.data:
+        scores = db.table("lead_scores").select("dealer_id, score, tier").eq(
+            "snapshot_id", snap.data[0]["id"]
+        ).in_("dealer_id", dealer_ids).execute()
+        score_map = {r["dealer_id"]: r for r in (scores.data or [])}
+
+    for d in all_dealers:
+        sc = score_map.get(d["dealer_id"], {})
+        d["lead_score"] = sc.get("score", 0)
+        d["lead_tier"] = sc.get("tier")
+
+    total_drive_km = _haversine(
+        start_coords[0], start_coords[1], end_coords[0], end_coords[1]
+    )
+    total_drive_hours = (total_drive_km / 1.609) / 55
+
+    max_day_min = max_hours * 60
+    visit_min = visit_minutes
+
+    day_splits = []
+    current_day = {"day": 1, "dealers": [], "drive_min": 0, "visit_min": 0}
+    prev_lat, prev_lng = start_coords
+
+    for dealer in all_dealers:
+        dlat, dlng = dealer["latitude"], dealer["longitude"]
+        drive_km = _haversine(prev_lat, prev_lng, dlat, dlng)
+        drive_min = (drive_km / 1.609) / 55 * 60
+
+        total_min = current_day["drive_min"] + current_day["visit_min"] + drive_min + visit_min
+
+        if total_min > max_day_min and current_day["dealers"]:
+            day_splits.append(current_day)
+            current_day = {"day": len(day_splits) + 1, "dealers": [], "drive_min": 0, "visit_min": 0}
+            if day_splits[-1]["dealers"]:
+                last = day_splits[-1]["dealers"][-1]
+                prev_lat, prev_lng = last["latitude"], last["longitude"]
+                drive_km = _haversine(prev_lat, prev_lng, dlat, dlng)
+                drive_min = (drive_km / 1.609) / 55 * 60
+
+        current_day["dealers"].append(dealer)
+        current_day["drive_min"] += drive_min
+        current_day["visit_min"] += visit_min
+        prev_lat, prev_lng = dlat, dlng
+
+    if current_day["dealers"]:
+        day_splits.append(current_day)
+
+    suggestions = []
+    for split in day_splits:
+        dealers_in_day = split["dealers"]
+        first_d = dealers_in_day[0] if dealers_in_day else None
+        last_d = dealers_in_day[-1] if dealers_in_day else None
+        suggestions.append({
+            "day": split["day"],
+            "dealer_count": len(dealers_in_day),
+            "estimated_hours": round((split["drive_min"] + split["visit_min"]) / 60, 1),
+            "start_area": f"{first_d['city']}, {first_d['state']}" if first_d else start,
+            "end_area": f"{last_d['city']}, {last_d['state']}" if last_d else end,
+            "dealers": [{
+                "dealer_id": d["dealer_id"],
+                "name": d["dealer_name"],
+                "city": d["city"],
+                "state": d["state"],
+                "lat": d["latitude"],
+                "lng": d["longitude"],
+                "route_position": round(d.get("route_position", 0), 3),
+                "lead_score": d.get("lead_score", 0),
+                "lead_tier": d.get("lead_tier"),
+            } for d in dealers_in_day],
+        })
+
+    return {
+        "total_dealers": len(all_dealers),
+        "total_drive_hours": round(total_drive_hours, 1),
+        "suggested_days": len(suggestions),
+        "visit_minutes": visit_min,
+        "max_day_hours": max_hours,
+        "day_splits": suggestions,
+    }
+
+
 @router.get("/trips/{trip_id}")
 def get_trip_detail(trip_id: str):
     """Full trip detail with days, stops, and dealer intel."""
@@ -1051,150 +1178,7 @@ def get_coverage(
     }
 
 
-# ---------------------------------------------------------------------------
-# Smart day-splitting — estimate how many dealers fit per day
-# ---------------------------------------------------------------------------
-
-@router.post("/trips/estimate-days")
-async def estimate_trip_days(
-    start: str = Query(...),
-    end: str = Query(...),
-    buffer_miles: float = Query(20),
-    visit_minutes: int = Query(VISIT_DURATION_MIN),
-    max_hours: int = Query(MAX_DAY_HOURS),
-):
-    """Estimate how many days a route needs and suggest day breakpoints.
-
-    Returns suggested day splits with dealer counts based on
-    drive time + visit time constraints.
-    """
-    start_coords = await _geocode_location(start)
-    if not start_coords:
-        raise HTTPException(422, f"Could not geocode: {start}")
-    end_coords = await _geocode_location(end)
-    if not end_coords:
-        raise HTTPException(422, f"Could not geocode: {end}")
-
-    # Get driving route
-    route_wkt = await get_driving_route(
-        start_coords[0], start_coords[1], end_coords[0], end_coords[1]
-    )
-
-    # Find dealers along the route
-    db = get_service_client()
-    rpc_params = {
-        "p_start_lat": start_coords[0],
-        "p_start_lng": start_coords[1],
-        "p_end_lat": end_coords[0],
-        "p_end_lng": end_coords[1],
-        "p_buffer_miles": buffer_miles,
-    }
-    if route_wkt:
-        rpc_params["p_polyline_wkt"] = route_wkt
-
-    route_dealers = db.rpc("find_dealers_along_route", rpc_params).execute()
-    all_dealers = route_dealers.data or []
-
-    if not all_dealers:
-        return {
-            "total_dealers": 0,
-            "suggested_days": 1,
-            "day_splits": [{"day": 1, "dealer_count": 0, "start": start, "end": end}],
-        }
-
-    # Sort by route position
-    all_dealers.sort(key=lambda d: d.get("route_position", 0))
-
-    # Enrich with scores for prioritization
-    dealer_ids = [d["dealer_id"] for d in all_dealers]
-    snap = db.table("report_snapshots").select("id").order("report_date", desc=True).limit(1).execute()
-    score_map = {}
-    if snap.data:
-        scores = db.table("lead_scores").select("dealer_id, score, tier").eq(
-            "snapshot_id", snap.data[0]["id"]
-        ).in_("dealer_id", dealer_ids).execute()
-        score_map = {r["dealer_id"]: r for r in (scores.data or [])}
-
-    for d in all_dealers:
-        sc = score_map.get(d["dealer_id"], {})
-        d["lead_score"] = sc.get("score", 0)
-        d["lead_tier"] = sc.get("tier")
-
-    # Estimate total drive time using haversine approximation
-    # (60 mph average highway speed)
-    total_drive_km = _haversine(
-        start_coords[0], start_coords[1], end_coords[0], end_coords[1]
-    )
-    total_drive_hours = (total_drive_km / 1.609) / 55  # ~55 mph avg with stops
-
-    # Add inter-dealer drive time estimates
-    # Walk through dealers in route order, estimating time
-    max_day_min = max_hours * 60
-    visit_min = visit_minutes
-
-    day_splits = []
-    current_day = {"day": 1, "dealers": [], "drive_min": 0, "visit_min": 0}
-    prev_lat, prev_lng = start_coords
-
-    for dealer in all_dealers:
-        dlat, dlng = dealer["latitude"], dealer["longitude"]
-        drive_km = _haversine(prev_lat, prev_lng, dlat, dlng)
-        drive_min = (drive_km / 1.609) / 55 * 60  # convert to minutes
-
-        total_min = current_day["drive_min"] + current_day["visit_min"] + drive_min + visit_min
-
-        if total_min > max_day_min and current_day["dealers"]:
-            # This dealer pushes us over — start a new day
-            day_splits.append(current_day)
-            current_day = {"day": len(day_splits) + 1, "dealers": [], "drive_min": 0, "visit_min": 0}
-            # New day starts from last dealer of previous day
-            if day_splits[-1]["dealers"]:
-                last = day_splits[-1]["dealers"][-1]
-                prev_lat, prev_lng = last["latitude"], last["longitude"]
-                drive_km = _haversine(prev_lat, prev_lng, dlat, dlng)
-                drive_min = (drive_km / 1.609) / 55 * 60
-
-        current_day["dealers"].append(dealer)
-        current_day["drive_min"] += drive_min
-        current_day["visit_min"] += visit_min
-        prev_lat, prev_lng = dlat, dlng
-
-    if current_day["dealers"]:
-        day_splits.append(current_day)
-
-    # Build response
-    suggestions = []
-    for split in day_splits:
-        dealers_in_day = split["dealers"]
-        first_d = dealers_in_day[0] if dealers_in_day else None
-        last_d = dealers_in_day[-1] if dealers_in_day else None
-        suggestions.append({
-            "day": split["day"],
-            "dealer_count": len(dealers_in_day),
-            "estimated_hours": round((split["drive_min"] + split["visit_min"]) / 60, 1),
-            "start_area": f"{first_d['city']}, {first_d['state']}" if first_d else start,
-            "end_area": f"{last_d['city']}, {last_d['state']}" if last_d else end,
-            "dealers": [{
-                "dealer_id": d["dealer_id"],
-                "name": d["dealer_name"],
-                "city": d["city"],
-                "state": d["state"],
-                "lat": d["latitude"],
-                "lng": d["longitude"],
-                "route_position": round(d.get("route_position", 0), 3),
-                "lead_score": d.get("lead_score", 0),
-                "lead_tier": d.get("lead_tier"),
-            } for d in dealers_in_day],
-        })
-
-    return {
-        "total_dealers": len(all_dealers),
-        "total_drive_hours": round(total_drive_hours, 1),
-        "suggested_days": len(suggestions),
-        "visit_minutes": visit_min,
-        "max_day_hours": max_hours,
-        "day_splits": suggestions,
-    }
+# (estimate-days moved above /trips/{trip_id} to avoid route conflict)
 
 
 # ---------------------------------------------------------------------------
