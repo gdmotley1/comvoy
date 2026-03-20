@@ -1111,6 +1111,11 @@ async def estimate_trip_days(
             "brands": sorted(all_brand_names),
             "body_types": sorted(all_btype_names),
         },
+        "route_polyline": route_wkt,
+        "start_lat": start_coords[0],
+        "start_lng": start_coords[1],
+        "end_lat": end_coords[0],
+        "end_lng": end_coords[1],
     }
 
 

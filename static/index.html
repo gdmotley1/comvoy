@@ -3445,6 +3445,75 @@
         }
         .tm-wiz-preview .tm-modal-actions { position: sticky; bottom: -32px; padding: 16px 0; margin: 0 -36px -32px; padding: 16px 36px 32px; background: linear-gradient(to top, #1a1a2e 60%, transparent); z-index: 2; }
 
+        /* --- Map-mode: wizard becomes right-side panel over the map --- */
+        body.tm-map-mode .tm-overlay {
+            background: none;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            pointer-events: none;
+            justify-content: flex-end;
+            align-items: stretch;
+            padding: 0;
+        }
+        body.tm-map-mode .tm-modal.tm-wiz-preview {
+            pointer-events: auto;
+            max-width: 400px;
+            width: 400px;
+            height: 100vh;
+            max-height: 100vh;
+            border-radius: 0;
+            border-left: 1px solid var(--glass-border);
+            margin: 0;
+            padding: 24px 20px;
+            animation: tmSlideRight 0.3s var(--spring);
+            background: rgba(18,18,36,0.97);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        body.tm-map-mode .tm-wiz-preview .tm-modal-actions {
+            margin: 0 -20px -24px;
+            padding: 16px 20px 24px;
+        }
+        body.tm-map-mode .tm-wiz-preview .tm-wiz-summary {
+            gap: 8px;
+        }
+        body.tm-map-mode .tm-wiz-preview .tm-wiz-filterbar {
+            flex-direction: column;
+            gap: 8px;
+        }
+        body.tm-map-mode .tm-wiz-preview .tm-wiz-filterbar-right {
+            width: 100%;
+        }
+        body.tm-map-mode .tm-wiz-preview .tm-wiz-filterbar-right select {
+            flex: 1;
+        }
+        @keyframes tmSlideRight { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* Wizard route markers */
+        .wiz-route-marker { opacity: 1; transition: opacity 0.2s; }
+        .wiz-route-marker.excluded { opacity: 0.3; }
+
+        @media (max-width: 768px) {
+            body.tm-map-mode .tm-overlay {
+                background: rgba(0,0,0,0.6);
+                backdrop-filter: blur(8px);
+                pointer-events: auto;
+                justify-content: center;
+                align-items: center;
+                padding: 20px;
+            }
+            body.tm-map-mode .tm-modal.tm-wiz-preview {
+                max-width: 920px;
+                width: 100%;
+                height: auto;
+                max-height: 90vh;
+                border-radius: 20px;
+                border-left: none;
+                padding: 32px 36px;
+                animation: tmSlideUp 0.25s var(--spring);
+            }
+        }
+
         .tm-modal-btn {
             flex: 1;
             padding: 10px;
@@ -6432,6 +6501,10 @@
             var _wizardBodyType = '';  // '' = any, else filter to specific body type
             var _wizardStockMode = 'in_stock'; // 'in_stock' | 'just_sold'
             var _filterOptions = { brands: [], body_types: [] };
+            var _mapModeActive = false;
+            var _wizRouteLayer = null;   // L.featureGroup for polyline
+            var _wizDealerLayer = null;  // L.featureGroup for dealer markers
+            var _wizMarkerMap = {};      // dealer_id -> L.marker
 
             function showForm() {
                 _wizardData = {};
@@ -6444,6 +6517,17 @@
                 _wizardStockMode = 'in_stock';
                 _filterOptions = { brands: [], body_types: [] };
                 _showStep1();
+            }
+
+            async function showFormFromMap() {
+                // Open wizard directly over the map (don't switch to trip-manager view)
+                if (_reps.length === 0) {
+                    try {
+                        var res = await fetchT(API_BASE + '/api/travel/reps');
+                        if (res.ok) _reps = await res.json();
+                    } catch(e) { console.error('Failed to load reps:', e); }
+                }
+                showForm();
             }
 
             function _showStep1() {
@@ -6529,6 +6613,13 @@
                     if (!res.ok) throw new Error('Route analysis failed');
                     _daySplits = await res.json();
                     _filterOptions = _daySplits.filter_options || { brands: [], body_types: [] };
+                    // Activate map mode if map is visible
+                    if (_isMapVisible()) {
+                        _mapModeActive = true;
+                        document.body.classList.add('tm-map-mode');
+                        _drawWizardRoute();
+                        setTimeout(function() { DealerMap.getMap().invalidateSize(); }, 50);
+                    }
                     _renderStep2();
                 } catch(e) {
                     overlay.innerHTML = '<div class="tm-modal tm-wiz-preview">' +
@@ -6757,6 +6848,7 @@
             }
 
             function wizardBack() {
+                _cleanupWizardMap();
                 _showStep1();
             }
 
@@ -6847,6 +6939,7 @@
                 _wizardFilter = val;
                 _wizardExcluded = {}; // reset manual exclusions when switching filter
                 _renderStep2();
+                if (_mapModeActive) _updateWizardMarkers();
             }
 
             function wizToggleDealer(dealerId, checked) {
@@ -6871,24 +6964,28 @@
                     }
                 }
                 _updateStep2Stats();
+                if (_mapModeActive) _updateWizardMarkers();
             }
 
             function wizSetBrand(val) {
                 _wizardBrand = val;
                 _wizardExcluded = {};
                 _renderStep2();
+                if (_mapModeActive) _updateWizardMarkers();
             }
 
             function wizSetBodyType(val) {
                 _wizardBodyType = val;
                 _wizardExcluded = {};
                 _renderStep2();
+                if (_mapModeActive) _updateWizardMarkers();
             }
 
             function wizSetStockMode(val) {
                 _wizardStockMode = val;
                 _wizardExcluded = {};
                 _renderStep2();
+                if (_mapModeActive) _updateWizardMarkers();
             }
 
             async function createTrip() {
@@ -6970,7 +7067,152 @@
                 } catch(e) { alert('Delete failed: ' + e.message); }
             }
 
+            // --- Map-mode: draw route + dealers on the Leaflet map ---
+            function _isMapVisible() {
+                return document.body.classList.contains('map-view');
+            }
+
+            function _drawWizardRoute() {
+                if (!_daySplits) return;
+                var map = DealerMap.getMap();
+                if (!map) return;
+
+                // Clear any existing RouteOverlay
+                RouteOverlay.clear();
+
+                // Route polyline layer
+                _wizRouteLayer = L.featureGroup().addTo(map);
+                var coords = RouteOverlay.parseWkt(_daySplits.route_polyline);
+                if (coords.length < 2 && _daySplits.start_lat && _daySplits.end_lat) {
+                    coords = [[_daySplits.start_lat, _daySplits.start_lng], [_daySplits.end_lat, _daySplits.end_lng]];
+                }
+                if (coords.length >= 2) {
+                    // 3-layer glow effect
+                    L.polyline(coords, { color: '#4f8fff', weight: 10, opacity: 0.15, smoothFactor: 1, lineCap: 'round', lineJoin: 'round' }).addTo(_wizRouteLayer);
+                    var mainLine = L.polyline(coords, { color: '#4f8fff', weight: 4, opacity: 0.8, smoothFactor: 1, lineCap: 'round', lineJoin: 'round' }).addTo(_wizRouteLayer);
+                    L.polyline(coords, { color: '#7ab4ff', weight: 2, opacity: 0.6, smoothFactor: 1, lineCap: 'round', dashArray: '8 15', className: 'route-dash-animated' }).addTo(_wizRouteLayer);
+
+                    // Start marker
+                    L.marker(coords[0], {
+                        icon: L.divIcon({ html: '<div class="route-endpoint start">S</div>', className: 'route-marker', iconSize: [28, 28], iconAnchor: [14, 14] }),
+                        zIndexOffset: 1000
+                    }).bindPopup('<div class="map-popup-name">Start</div><div class="map-popup-loc">' + esc(_wizardData.startLoc) + '</div>').addTo(_wizRouteLayer);
+
+                    // End marker
+                    L.marker(coords[coords.length - 1], {
+                        icon: L.divIcon({ html: '<div class="route-endpoint end">E</div>', className: 'route-marker', iconSize: [28, 28], iconAnchor: [14, 14] }),
+                        zIndexOffset: 1000
+                    }).bindPopup('<div class="map-popup-name">End</div><div class="map-popup-loc">' + esc(_wizardData.endLoc) + '</div>').addTo(_wizRouteLayer);
+                }
+
+                // Dealer markers layer
+                _wizDealerLayer = L.featureGroup().addTo(map);
+                _wizMarkerMap = {};
+                var splits = _daySplits.day_splits || [];
+                var dayColors = ['#4f8fff', '#a855f7', '#f97316', '#22c55e', '#ec4899', '#eab308'];
+
+                splits.forEach(function(split, dayIdx) {
+                    (split.dealers || []).forEach(function(d) {
+                        if (!d.lat || !d.lng) return;
+                        var included = _isDealerIncluded(d);
+                        var tier = (d.lead_tier || 'cold').toLowerCase();
+                        var clr = tierColor(tier);
+                        var dayClr = dayColors[dayIdx % dayColors.length];
+
+                        var icon = L.divIcon({
+                            html: '<div style="width:12px;height:12px;border-radius:50%;background:' + clr + ';border:2px solid ' + dayClr + ';box-shadow:0 0 6px ' + clr + '40;opacity:' + (included ? '1' : '0.3') + '" class="wiz-dealer-dot" data-did="' + d.dealer_id + '"></div>',
+                            className: 'wiz-route-marker' + (included ? '' : ' excluded'),
+                            iconSize: [16, 16],
+                            iconAnchor: [8, 8],
+                        });
+
+                        var marker = L.marker([d.lat, d.lng], { icon: icon, zIndexOffset: 600 });
+                        marker.bindTooltip('<b>' + esc(d.name) + '</b><br>' + esc(d.city) + ', ' + esc(d.state) + '<br>' + (d.lead_score || 0) + ' pts · ' + tier + '<br>Day ' + split.day, {
+                            className: 'map-tooltip', direction: 'top', offset: [0, -10]
+                        });
+                        marker._dealerId = d.dealer_id;
+                        marker._dayIdx = dayIdx;
+                        marker.on('click', function() {
+                            var did = this._dealerId;
+                            var isExcluded = !!_wizardExcluded[did];
+                            if (isExcluded) {
+                                delete _wizardExcluded[did];
+                            } else {
+                                _wizardExcluded[did] = true;
+                            }
+                            _updateWizardMarkers();
+                            _updateStep2Stats();
+                            // Also update checkbox in the panel
+                            var overlay = document.getElementById('tmOverlay');
+                            if (overlay) {
+                                var rows = overlay.querySelectorAll('.tm-wiz-dealer');
+                                for (var i = 0; i < rows.length; i++) {
+                                    var cb = rows[i].querySelector('.tm-check');
+                                    if (cb && cb.getAttribute('onchange') && cb.getAttribute('onchange').indexOf(did) !== -1) {
+                                        cb.checked = isExcluded; // was excluded, now included (toggled)
+                                        if (isExcluded) rows[i].classList.remove('excluded');
+                                        else rows[i].classList.add('excluded');
+                                        break;
+                                    }
+                                }
+                            }
+                        });
+                        marker.addTo(_wizDealerLayer);
+                        _wizMarkerMap[d.dealer_id] = marker;
+                    });
+                });
+
+                // Fit map bounds with right panel padding
+                var allBounds = L.featureGroup([_wizRouteLayer, _wizDealerLayer]).getBounds();
+                if (allBounds.isValid()) {
+                    map.fitBounds(allBounds, { paddingTopLeft: [40, 40], paddingBottomRight: [440, 40], maxZoom: 9 });
+                }
+
+                // Hide base cluster layer for cleaner view
+                var cl = DealerMap.getClusterLayer();
+                if (cl) map.removeLayer(cl);
+            }
+
+            function _updateWizardMarkers() {
+                if (!_wizDealerLayer) return;
+                var splits = _daySplits ? (_daySplits.day_splits || []) : [];
+                splits.forEach(function(split) {
+                    (split.dealers || []).forEach(function(d) {
+                        var marker = _wizMarkerMap[d.dealer_id];
+                        if (!marker) return;
+                        var included = _isDealerIncluded(d);
+                        var el = marker.getElement();
+                        if (el) {
+                            if (included) el.classList.remove('excluded');
+                            else el.classList.add('excluded');
+                            var dot = el.querySelector('.wiz-dealer-dot');
+                            if (dot) dot.style.opacity = included ? '1' : '0.3';
+                        }
+                    });
+                });
+            }
+
+            function _cleanupWizardMap() {
+                var map = DealerMap.getMap();
+                if (map) {
+                    if (_wizRouteLayer) { map.removeLayer(_wizRouteLayer); _wizRouteLayer = null; }
+                    if (_wizDealerLayer) { map.removeLayer(_wizDealerLayer); _wizDealerLayer = null; }
+                }
+                _wizMarkerMap = {};
+                if (_mapModeActive) {
+                    _mapModeActive = false;
+                    document.body.classList.remove('tm-map-mode');
+                    // Restore cluster layer
+                    var allDealers = DealerMap.getAllDealers();
+                    if (allDealers && allDealers.length > 0 && map) {
+                        DealerMap.addMarkers(allDealers);
+                    }
+                    if (map) map.invalidateSize();
+                }
+            }
+
             function closeForm() {
+                _cleanupWizardMap();
                 var overlay = document.getElementById('tmOverlay');
                 if (overlay) overlay.remove();
             }
@@ -7016,7 +7258,7 @@
             }
 
             return {
-                open: open, openTrip: openTrip, backToList: backToList, showForm: showForm,
+                open: open, openTrip: openTrip, backToList: backToList, showForm: showForm, showFormFromMap: showFormFromMap,
                 closeForm: closeForm, createTrip: createTrip,
                 wizardNext: wizardNext, wizardBack: wizardBack, wizToggleDay: wizToggleDay, wizFilter: wizFilter, wizToggleDealer: wizToggleDealer, wizSetBrand: wizSetBrand, wizSetBodyType: wizSetBodyType, wizSetStockMode: wizSetStockMode,
                 deleteTrip: deleteTrip, onRepChange: onRepChange, setTab: setTab,
@@ -9477,7 +9719,7 @@
         window.selectRouteRep = (id, name) => RouteOverlay.selectRep(id, name);
         window.selectRouteTrip = (id) => RouteOverlay.selectTrip(id);
         window.clearRoute = () => RouteOverlay.clear();
-        window.openTripCreatePanel = () => { openTripManager(); TripManager.showForm(); };
+        window.openTripCreatePanel = () => { TripManager.showFormFromMap(); };
         window.closeTripCreatePanel = () => TripCreate.close();
         window.saveMapTrip = () => TripCreate.save();
         window.showTripForm = () => TripManager.showForm();
