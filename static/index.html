@@ -3136,11 +3136,10 @@
         .tm-spinner { width: 32px; height: 32px; border: 3px solid rgba(79,143,255,0.15); border-top-color: var(--accent-blue); border-radius: 50%; animation: tmSpin 0.8s linear infinite; }
         @keyframes tmSpin { to { transform: rotate(360deg); } }
 
-        .tm-wiz-summary { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px; margin-bottom: 16px; background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); border-radius: 12px; overflow: hidden; }
-        .tm-wiz-stat { text-align: center; padding: 14px 6px; background: #1a1a2e; }
-        .tm-wiz-stat-val { display: block; font-size: 20px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
-        .tm-wiz-stat-lbl { display: block; font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 4px; }
-        .tm-wiz-info { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-tertiary); margin-bottom: 18px; flex-wrap: wrap; }
+        .tm-wiz-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-bottom: 18px; background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); border-radius: 12px; overflow: hidden; }
+        .tm-wiz-stat { text-align: center; padding: 16px 8px; background: #1a1a2e; }
+        .tm-wiz-stat-val { display: block; font-size: 22px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+        .tm-wiz-stat-lbl { display: block; font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 4px; }
 
         .tm-wiz-days { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
         .tm-wiz-day-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; overflow: hidden; transition: border-color 0.2s; }
@@ -3156,34 +3155,31 @@
         .tm-wiz-day-chevron { font-size: 12px; color: var(--text-tertiary); transition: transform 0.2s; }
         .tm-wiz-day-chevron.open { transform: rotate(180deg); }
 
-        .tm-wiz-dealer-list { border-top: 1px solid rgba(255,255,255,0.04); padding: 6px 12px 12px; animation: tmFadeIn 0.2s ease; }
-        .tm-wiz-dealer { display: flex; align-items: center; gap: 12px; padding: 10px 10px; border-radius: 10px; transition: background 0.15s; }
+        .tm-wiz-dealer-list { border-top: 1px solid rgba(255,255,255,0.04); padding: 6px 14px 14px; animation: tmFadeIn 0.2s ease; }
+        .tm-wiz-dealer { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; transition: background 0.15s; }
         .tm-wiz-dealer:hover { background: rgba(255,255,255,0.03); }
-        .tm-wiz-dealer-order { width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,0.06); color: var(--text-tertiary); font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .tm-wiz-dealer-score { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 8px; min-width: 32px; text-align: center; flex-shrink: 0; }
+        .tm-wiz-dealer-score-wrap { display: flex; flex-direction: column; align-items: center; gap: 2px; flex-shrink: 0; min-width: 40px; }
+        .tm-wiz-dealer-score { font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 8px; min-width: 36px; text-align: center; }
         .tm-wiz-dealer-info { flex: 1; min-width: 0; }
         .tm-wiz-dealer-name { font-size: 14px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .tm-wiz-dealer-loc { font-size: 12px; color: var(--text-tertiary); margin-top: 1px; }
-        .tm-wiz-dealer-tier { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; flex-shrink: 0; min-width: 40px; text-align: right; }
+        .tm-wiz-dealer-loc { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tm-wiz-dealer-tier { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         .tm-wiz-dealer-tier.hot { color: #f97316; }
         .tm-wiz-dealer-tier.warm { color: #eab308; }
         .tm-wiz-dealer-tier.cold { color: var(--text-tertiary); }
-        .tm-wiz-filters { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
-        .tm-wiz-filter { font-size: 11px; font-weight: 600; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
+        .tm-wiz-sold-tag { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(239,68,68,0.15); color: #ef4444; letter-spacing: 0.3px; vertical-align: middle; margin-left: 6px; }
+        .tm-wiz-filterbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; padding: 12px 14px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; }
+        .tm-wiz-filterbar-left { display: flex; gap: 4px; flex-wrap: wrap; }
+        .tm-wiz-filterbar-right { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .tm-wiz-filter { font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid transparent; background: rgba(255,255,255,0.04); color: var(--text-tertiary); cursor: pointer; transition: all 0.15s; }
         .tm-wiz-filter:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
         .tm-wiz-filter.active { background: rgba(79,143,255,0.15); border-color: rgba(79,143,255,0.3); color: var(--accent-blue); }
         .tm-wiz-filter.active.sold { background: rgba(249,115,22,0.15); border-color: rgba(249,115,22,0.3); color: #f97316; }
-        .tm-wiz-filters-row { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
-        .tm-wiz-select { background: #1a1d27; border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-primary); font-family: inherit; font-size: 12px; padding: 7px 12px; outline: none; cursor: pointer; min-width: 140px; transition: border-color 0.2s; color-scheme: dark; }
+        .tm-wiz-select { background: #151824; border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-primary); font-family: inherit; font-size: 12px; padding: 6px 10px; outline: none; cursor: pointer; min-width: 130px; transition: border-color 0.2s; color-scheme: dark; }
         .tm-wiz-select:focus { border-color: var(--accent-blue); }
-        .tm-wiz-stock-toggle { display: flex; gap: 4px; margin-left: 4px; }
         .tm-wiz-dealer.excluded { opacity: 0.35; }
         .tm-wiz-dealer.excluded .tm-wiz-dealer-name { text-decoration: line-through; }
-        .tm-wiz-dealer-kpis { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
-        .tm-wiz-kpi { font-size: 11px; font-weight: 500; padding: 4px 8px; border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text-tertiary); white-space: nowrap; }
-        .tm-wiz-kpi.smyrna { background: rgba(34,197,94,0.12); color: #22c55e; font-weight: 600; }
-        .tm-wiz-kpi.aging { background: rgba(249,115,22,0.1); color: #fb923c; }
-        .tm-wiz-kpi.sold-badge { background: rgba(239,68,68,0.12); color: #ef4444; font-weight: 700; letter-spacing: 0.3px; }
+        .tm-wiz-day-card.expanded { border-color: rgba(79,143,255,0.15); }
 
         /* Inline chat at bottom */
         .tm-chat-wrap {
@@ -4157,8 +4153,9 @@
             .tm-kpi-row { gap: 8px; grid-template-columns: repeat(2, 1fr); }
             .tm-kpi-card { padding: 12px 10px; }
             .tm-kpi-value { font-size: 20px; }
-            .tm-wiz-summary { grid-template-columns: repeat(3, 1fr); }
-            .tm-wiz-dealer-kpis { display: none; }
+            .tm-wiz-summary { grid-template-columns: repeat(2, 1fr); }
+            .tm-wiz-filterbar { flex-direction: column; align-items: stretch; }
+            .tm-wiz-filterbar-left, .tm-wiz-filterbar-right { justify-content: flex-start; }
             .tm-stop-stats { flex-wrap: wrap; }
             .tm-wiz-preview { max-width: calc(100vw - 16px); }
             .dash-grid { grid-template-columns: 1fr; }
@@ -6574,20 +6571,26 @@
                 var rep = _reps.find(function(r) { return r.id === _wizardData.repId; });
                 var repName = rep ? rep.name : 'Unknown';
 
-                // Count included dealers
-                var totalAll = 0, totalIncluded = 0, hotIncl = 0, warmIncl = 0, totalVeh = 0, totalSmyrna = 0;
+                // Count included dealers + compute avg score
+                var totalAll = 0, totalIncluded = 0, hotIncl = 0, warmIncl = 0, coldIncl = 0, scoreSum = 0;
                 splits.forEach(function(s) {
                     (s.dealers || []).forEach(function(d) {
                         totalAll++;
                         if (_isDealerIncluded(d)) {
                             totalIncluded++;
-                            if (d.lead_tier === 'hot') hotIncl++;
-                            if (d.lead_tier === 'warm') warmIncl++;
-                            totalVeh += (d.total_vehicles || 0);
-                            totalSmyrna += (d.smyrna_units || 0);
+                            var tier = (d.lead_tier || 'cold').toLowerCase();
+                            if (tier === 'hot') hotIncl++;
+                            else if (tier === 'warm') warmIncl++;
+                            else coldIncl++;
+                            scoreSum += (d.lead_score || 0);
                         }
                     });
                 });
+                var avgScore = totalIncluded > 0 ? Math.round(scoreSum / totalIncluded) : 0;
+                var totalDriveH = _daySplits.total_drive_hours || 0;
+
+                // Determine if any filters are active for the "active filters" badge
+                var hasActiveFilters = _wizardFilter !== 'all' || _wizardBrand || _wizardBodyType;
 
                 var fBtn = function(val, label) {
                     var active = _wizardFilter === val;
@@ -6596,50 +6599,63 @@
 
                 var html = '<div class="tm-modal tm-wiz-preview">' +
                     '<div class="tm-wiz-preview-header">' +
-                        '<div class="tm-modal-title" style="margin-bottom:6px;font-size:22px">' + esc(_wizardData.name) + '</div>' +
-                        '<div class="tm-wiz-step">Step 2 of 2 — Route Preview</div>' +
+                        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">' +
+                            '<div class="tm-modal-title" style="margin-bottom:0;font-size:22px">' + esc(_wizardData.name) + '</div>' +
+                            '<span style="font-size:12px;color:var(--text-tertiary)">' + esc(repName) + ' · ' + _fmtDateShort(_wizardData.startDate) + ' – ' + _fmtDateShort(_wizardData.endDate) + '</span>' +
+                        '</div>' +
+                        '<div class="tm-wiz-step">Review &amp; refine your stops, then finalize</div>' +
                     '</div>' +
+
+                    // --- Summary: 4 clean stats ---
                     '<div class="tm-wiz-summary">' +
-                        '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">' + totalIncluded + '<span style="font-size:12px;opacity:0.4;font-weight:400">/' + totalAll + '</span></span><span class="tm-wiz-stat-lbl">Selected</span></div>' +
+                        '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">' + totalIncluded + '<span style="font-size:12px;opacity:0.35;font-weight:400">/' + totalAll + '</span></span><span class="tm-wiz-stat-lbl">Dealers</span></div>' +
                         '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">' + (_daySplits.suggested_days || 1) + '</span><span class="tm-wiz-stat-lbl">Days</span></div>' +
-                        '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">' + hotIncl + '</span><span class="tm-wiz-stat-lbl">Hot</span></div>' +
-                        '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">' + warmIncl + '</span><span class="tm-wiz-stat-lbl">Warm</span></div>' +
-                        '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">' + totalVeh.toLocaleString() + '</span><span class="tm-wiz-stat-lbl">Vehicles</span></div>' +
-                        '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val" style="color:#22c55e">' + totalSmyrna + '</span><span class="tm-wiz-stat-lbl">Smyrna</span></div>' +
+                        '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val" style="color:' + (avgScore >= 70 ? '#f97316' : avgScore >= 40 ? '#eab308' : 'var(--text-tertiary)') + '">' + avgScore + '</span><span class="tm-wiz-stat-lbl">Avg Score</span></div>' +
+                        '<div class="tm-wiz-stat">' +
+                            '<span class="tm-wiz-stat-val">' +
+                                (hotIncl > 0 ? '<span style="color:#f97316">' + hotIncl + '</span>' : '') +
+                                (hotIncl > 0 && warmIncl > 0 ? '<span style="opacity:0.3;font-size:12px"> / </span>' : '') +
+                                (warmIncl > 0 ? '<span style="color:#eab308">' + warmIncl + '</span>' : '') +
+                                (hotIncl === 0 && warmIncl === 0 ? '<span style="opacity:0.4">0</span>' : '') +
+                            '</span><span class="tm-wiz-stat-lbl">Hot / Warm</span>' +
+                        '</div>' +
                     '</div>' +
-                    '<div class="tm-wiz-info">' +
-                        '<span>' + esc(repName) + '</span>' +
-                        '<span class="tm-meta-dot">·</span>' +
-                        '<span>' + _fmtDateShort(_wizardData.startDate) + ' — ' + _fmtDateShort(_wizardData.endDate) + '</span>' +
-                        '<span class="tm-meta-dot">·</span>' +
-                        '<span>' + esc(_wizardData.startLoc) + ' → ' + esc(_wizardData.endLoc) + '</span>' +
+
+                    // --- Single unified filter bar ---
+                    '<div class="tm-wiz-filterbar">' +
+                        '<div class="tm-wiz-filterbar-left">' +
+                            fBtn('all', 'All') +
+                            fBtn('no_cold', 'No Cold') +
+                            fBtn('hot_warm', 'Hot + Warm') +
+                            fBtn('hot_only', 'Hot Only') +
+                        '</div>' +
+                        '<div class="tm-wiz-filterbar-right">' +
+                            '<select class="tm-wiz-select" onchange="tmWizSetBrand(this.value)">' +
+                                '<option value="">Any Brand</option>' +
+                                (_filterOptions.brands || []).map(function(b) {
+                                    return '<option value="' + esc(b) + '"' + (b === _wizardBrand ? ' selected' : '') + '>' + esc(b) + '</option>';
+                                }).join('') +
+                            '</select>' +
+                            '<select class="tm-wiz-select" onchange="tmWizSetBodyType(this.value)">' +
+                                '<option value="">Any Body Type</option>' +
+                                (_filterOptions.body_types || []).map(function(bt) {
+                                    return '<option value="' + esc(bt) + '"' + (bt === _wizardBodyType ? ' selected' : '') + '>' + esc(bt) + '</option>';
+                                }).join('') +
+                            '</select>' +
+                            ((_wizardBrand || _wizardBodyType) ?
+                                '<button class="tm-wiz-filter' + (_wizardStockMode === 'just_sold' ? ' active sold' : '') + '" onclick="tmWizSetStockMode(\'' + (_wizardStockMode === 'just_sold' ? 'in_stock' : 'just_sold') + '\')" style="white-space:nowrap">' +
+                                    (_wizardStockMode === 'just_sold' ? '🔥 Just Sold' : 'Just Sold') +
+                                '</button>' : '') +
+                        '</div>' +
                     '</div>' +
-                    '<div class="tm-wiz-filters">' +
-                        fBtn('all', 'All Dealers') +
-                        fBtn('no_cold', 'No Cold') +
-                        fBtn('hot_warm', 'Hot + Warm') +
-                        fBtn('hot_only', 'Hot Only') +
-                    '</div>' +
-                    '<div class="tm-wiz-filters-row">' +
-                        '<select class="tm-wiz-select" onchange="tmWizSetBrand(this.value)">' +
-                            '<option value="">Any Brand</option>' +
-                            (_filterOptions.brands || []).map(function(b) {
-                                return '<option value="' + esc(b) + '"' + (b === _wizardBrand ? ' selected' : '') + '>' + esc(b) + '</option>';
-                            }).join('') +
-                        '</select>' +
-                        '<select class="tm-wiz-select" onchange="tmWizSetBodyType(this.value)">' +
-                            '<option value="">Any Body Type</option>' +
-                            (_filterOptions.body_types || []).map(function(bt) {
-                                return '<option value="' + esc(bt) + '"' + (bt === _wizardBodyType ? ' selected' : '') + '>' + esc(bt) + '</option>';
-                            }).join('') +
-                        '</select>' +
-                        ((_wizardBrand || _wizardBodyType) ?
-                            '<div class="tm-wiz-stock-toggle">' +
-                                '<button class="tm-wiz-filter' + (_wizardStockMode === 'in_stock' ? ' active' : '') + '" onclick="tmWizSetStockMode(\'in_stock\')">In Stock</button>' +
-                                '<button class="tm-wiz-filter' + (_wizardStockMode === 'just_sold' ? ' active sold' : '') + '" onclick="tmWizSetStockMode(\'just_sold\')">Just Sold</button>' +
-                            '</div>' : '') +
-                    '</div>' +
+
+                    // --- Day cards ---
                     '<div class="tm-wiz-days" id="tmWizDays">';
+
+                // Auto-expand Day 1 on first render
+                if (Object.keys(_wizardExpanded).length === 0 && splits.length > 0) {
+                    _wizardExpanded[0] = true;
+                }
 
                 splits.forEach(function(split, i) {
                     var dealers = split.dealers || [];
@@ -6648,7 +6664,7 @@
                     var warmCount = includedDealers.filter(function(d) { return d.lead_tier === 'warm'; }).length;
                     var expanded = _wizardExpanded[i];
 
-                    html += '<div class="tm-wiz-day-card">' +
+                    html += '<div class="tm-wiz-day-card' + (expanded ? ' expanded' : '') + '">' +
                         '<div class="tm-wiz-day-header" onclick="tmWizToggleDay(' + i + ')">' +
                             '<div class="tm-wiz-day-left">' +
                                 '<span class="tm-wiz-day-num">Day ' + split.day + '</span>' +
@@ -6656,7 +6672,7 @@
                             '</div>' +
                             '<div class="tm-wiz-day-right">' +
                                 (split.estimated_hours ? '<span class="tm-wiz-day-meta" style="opacity:0.5">~' + split.estimated_hours + 'h</span>' : '') +
-                                '<span class="tm-wiz-day-meta">' + includedDealers.length + '/' + dealers.length + ' selected</span>' +
+                                '<span class="tm-wiz-day-meta">' + includedDealers.length + ' stops</span>' +
                                 (hotCount > 0 ? '<span class="tm-wiz-day-hot">' + hotCount + ' hot</span>' : '') +
                                 (warmCount > 0 ? '<span class="tm-wiz-day-warm">' + warmCount + ' warm</span>' : '') +
                                 '<span class="tm-wiz-day-chevron' + (expanded ? ' open' : '') + '">▾</span>' +
@@ -6674,29 +6690,35 @@
                             var filteredOut = !included && !manuallyExcluded;
                             if (included) orderNum++;
 
+                            // Build a concise detail line
+                            var details = [];
+                            details.push((d.total_vehicles || 0) + ' vehicles');
+                            if (d.smyrna_units > 0) details.push(d.smyrna_units + ' Smyrna');
+                            if (d.avg_days_on_lot > 0) details.push(d.avg_days_on_lot + 'd avg lot time');
+                            var hasSold = (_wizardBrand && (d.sold_brands || []).includes(_wizardBrand)) || (_wizardBodyType && (d.sold_body_types || []).includes(_wizardBodyType));
+
                             html += '<div class="tm-wiz-dealer' + (!included ? ' excluded' : '') + '">' +
                                 '<input type="checkbox" class="tm-check" ' + (included ? 'checked' : '') +
                                     (filteredOut ? ' disabled title="Filtered out"' : '') +
                                     ' onchange="tmWizToggleDealer(\'' + d.dealer_id + '\', this.checked)">' +
-                                '<span class="tm-wiz-dealer-order">' + (included ? orderNum : '—') + '</span>' +
-                                '<span class="tm-wiz-dealer-score" style="background:' + clr + '20;color:' + clr + '">' + (d.lead_score || '—') + '</span>' +
+                                '<div class="tm-wiz-dealer-score-wrap">' +
+                                    '<span class="tm-wiz-dealer-score" style="background:' + clr + '20;color:' + clr + '">' + (d.lead_score || '—') + '</span>' +
+                                    '<span class="tm-wiz-dealer-tier ' + tier + '">' + tier + '</span>' +
+                                '</div>' +
                                 '<div class="tm-wiz-dealer-info">' +
-                                    '<div class="tm-wiz-dealer-name">' + esc(d.name) + '</div>' +
-                                    '<div class="tm-wiz-dealer-loc">' + esc(d.city) + ', ' + esc(d.state) + (d.top_brand ? ' · ' + esc(d.top_brand) : '') + '</div>' +
+                                    '<div class="tm-wiz-dealer-name">' + esc(d.name) +
+                                        (hasSold ? ' <span class="tm-wiz-sold-tag">JUST SOLD</span>' : '') +
+                                    '</div>' +
+                                    '<div class="tm-wiz-dealer-loc">' + esc(d.city) + ', ' + esc(d.state) +
+                                        (d.top_brand ? ' · ' + esc(d.top_brand) : '') +
+                                        (details.length > 0 ? ' · ' + details.join(' · ') : '') +
+                                    '</div>' +
                                 '</div>' +
-                                '<div class="tm-wiz-dealer-kpis">' +
-                                    '<span class="tm-wiz-kpi">' + (d.total_vehicles || 0) + ' veh</span>' +
-                                    (d.smyrna_units > 0 ? '<span class="tm-wiz-kpi smyrna">' + d.smyrna_units + ' Smyrna</span>' : '') +
-                                    (d.avg_days_on_lot > 0 ? '<span class="tm-wiz-kpi aging">' + d.avg_days_on_lot + 'd avg</span>' : '') +
-                                    ((_wizardBrand && (d.sold_brands || []).includes(_wizardBrand)) || (_wizardBodyType && (d.sold_body_types || []).includes(_wizardBodyType))
-                                        ? '<span class="tm-wiz-kpi sold-badge">SOLD</span>' : '') +
-                                '</div>' +
-                                '<span class="tm-wiz-dealer-tier ' + tier + '">' + tier + '</span>' +
                             '</div>';
                         });
                         html += '</div>';
                     } else if (expanded) {
-                        html += '<div class="tm-wiz-dealer-list"><div style="padding:12px;color:var(--text-tertiary);font-size:12px;text-align:center">No dealers on this segment</div></div>';
+                        html += '<div class="tm-wiz-dealer-list"><div style="padding:16px;color:var(--text-tertiary);font-size:13px;text-align:center">No dealers on this segment</div></div>';
                     }
 
                     html += '</div>';
