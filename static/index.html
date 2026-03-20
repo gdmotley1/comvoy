@@ -3130,8 +3130,8 @@
 
         /* Wizard steps */
         .tm-wiz-step { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent-blue); margin-bottom: 20px; }
-        .tm-modal.tm-wiz-preview { max-width: 920px; max-height: 88vh; display: flex; flex-direction: column; padding: 32px 36px; }
-        .tm-wiz-preview-header { flex-shrink: 0; }
+        .tm-modal.tm-wiz-preview { max-width: 920px; max-height: 90vh; overflow-y: auto; padding: 32px 36px; }
+        .tm-wiz-preview-header { }
         .tm-wiz-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0; }
         .tm-spinner { width: 32px; height: 32px; border: 3px solid rgba(79,143,255,0.15); border-top-color: var(--accent-blue); border-radius: 50%; animation: tmSpin 0.8s linear infinite; }
         @keyframes tmSpin { to { transform: rotate(360deg); } }
@@ -3142,7 +3142,7 @@
         .tm-wiz-stat-lbl { display: block; font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 4px; }
         .tm-wiz-info { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-tertiary); margin-bottom: 18px; flex-wrap: wrap; }
 
-        .tm-wiz-days { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; padding-right: 4px; }
+        .tm-wiz-days { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
         .tm-wiz-day-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; overflow: hidden; transition: border-color 0.2s; }
         .tm-wiz-day-card:hover { border-color: rgba(79,143,255,0.2); }
         .tm-wiz-day-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; cursor: pointer; gap: 16px; }
@@ -3440,6 +3440,7 @@
             gap: 10px;
             margin-top: 20px;
         }
+        .tm-wiz-preview .tm-modal-actions { position: sticky; bottom: -32px; padding: 16px 0; margin: 0 -36px -32px; padding: 16px 36px 32px; background: linear-gradient(to top, #1a1a2e 60%, transparent); z-index: 2; }
 
         .tm-modal-btn {
             flex: 1;
