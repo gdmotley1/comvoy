@@ -4073,12 +4073,13 @@
             inset: 0;
             z-index: 9999;
             background: var(--bg-deep);
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
-            opacity: 1;
-            transition: opacity 0.4s ease;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
+        .auth-overlay.visible { display: flex; opacity: 1; }
         .auth-overlay.hidden { opacity: 0; pointer-events: none; }
         .auth-card {
             width: 100%;
@@ -4689,10 +4690,13 @@
             function _onAuth(user) {
                 _user = user;
                 _userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
-                // Update UI
+                // Hide auth overlay
                 const overlay = document.getElementById('authOverlay');
-                if (overlay) overlay.classList.add('hidden');
-                setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 400);
+                if (overlay) {
+                    overlay.classList.add('hidden');
+                    overlay.classList.remove('visible');
+                    setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 300);
+                }
                 // Show user bar in topbar
                 const bar = document.getElementById('authUserBar');
                 const nameEl = document.getElementById('authUserName');
@@ -4711,7 +4715,7 @@
                 localStorage.removeItem('otto_sid');
                 // Show auth overlay
                 const overlay = document.getElementById('authOverlay');
-                if (overlay) { overlay.style.display = 'flex'; overlay.classList.remove('hidden'); }
+                if (overlay) { overlay.style.display = 'flex'; overlay.classList.remove('hidden'); overlay.classList.add('visible'); }
                 const bar = document.getElementById('authUserBar');
                 if (bar) bar.style.display = 'none';
                 showLogin();
@@ -4721,7 +4725,12 @@
             async function init() {
                 const { data: { session } } = await sb.auth.getSession();
                 if (session?.user) {
+                    // Already logged in — no flash, just proceed
                     _onAuth(session.user);
+                } else {
+                    // No session — show login screen
+                    const overlay = document.getElementById('authOverlay');
+                    if (overlay) { overlay.style.display = 'flex'; requestAnimationFrame(() => overlay.classList.add('visible')); }
                 }
                 // Listen for auth state changes
                 sb.auth.onAuthStateChange((event, session) => {
