@@ -3489,9 +3489,7 @@
         }
         @keyframes tmSlideRight { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
 
-        /* Wizard route markers */
-        .wiz-route-marker { opacity: 1; transition: opacity 0.2s; }
-        .wiz-route-marker.excluded { opacity: 0.3; }
+        /* Wizard route markers — no extra styles needed, uses tactical icons */
 
         @media (max-width: 768px) {
             body.tm-map-mode .tm-overlay {
@@ -7109,22 +7107,16 @@
                 _wizDealerLayer = L.featureGroup().addTo(map);
                 _wizMarkerMap = {};
                 var splits = _daySplits.day_splits || [];
-                var dayColors = ['#4f8fff', '#a855f7', '#f97316', '#22c55e', '#ec4899', '#eab308'];
 
                 splits.forEach(function(split, dayIdx) {
                     (split.dealers || []).forEach(function(d) {
                         if (!d.lat || !d.lng) return;
                         var included = _isDealerIncluded(d);
                         var tier = (d.lead_tier || 'cold').toLowerCase();
-                        var clr = tierColor(tier);
-                        var dayClr = dayColors[dayIdx % dayColors.length];
 
-                        var icon = L.divIcon({
-                            html: '<div style="width:12px;height:12px;border-radius:50%;background:' + clr + ';border:2px solid ' + dayClr + ';box-shadow:0 0 6px ' + clr + '40;opacity:' + (included ? '1' : '0.3') + '" class="wiz-dealer-dot" data-did="' + d.dealer_id + '"></div>',
-                            className: 'wiz-route-marker' + (included ? '' : ' excluded'),
-                            iconSize: [16, 16],
-                            iconAnchor: [8, 8],
-                        });
+                        var icon = included
+                            ? DealerMap.createTacticalIcon(tier, tierColor(tier))
+                            : DealerMap.createTacticalIcon('unscored', '#555');
 
                         var marker = L.marker([d.lat, d.lng], { icon: icon, zIndexOffset: 600 });
                         marker.bindTooltip('<b>' + esc(d.name) + '</b><br>' + esc(d.city) + ', ' + esc(d.state) + '<br>' + (d.lead_score || 0) + ' pts · ' + tier + '<br>Day ' + split.day, {
@@ -7181,13 +7173,11 @@
                         var marker = _wizMarkerMap[d.dealer_id];
                         if (!marker) return;
                         var included = _isDealerIncluded(d);
-                        var el = marker.getElement();
-                        if (el) {
-                            if (included) el.classList.remove('excluded');
-                            else el.classList.add('excluded');
-                            var dot = el.querySelector('.wiz-dealer-dot');
-                            if (dot) dot.style.opacity = included ? '1' : '0.3';
-                        }
+                        var tier = (d.lead_tier || 'cold').toLowerCase();
+                        var icon = included
+                            ? DealerMap.createTacticalIcon(tier, tierColor(tier))
+                            : DealerMap.createTacticalIcon('unscored', '#555');
+                        marker.setIcon(icon);
                     });
                 });
             }
