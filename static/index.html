@@ -3057,6 +3057,7 @@
         .tm-card-meta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-tertiary); }
         .tm-meta-dot { opacity: 0.4; }
         .tm-card-rep { margin-left: auto; font-size: 11px; color: var(--text-tertiary); }
+        .tm-card-rep-pill { margin-left: auto; width: 28px; height: 28px; border-radius: 50%; background: rgba(79,143,255,0.12); color: var(--accent-blue); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; letter-spacing: -0.5px; }
         .tm-status-badge { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 3px 10px; border-radius: 100px; }
         .tm-trip-card { cursor: pointer; }
 
@@ -6101,11 +6102,13 @@
 
                 var statusBadge = '<span class="tm-status-badge" style="background:' + _statusColor(trip.status) + '20;color:' + _statusColor(trip.status) + '">' + (trip.status || 'draft') + '</span>';
 
+                var repInitials = (trip.rep_name || '').split(' ').map(function(w) { return w[0]; }).join('').toUpperCase();
+
                 return '<div class="tm-trip-card" style="border-left-color:' + borderColor + '" onclick="tmOpenTrip(\'' + trip.id + '\')">' +
                     '<div class="tm-trip-top">' +
                         statusBadge +
                         '<span class="tm-card-date">' + dateRange + '</span>' +
-                        '<span class="tm-card-rep">' + esc(trip.rep_name || '') + '</span>' +
+                        '<span class="tm-card-rep-pill" title="' + esc(trip.rep_name || '') + '">' + repInitials + '</span>' +
                     '</div>' +
                     '<div class="tm-card-name">' + esc(trip.name) + '</div>' +
                     '<div class="tm-card-meta">' +
@@ -6374,7 +6377,7 @@
 
                 overlay.innerHTML = '<div class="tm-modal" style="max-width:520px">' +
                     '<div class="tm-modal-title">Plan a New Trip</div>' +
-                    '<div class="tm-field"><label>Trip Name</label><input type="text" id="tmTripName" placeholder="e.g. March NC Service Run"></div>' +
+                    '<div class="tm-field"><label>Trip Name <span style="opacity:0.4;font-weight:400">(auto-generates if blank)</span></label><input type="text" id="tmTripName" placeholder="e.g. March NC Service Run"></div>' +
                     '<div class="tm-field"><label>Assign To</label><select id="tmTripRep" class="tm-rep-select" style="width:100%;height:42px">' + repOptions + '</select></div>' +
                     '<div style="display:flex;gap:10px">' +
                         '<div class="tm-field" style="flex:1"><label>Start Date</label><input type="date" id="tmTripStart"></div>' +
@@ -6431,10 +6434,25 @@
                 var endLoc = (document.getElementById('tmRouteEnd') || {}).value || '';
                 var notes = (document.getElementById('tmTripNotes') || {}).value || '';
 
-                if (!name.trim()) { alert('Enter a trip name'); return; }
                 if (!repId) { alert('Select a rep'); return; }
                 if (!startDate || !endDate) { alert('Enter start and end dates'); return; }
                 if (!startLoc.trim()) { alert('Enter a start location'); return; }
+
+                // Auto-generate name if blank
+                if (!name.trim()) {
+                    var rep = _reps.find(function(r) { return r.id === repId; });
+                    var firstName = rep ? rep.name.split(' ')[0] : 'Trip';
+                    var m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                    var dp = startDate.split('-');
+                    var dateLabel = m[parseInt(dp[1])-1] + ' ' + parseInt(dp[2]);
+                    var startCity = startLoc.trim().split(',')[0];
+                    var endCity = endLoc.trim() ? endLoc.trim().split(',')[0] : '';
+                    if (endCity && endCity !== startCity) {
+                        name = firstName + "'s " + dateLabel + ' ' + startCity + ' to ' + endCity;
+                    } else {
+                        name = firstName + "'s " + dateLabel + ' ' + startCity + ' Run';
+                    }
+                }
 
                 var btn = document.getElementById('tmCreateBtn');
                 if (btn) { btn.disabled = true; btn.textContent = 'Creating...'; }
