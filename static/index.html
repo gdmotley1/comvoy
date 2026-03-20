@@ -6730,7 +6730,16 @@
                         '<button class="tm-modal-btn primary" id="tmCreateBtn" onclick="tmCreateTrip()">Create Trip (' + totalIncluded + ' dealers)</button>' +
                     '</div></div>';
 
+                // Preserve scroll position across re-renders
+                var prevModal = overlay.querySelector('.tm-wiz-preview');
+                var savedScroll = prevModal ? prevModal.scrollTop : 0;
                 overlay.innerHTML = html;
+                if (savedScroll > 0) {
+                    requestAnimationFrame(function() {
+                        var newModal = overlay.querySelector('.tm-wiz-preview');
+                        if (newModal) newModal.scrollTop = savedScroll;
+                    });
+                }
             }
 
             function wizardBack() {
