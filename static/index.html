@@ -3124,13 +3124,46 @@
         .tm-sug-loc { font-size: 11px; color: var(--text-tertiary); white-space: nowrap; }
         .tm-sug-dist { font-size: 11px; color: var(--text-tertiary); white-space: nowrap; }
 
-        /* Estimate result */
-        .tm-estimate-result { margin: 12px 0; padding: 14px; background: rgba(79,143,255,0.05); border: 1px solid rgba(79,143,255,0.15); border-radius: 12px; }
-        .tm-estimate-header { font-size: 13px; font-weight: 600; color: var(--accent-blue); margin-bottom: 10px; }
-        .tm-estimate-day { padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.04); }
-        .tm-estimate-day:first-of-type { border-top: none; }
-        .tm-estimate-day-title { font-size: 13px; font-weight: 500; color: var(--text-primary); }
-        .tm-estimate-day-meta { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+        /* Wizard steps */
+        .tm-wiz-step { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent-blue); margin-bottom: 16px; }
+        .tm-wiz-preview { max-width: 640px; max-height: 85vh; display: flex; flex-direction: column; }
+        .tm-wiz-preview-header { flex-shrink: 0; }
+        .tm-wiz-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0; }
+        .tm-spinner { width: 32px; height: 32px; border: 3px solid rgba(79,143,255,0.15); border-top-color: var(--accent-blue); border-radius: 50%; animation: tmSpin 0.8s linear infinite; }
+        @keyframes tmSpin { to { transform: rotate(360deg); } }
+
+        .tm-wiz-summary { display: flex; gap: 2px; margin-bottom: 14px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; overflow: hidden; }
+        .tm-wiz-stat { flex: 1; text-align: center; padding: 12px 8px; }
+        .tm-wiz-stat-val { display: block; font-size: 18px; font-weight: 700; color: var(--text-primary); }
+        .tm-wiz-stat-lbl { display: block; font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.3px; margin-top: 2px; }
+        .tm-wiz-info { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-tertiary); margin-bottom: 16px; flex-wrap: wrap; }
+
+        .tm-wiz-days { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; padding-right: 4px; }
+        .tm-wiz-day-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; overflow: hidden; transition: border-color 0.2s; }
+        .tm-wiz-day-card:hover { border-color: rgba(79,143,255,0.2); }
+        .tm-wiz-day-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; cursor: pointer; gap: 12px; }
+        .tm-wiz-day-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .tm-wiz-day-num { font-size: 13px; font-weight: 700; color: var(--accent-blue); white-space: nowrap; }
+        .tm-wiz-day-route { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tm-wiz-day-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .tm-wiz-day-meta { font-size: 11px; color: var(--text-tertiary); white-space: nowrap; }
+        .tm-wiz-day-hot { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 6px; background: rgba(249,115,22,0.15); color: #f97316; }
+        .tm-wiz-day-warm { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 6px; background: rgba(234,179,8,0.15); color: #eab308; }
+        .tm-wiz-day-chevron { font-size: 12px; color: var(--text-tertiary); transition: transform 0.2s; }
+        .tm-wiz-day-chevron.open { transform: rotate(180deg); }
+
+        .tm-wiz-dealer-list { border-top: 1px solid rgba(255,255,255,0.04); padding: 4px 8px 8px; animation: tmFadeIn 0.2s ease; }
+        .tm-wiz-dealer { display: flex; align-items: center; gap: 10px; padding: 8px 8px; border-radius: 8px; transition: background 0.15s; }
+        .tm-wiz-dealer:hover { background: rgba(255,255,255,0.03); }
+        .tm-wiz-dealer-order { width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,0.06); color: var(--text-tertiary); font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .tm-wiz-dealer-score { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; min-width: 28px; text-align: center; flex-shrink: 0; }
+        .tm-wiz-dealer-info { flex: 1; min-width: 0; }
+        .tm-wiz-dealer-name { font-size: 13px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tm-wiz-dealer-loc { font-size: 11px; color: var(--text-tertiary); }
+        .tm-wiz-dealer-tier { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; flex-shrink: 0; }
+        .tm-wiz-dealer-tier.hot { color: #f97316; }
+        .tm-wiz-dealer-tier.warm { color: #eab308; }
+        .tm-wiz-dealer-tier.cold { color: var(--text-tertiary); }
 
         /* Inline chat at bottom */
         .tm-chat-wrap {
@@ -6366,123 +6399,230 @@
             }
 
             /* ---- CREATE TRIP WIZARD ---- */
+            /* ---- 2-STEP CREATION WIZARD ---- */
+            var _wizardData = {};  // persists between steps
+            var _wizardExpanded = {}; // which day cards are expanded
+
             function showForm() {
-                var overlay = document.createElement('div');
-                overlay.className = 'tm-overlay';
-                overlay.id = 'tmOverlay';
-                overlay.onclick = function(e) { if (e.target === overlay) closeForm(); };
+                _wizardData = {};
+                _daySplits = null;
+                _wizardExpanded = {};
+                _showStep1();
+            }
+
+            function _showStep1() {
+                var overlay = document.getElementById('tmOverlay');
+                if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.className = 'tm-overlay';
+                    overlay.id = 'tmOverlay';
+                    overlay.onclick = function(e) { if (e.target === overlay) closeForm(); };
+                    document.body.appendChild(overlay);
+                }
 
                 var repOptions = '<option value="">Select rep...</option>' +
-                    _reps.map(function(r) { return '<option value="' + r.id + '">' + esc(r.name) + '</option>'; }).join('');
+                    _reps.map(function(r) { return '<option value="' + r.id + '"' + (_wizardData.repId === r.id ? ' selected' : '') + '>' + esc(r.name) + '</option>'; }).join('');
 
                 overlay.innerHTML = '<div class="tm-modal" style="max-width:520px">' +
                     '<div class="tm-modal-title">Plan a New Trip</div>' +
-                    '<div class="tm-field"><label>Trip Name <span style="opacity:0.4;font-weight:400">(auto-generates if blank)</span></label><input type="text" id="tmTripName" placeholder="e.g. March NC Service Run"></div>' +
+                    '<div class="tm-wiz-step">Step 1 of 2 — Route Setup</div>' +
+                    '<div class="tm-field"><label>Trip Name <span style="opacity:0.4;font-weight:400">(auto-generates if blank)</span></label><input type="text" id="tmTripName" placeholder="e.g. March NC Service Run" value="' + esc(_wizardData.name || '') + '"></div>' +
                     '<div class="tm-field"><label>Assign To</label><select id="tmTripRep" class="tm-rep-select" style="width:100%;height:42px">' + repOptions + '</select></div>' +
                     '<div style="display:flex;gap:10px">' +
-                        '<div class="tm-field" style="flex:1"><label>Start Date</label><input type="date" id="tmTripStart"></div>' +
-                        '<div class="tm-field" style="flex:1"><label>End Date</label><input type="date" id="tmTripEnd"></div>' +
+                        '<div class="tm-field" style="flex:1"><label>Start Date</label><input type="date" id="tmTripStart" value="' + (_wizardData.startDate || '') + '"></div>' +
+                        '<div class="tm-field" style="flex:1"><label>End Date</label><input type="date" id="tmTripEnd" value="' + (_wizardData.endDate || '') + '"></div>' +
                     '</div>' +
-                    '<div class="tm-field"><label>Start Location</label><input type="text" id="tmRouteStart" placeholder="e.g. Smyrna, GA"></div>' +
-                    '<div class="tm-field"><label>End Location</label><input type="text" id="tmRouteEnd" placeholder="e.g. Nashville, TN"></div>' +
-                    '<div class="tm-field"><label>Notes (optional)</label><textarea id="tmTripNotes" rows="2" placeholder="Hotel, goals, special instructions..."></textarea></div>' +
-                    '<div id="tmDaySplitPreview"></div>' +
+                    '<div class="tm-field"><label>Start Location</label><input type="text" id="tmRouteStart" placeholder="e.g. Smyrna, GA" value="' + esc(_wizardData.startLoc || '') + '"></div>' +
+                    '<div class="tm-field"><label>End Location</label><input type="text" id="tmRouteEnd" placeholder="e.g. Nashville, TN" value="' + esc(_wizardData.endLoc || '') + '"></div>' +
+                    '<div class="tm-field"><label>Notes (optional)</label><textarea id="tmTripNotes" rows="2" placeholder="Hotel, goals, special instructions...">' + esc(_wizardData.notes || '') + '</textarea></div>' +
                     '<div class="tm-modal-actions">' +
                         '<button class="tm-modal-btn secondary" onclick="closeTripForm()">Cancel</button>' +
-                        '<button class="tm-modal-btn primary" id="tmEstimateBtn" onclick="tmEstimateDays()" style="flex:0.6">Preview Route</button>' +
-                        '<button class="tm-modal-btn primary" id="tmCreateBtn" onclick="tmCreateTrip()">Create Trip</button>' +
+                        '<button class="tm-modal-btn primary" id="tmNextBtn" onclick="tmWizardNext()">Analyze Route →</button>' +
                     '</div></div>';
-                document.body.appendChild(overlay);
-                setTimeout(function() { var n = document.getElementById('tmTripName'); if (n) n.focus(); }, 100);
+                setTimeout(function() { var n = document.getElementById('tmTripName'); if (n && !n.value) n.focus(); }, 100);
             }
 
-            async function estimateDays() {
-                var startLoc = (document.getElementById('tmRouteStart') || {}).value || '';
-                var endLoc = (document.getElementById('tmRouteEnd') || {}).value || '';
-                if (!startLoc.trim() || !endLoc.trim()) { alert('Enter start and end locations first'); return; }
-                var btn = document.getElementById('tmEstimateBtn');
-                if (btn) { btn.disabled = true; btn.textContent = 'Analyzing...'; }
-                var preview = document.getElementById('tmDaySplitPreview');
-                try {
-                    var res = await fetchT(API_BASE + '/api/travel/trips/estimate-days?start=' + encodeURIComponent(startLoc) + '&end=' + encodeURIComponent(endLoc));
-                    if (!res.ok) throw new Error('Failed');
-                    _daySplits = await res.json();
-                    if (preview) {
-                        var splits = _daySplits.day_splits || [];
-                        preview.innerHTML = '<div class="tm-estimate-result">' +
-                            '<div class="tm-estimate-header">Route Analysis: ' + (_daySplits.total_dealers || 0) + ' dealers, ~' + (_daySplits.total_drive_hours || 0) + 'h drive</div>' +
-                            splits.map(function(s) {
-                                return '<div class="tm-estimate-day">' +
-                                    '<div class="tm-estimate-day-title">Day ' + s.day + ' <span style="opacity:0.5">(' + s.start_area + ' → ' + s.end_area + ')</span></div>' +
-                                    '<div class="tm-estimate-day-meta">' + s.dealer_count + ' dealers · ~' + s.estimated_hours + 'h</div>' +
-                                '</div>';
-                            }).join('') +
-                        '</div>';
-                    }
-                } catch(e) {
-                    if (preview) preview.innerHTML = '<div style="color:#f87171;font-size:13px;padding:10px 0">Could not analyze route</div>';
-                }
-                if (btn) { btn.disabled = false; btn.textContent = 'Preview Route'; }
-            }
-
-            async function createTrip() {
-                var name = (document.getElementById('tmTripName') || {}).value || '';
+            async function wizardNext() {
+                // Validate & save step 1 data
                 var repId = (document.getElementById('tmTripRep') || {}).value || '';
                 var startDate = (document.getElementById('tmTripStart') || {}).value || '';
                 var endDate = (document.getElementById('tmTripEnd') || {}).value || '';
-                var startLoc = (document.getElementById('tmRouteStart') || {}).value || '';
-                var endLoc = (document.getElementById('tmRouteEnd') || {}).value || '';
-                var notes = (document.getElementById('tmTripNotes') || {}).value || '';
+                var startLoc = (document.getElementById('tmRouteStart') || {}).value.trim();
+                var endLoc = (document.getElementById('tmRouteEnd') || {}).value.trim();
 
                 if (!repId) { alert('Select a rep'); return; }
-                if (!startDate || !endDate) { alert('Enter start and end dates'); return; }
-                if (!startLoc.trim()) { alert('Enter a start location'); return; }
+                if (!startDate) { alert('Enter a start date'); return; }
+                if (!endDate) { endDate = startDate; }
+                if (!startLoc) { alert('Enter a start location'); return; }
+                if (!endLoc) { alert('Enter an end location'); return; }
 
-                // Auto-generate name if blank
-                if (!name.trim()) {
+                _wizardData.name = (document.getElementById('tmTripName') || {}).value || '';
+                _wizardData.repId = repId;
+                _wizardData.startDate = startDate;
+                _wizardData.endDate = endDate;
+                _wizardData.startLoc = startLoc;
+                _wizardData.endLoc = endLoc;
+                _wizardData.notes = (document.getElementById('tmTripNotes') || {}).value || '';
+
+                // Auto-generate name
+                if (!_wizardData.name.trim()) {
                     var rep = _reps.find(function(r) { return r.id === repId; });
                     var firstName = rep ? rep.name.split(' ')[0] : 'Trip';
                     var m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
                     var dp = startDate.split('-');
                     var dateLabel = m[parseInt(dp[1])-1] + ' ' + parseInt(dp[2]);
-                    var startCity = startLoc.trim().split(',')[0];
-                    var endCity = endLoc.trim() ? endLoc.trim().split(',')[0] : '';
-                    if (endCity && endCity !== startCity) {
-                        name = firstName + "'s " + dateLabel + ' ' + startCity + ' to ' + endCity;
-                    } else {
-                        name = firstName + "'s " + dateLabel + ' ' + startCity + ' Run';
-                    }
+                    var startCity = startLoc.split(',')[0];
+                    var endCity = endLoc.split(',')[0];
+                    _wizardData.name = (endCity && endCity !== startCity)
+                        ? firstName + "'s " + dateLabel + ' ' + startCity + ' to ' + endCity
+                        : firstName + "'s " + dateLabel + ' ' + startCity + ' Run';
                 }
+
+                // Show loading in step 2
+                var overlay = document.getElementById('tmOverlay');
+                if (!overlay) return;
+                overlay.innerHTML = '<div class="tm-modal tm-wiz-preview">' +
+                    '<div class="tm-modal-title">' + esc(_wizardData.name) + '</div>' +
+                    '<div class="tm-wiz-step">Step 2 of 2 — Route Preview</div>' +
+                    '<div class="tm-wiz-loading"><div class="tm-spinner"></div><div style="margin-top:12px;color:var(--text-tertiary);font-size:13px">Analyzing route and finding dealers...</div></div>' +
+                '</div>';
+
+                // Fetch estimate
+                try {
+                    var res = await fetchT(API_BASE + '/api/travel/trips/estimate-days?start=' + encodeURIComponent(startLoc) + '&end=' + encodeURIComponent(endLoc));
+                    if (!res.ok) throw new Error('Route analysis failed');
+                    _daySplits = await res.json();
+                    _renderStep2();
+                } catch(e) {
+                    overlay.innerHTML = '<div class="tm-modal tm-wiz-preview">' +
+                        '<div class="tm-modal-title">Route Analysis Failed</div>' +
+                        '<div style="color:#f87171;font-size:13px;padding:20px 0;text-align:center">Could not analyze this route. Check your locations and try again.</div>' +
+                        '<div class="tm-modal-actions">' +
+                            '<button class="tm-modal-btn secondary" onclick="tmWizardBack()">← Back</button>' +
+                        '</div></div>';
+                }
+            }
+
+            function _renderStep2() {
+                var overlay = document.getElementById('tmOverlay');
+                if (!overlay || !_daySplits) return;
+                var splits = _daySplits.day_splits || [];
+                var rep = _reps.find(function(r) { return r.id === _wizardData.repId; });
+                var repName = rep ? rep.name : 'Unknown';
+
+                var html = '<div class="tm-modal tm-wiz-preview">' +
+                    '<div class="tm-wiz-preview-header">' +
+                        '<div class="tm-modal-title" style="margin-bottom:4px">' + esc(_wizardData.name) + '</div>' +
+                        '<div class="tm-wiz-step">Step 2 of 2 — Route Preview</div>' +
+                    '</div>' +
+                    '<div class="tm-wiz-summary">' +
+                        '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">' + (_daySplits.total_dealers || 0) + '</span><span class="tm-wiz-stat-lbl">Dealers</span></div>' +
+                        '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">' + (_daySplits.suggested_days || 1) + '</span><span class="tm-wiz-stat-lbl">Days</span></div>' +
+                        '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">~' + (_daySplits.total_drive_hours || 0) + 'h</span><span class="tm-wiz-stat-lbl">Drive Time</span></div>' +
+                        '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">' + (_daySplits.visit_minutes || 45) + 'm</span><span class="tm-wiz-stat-lbl">Per Visit</span></div>' +
+                    '</div>' +
+                    '<div class="tm-wiz-info">' +
+                        '<span>' + esc(repName) + '</span>' +
+                        '<span class="tm-meta-dot">·</span>' +
+                        '<span>' + _fmtDateShort(_wizardData.startDate) + ' — ' + _fmtDateShort(_wizardData.endDate) + '</span>' +
+                        '<span class="tm-meta-dot">·</span>' +
+                        '<span>' + esc(_wizardData.startLoc) + ' → ' + esc(_wizardData.endLoc) + '</span>' +
+                    '</div>' +
+                    '<div class="tm-wiz-days" id="tmWizDays">';
+
+                splits.forEach(function(split, i) {
+                    var dealers = split.dealers || [];
+                    var hotCount = dealers.filter(function(d) { return d.lead_tier === 'hot'; }).length;
+                    var warmCount = dealers.filter(function(d) { return d.lead_tier === 'warm'; }).length;
+                    var expanded = _wizardExpanded[i];
+
+                    html += '<div class="tm-wiz-day-card">' +
+                        '<div class="tm-wiz-day-header" onclick="tmWizToggleDay(' + i + ')">' +
+                            '<div class="tm-wiz-day-left">' +
+                                '<span class="tm-wiz-day-num">Day ' + split.day + '</span>' +
+                                '<span class="tm-wiz-day-route">' + esc(split.start_area) + ' → ' + esc(split.end_area) + '</span>' +
+                            '</div>' +
+                            '<div class="tm-wiz-day-right">' +
+                                '<span class="tm-wiz-day-meta">' + split.dealer_count + ' dealers · ~' + split.estimated_hours + 'h</span>' +
+                                (hotCount > 0 ? '<span class="tm-wiz-day-hot">' + hotCount + ' hot</span>' : '') +
+                                (warmCount > 0 ? '<span class="tm-wiz-day-warm">' + warmCount + ' warm</span>' : '') +
+                                '<span class="tm-wiz-day-chevron' + (expanded ? ' open' : '') + '">▾</span>' +
+                            '</div>' +
+                        '</div>';
+
+                    if (expanded && dealers.length > 0) {
+                        html += '<div class="tm-wiz-dealer-list">';
+                        dealers.forEach(function(d, di) {
+                            var tier = (d.lead_tier || 'cold').toLowerCase();
+                            var clr = tierColor(tier);
+                            html += '<div class="tm-wiz-dealer">' +
+                                '<span class="tm-wiz-dealer-order">' + (di + 1) + '</span>' +
+                                '<span class="tm-wiz-dealer-score" style="background:' + clr + '20;color:' + clr + '">' + (d.lead_score || '—') + '</span>' +
+                                '<div class="tm-wiz-dealer-info">' +
+                                    '<div class="tm-wiz-dealer-name">' + esc(d.name) + '</div>' +
+                                    '<div class="tm-wiz-dealer-loc">' + esc(d.city) + ', ' + esc(d.state) + '</div>' +
+                                '</div>' +
+                                '<span class="tm-wiz-dealer-tier ' + tier + '">' + tier + '</span>' +
+                            '</div>';
+                        });
+                        html += '</div>';
+                    } else if (expanded) {
+                        html += '<div class="tm-wiz-dealer-list"><div style="padding:12px;color:var(--text-tertiary);font-size:12px;text-align:center">No dealers on this segment</div></div>';
+                    }
+
+                    html += '</div>';
+                });
+
+                html += '</div>' +
+                    '<div class="tm-modal-actions">' +
+                        '<button class="tm-modal-btn secondary" onclick="tmWizardBack()">← Back</button>' +
+                        '<button class="tm-modal-btn primary" id="tmCreateBtn" onclick="tmCreateTrip()">Create Trip</button>' +
+                    '</div></div>';
+
+                overlay.innerHTML = html;
+            }
+
+            function wizardBack() {
+                _showStep1();
+            }
+
+            function wizToggleDay(idx) {
+                _wizardExpanded[idx] = !_wizardExpanded[idx];
+                _renderStep2();
+            }
+
+            async function createTrip() {
+                if (!_daySplits || !_wizardData.repId) { alert('Please complete route analysis first'); return; }
 
                 var btn = document.getElementById('tmCreateBtn');
                 if (btn) { btn.disabled = true; btn.textContent = 'Creating...'; }
 
-                // Build days from date range + day splits
                 var days = [];
-                if (_daySplits && _daySplits.day_splits) {
-                    var dStart = new Date(startDate + 'T12:00:00');
-                    _daySplits.day_splits.forEach(function(split, i) {
+                var splits = _daySplits.day_splits || [];
+                var dStart = new Date(_wizardData.startDate + 'T12:00:00');
+
+                if (splits.length > 0) {
+                    splits.forEach(function(split, i) {
                         var dayDate = new Date(dStart.getTime() + i * 86400000);
                         days.push({
                             travel_date: dayDate.toISOString().slice(0, 10),
-                            start_location: split.start_area || startLoc,
-                            end_location: split.end_area || endLoc,
+                            start_location: split.start_area || _wizardData.startLoc,
+                            end_location: split.end_area || _wizardData.endLoc,
                         });
                     });
-                } else if (startLoc.trim() && endLoc.trim()) {
-                    // Single day trip
+                } else {
                     days.push({
-                        travel_date: startDate,
-                        start_location: startLoc.trim(),
-                        end_location: endLoc.trim() || startLoc.trim(),
+                        travel_date: _wizardData.startDate,
+                        start_location: _wizardData.startLoc,
+                        end_location: _wizardData.endLoc || _wizardData.startLoc,
                     });
-                } else if (startLoc.trim()) {
-                    days.push({
-                        travel_date: startDate,
-                        start_location: startLoc.trim(),
-                        end_location: startLoc.trim(),
-                        is_round_trip: true,
-                    });
+                }
+
+                // Auto-adjust end date if more days than date range
+                var endDate = _wizardData.endDate;
+                if (days.length > 1) {
+                    var lastDayDate = days[days.length - 1].travel_date;
+                    if (lastDayDate > endDate) endDate = lastDayDate;
                 }
 
                 try {
@@ -6490,12 +6630,12 @@
                     var res = await fetchT(API_BASE + '/api/travel/trips', {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            name: name.trim(),
-                            rep_id: repId,
+                            name: _wizardData.name.trim(),
+                            rep_id: _wizardData.repId,
                             created_by: userName,
-                            start_date: startDate,
+                            start_date: _wizardData.startDate,
                             end_date: endDate,
-                            notes: notes.trim() || null,
+                            notes: _wizardData.notes.trim() || null,
                             days: days,
                         })
                     });
@@ -6508,6 +6648,8 @@
                     var data = await res.json();
                     closeForm();
                     _daySplits = null;
+                    _wizardData = {};
+                    _wizardExpanded = {};
                     if (data.trip && data.trip.id) openTrip(data.trip.id);
                     else loadTrips();
                 } catch(e) {
@@ -6571,7 +6713,8 @@
 
             return {
                 open: open, openTrip: openTrip, backToList: backToList, showForm: showForm,
-                closeForm: closeForm, createTrip: createTrip, estimateDays: estimateDays,
+                closeForm: closeForm, createTrip: createTrip,
+                wizardNext: wizardNext, wizardBack: wizardBack, wizToggleDay: wizToggleDay,
                 deleteTrip: deleteTrip, onRepChange: onRepChange, setTab: setTab,
                 selectDay: selectDay, toggleVisit: toggleVisit, toggleInclude: toggleInclude,
                 loadSuggestions: loadSuggestions, addSelected: addSelected,
@@ -9041,7 +9184,9 @@
         window.showTripForm = () => TripManager.showForm();
         window.closeTripForm = () => TripManager.closeForm();
         window.tmCreateTrip = () => TripManager.createTrip();
-        window.tmEstimateDays = () => TripManager.estimateDays();
+        window.tmWizardNext = () => TripManager.wizardNext();
+        window.tmWizardBack = () => TripManager.wizardBack();
+        window.tmWizToggleDay = (i) => TripManager.wizToggleDay(i);
         window.tmDeleteTrip = (id) => TripManager.deleteTrip(id);
         window.tmRepChange = (id) => TripManager.onRepChange(id);
         window.tmSetTab = (tab) => TripManager.setTab(tab);
