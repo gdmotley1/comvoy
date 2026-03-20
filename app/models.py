@@ -170,6 +170,7 @@ class TripDayInput(BaseModel):
     end_location: str = Field("", max_length=200)
     is_round_trip: bool = False
     notes: str | None = Field(None, max_length=500)
+    dealer_ids: list[str] = Field(default_factory=list)  # pre-selected dealers from wizard
 
 
 class TripCreate(BaseModel):

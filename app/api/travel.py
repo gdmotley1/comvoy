@@ -1186,11 +1186,26 @@ def get_coverage(
 # ---------------------------------------------------------------------------
 
 async def _create_trip_days(db, trip_id: str, days: list[TripDayInput]):
-    """Geocode and insert multiple trip days."""
+    """Geocode and insert multiple trip days, optionally with pre-selected dealer stops."""
     for i, day_input in enumerate(days):
         day_row = await _geocode_and_build_day(day_input, trip_id, i + 1)
         try:
-            db.table("trip_days").insert(day_row).execute()
+            result = db.table("trip_days").insert(day_row).execute()
+            if result.data and day_input.dealer_ids:
+                day_id = result.data[0]["id"]
+                stop_rows = [
+                    {
+                        "trip_day_id": day_id,
+                        "dealer_id": did,
+                        "stop_order": order,
+                        "is_included": True,
+                    }
+                    for order, did in enumerate(day_input.dealer_ids, 1)
+                ]
+                if stop_rows:
+                    db.table("trip_stops").upsert(
+                        stop_rows, on_conflict="trip_day_id,dealer_id"
+                    ).execute()
         except Exception as e:
             logger.warning(f"Failed to insert trip day {i+1}: {e}")
 

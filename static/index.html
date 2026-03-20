@@ -3164,6 +3164,12 @@
         .tm-wiz-dealer-tier.hot { color: #f97316; }
         .tm-wiz-dealer-tier.warm { color: #eab308; }
         .tm-wiz-dealer-tier.cold { color: var(--text-tertiary); }
+        .tm-wiz-filters { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+        .tm-wiz-filter { font-size: 11px; font-weight: 600; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
+        .tm-wiz-filter:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+        .tm-wiz-filter.active { background: rgba(79,143,255,0.15); border-color: rgba(79,143,255,0.3); color: var(--accent-blue); }
+        .tm-wiz-dealer.excluded { opacity: 0.35; }
+        .tm-wiz-dealer.excluded .tm-wiz-dealer-name { text-decoration: line-through; }
 
         /* Inline chat at bottom */
         .tm-chat-wrap {
@@ -6402,11 +6408,15 @@
             /* ---- 2-STEP CREATION WIZARD ---- */
             var _wizardData = {};  // persists between steps
             var _wizardExpanded = {}; // which day cards are expanded
+            var _wizardExcluded = {}; // dealer_id -> true (toggled off)
+            var _wizardFilter = 'all'; // 'all' | 'no_cold' | 'hot_warm' | 'hot_only'
 
             function showForm() {
                 _wizardData = {};
                 _daySplits = null;
                 _wizardExpanded = {};
+                _wizardExcluded = {};
+                _wizardFilter = 'all';
                 _showStep1();
             }
 
@@ -6503,6 +6513,15 @@
                 }
             }
 
+            function _isDealerIncluded(d) {
+                if (_wizardExcluded[d.dealer_id]) return false;
+                var tier = (d.lead_tier || 'cold').toLowerCase();
+                if (_wizardFilter === 'no_cold' && tier === 'cold') return false;
+                if (_wizardFilter === 'hot_warm' && tier !== 'hot' && tier !== 'warm') return false;
+                if (_wizardFilter === 'hot_only' && tier !== 'hot') return false;
+                return true;
+            }
+
             function _renderStep2() {
                 var overlay = document.getElementById('tmOverlay');
                 if (!overlay || !_daySplits) return;
@@ -6510,16 +6529,34 @@
                 var rep = _reps.find(function(r) { return r.id === _wizardData.repId; });
                 var repName = rep ? rep.name : 'Unknown';
 
+                // Count included dealers
+                var totalAll = 0, totalIncluded = 0, hotIncl = 0, warmIncl = 0;
+                splits.forEach(function(s) {
+                    (s.dealers || []).forEach(function(d) {
+                        totalAll++;
+                        if (_isDealerIncluded(d)) {
+                            totalIncluded++;
+                            if (d.lead_tier === 'hot') hotIncl++;
+                            if (d.lead_tier === 'warm') warmIncl++;
+                        }
+                    });
+                });
+
+                var fBtn = function(val, label) {
+                    var active = _wizardFilter === val;
+                    return '<button class="tm-wiz-filter' + (active ? ' active' : '') + '" onclick="tmWizFilter(\'' + val + '\')">' + label + '</button>';
+                };
+
                 var html = '<div class="tm-modal tm-wiz-preview">' +
                     '<div class="tm-wiz-preview-header">' +
                         '<div class="tm-modal-title" style="margin-bottom:4px">' + esc(_wizardData.name) + '</div>' +
                         '<div class="tm-wiz-step">Step 2 of 2 — Route Preview</div>' +
                     '</div>' +
                     '<div class="tm-wiz-summary">' +
-                        '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">' + (_daySplits.total_dealers || 0) + '</span><span class="tm-wiz-stat-lbl">Dealers</span></div>' +
+                        '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">' + totalIncluded + '<span style="font-size:12px;opacity:0.4;font-weight:400">/' + totalAll + '</span></span><span class="tm-wiz-stat-lbl">Selected</span></div>' +
                         '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">' + (_daySplits.suggested_days || 1) + '</span><span class="tm-wiz-stat-lbl">Days</span></div>' +
-                        '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">~' + (_daySplits.total_drive_hours || 0) + 'h</span><span class="tm-wiz-stat-lbl">Drive Time</span></div>' +
-                        '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">' + (_daySplits.visit_minutes || 45) + 'm</span><span class="tm-wiz-stat-lbl">Per Visit</span></div>' +
+                        '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">' + hotIncl + '</span><span class="tm-wiz-stat-lbl">Hot</span></div>' +
+                        '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">' + warmIncl + '</span><span class="tm-wiz-stat-lbl">Warm</span></div>' +
                     '</div>' +
                     '<div class="tm-wiz-info">' +
                         '<span>' + esc(repName) + '</span>' +
@@ -6528,12 +6565,19 @@
                         '<span class="tm-meta-dot">·</span>' +
                         '<span>' + esc(_wizardData.startLoc) + ' → ' + esc(_wizardData.endLoc) + '</span>' +
                     '</div>' +
+                    '<div class="tm-wiz-filters">' +
+                        fBtn('all', 'All Dealers') +
+                        fBtn('no_cold', 'No Cold') +
+                        fBtn('hot_warm', 'Hot + Warm') +
+                        fBtn('hot_only', 'Hot Only') +
+                    '</div>' +
                     '<div class="tm-wiz-days" id="tmWizDays">';
 
                 splits.forEach(function(split, i) {
                     var dealers = split.dealers || [];
-                    var hotCount = dealers.filter(function(d) { return d.lead_tier === 'hot'; }).length;
-                    var warmCount = dealers.filter(function(d) { return d.lead_tier === 'warm'; }).length;
+                    var includedDealers = dealers.filter(_isDealerIncluded);
+                    var hotCount = includedDealers.filter(function(d) { return d.lead_tier === 'hot'; }).length;
+                    var warmCount = includedDealers.filter(function(d) { return d.lead_tier === 'warm'; }).length;
                     var expanded = _wizardExpanded[i];
 
                     html += '<div class="tm-wiz-day-card">' +
@@ -6543,7 +6587,7 @@
                                 '<span class="tm-wiz-day-route">' + esc(split.start_area) + ' → ' + esc(split.end_area) + '</span>' +
                             '</div>' +
                             '<div class="tm-wiz-day-right">' +
-                                '<span class="tm-wiz-day-meta">' + split.dealer_count + ' dealers · ~' + split.estimated_hours + 'h</span>' +
+                                '<span class="tm-wiz-day-meta">' + includedDealers.length + '/' + dealers.length + ' selected</span>' +
                                 (hotCount > 0 ? '<span class="tm-wiz-day-hot">' + hotCount + ' hot</span>' : '') +
                                 (warmCount > 0 ? '<span class="tm-wiz-day-warm">' + warmCount + ' warm</span>' : '') +
                                 '<span class="tm-wiz-day-chevron' + (expanded ? ' open' : '') + '">▾</span>' +
@@ -6552,11 +6596,20 @@
 
                     if (expanded && dealers.length > 0) {
                         html += '<div class="tm-wiz-dealer-list">';
-                        dealers.forEach(function(d, di) {
+                        var orderNum = 0;
+                        dealers.forEach(function(d) {
                             var tier = (d.lead_tier || 'cold').toLowerCase();
                             var clr = tierColor(tier);
-                            html += '<div class="tm-wiz-dealer">' +
-                                '<span class="tm-wiz-dealer-order">' + (di + 1) + '</span>' +
+                            var included = _isDealerIncluded(d);
+                            var manuallyExcluded = !!_wizardExcluded[d.dealer_id];
+                            var filteredOut = !included && !manuallyExcluded;
+                            if (included) orderNum++;
+
+                            html += '<div class="tm-wiz-dealer' + (!included ? ' excluded' : '') + '">' +
+                                '<input type="checkbox" class="tm-check" ' + (included ? 'checked' : '') +
+                                    (filteredOut ? ' disabled title="Filtered out"' : '') +
+                                    ' onchange="tmWizToggleDealer(\'' + d.dealer_id + '\', this.checked)">' +
+                                '<span class="tm-wiz-dealer-order">' + (included ? orderNum : '—') + '</span>' +
                                 '<span class="tm-wiz-dealer-score" style="background:' + clr + '20;color:' + clr + '">' + (d.lead_score || '—') + '</span>' +
                                 '<div class="tm-wiz-dealer-info">' +
                                     '<div class="tm-wiz-dealer-name">' + esc(d.name) + '</div>' +
@@ -6576,7 +6629,7 @@
                 html += '</div>' +
                     '<div class="tm-modal-actions">' +
                         '<button class="tm-modal-btn secondary" onclick="tmWizardBack()">← Back</button>' +
-                        '<button class="tm-modal-btn primary" id="tmCreateBtn" onclick="tmCreateTrip()">Create Trip</button>' +
+                        '<button class="tm-modal-btn primary" id="tmCreateBtn" onclick="tmCreateTrip()">Create Trip (' + totalIncluded + ' dealers)</button>' +
                     '</div></div>';
 
                 overlay.innerHTML = html;
@@ -6588,6 +6641,21 @@
 
             function wizToggleDay(idx) {
                 _wizardExpanded[idx] = !_wizardExpanded[idx];
+                _renderStep2();
+            }
+
+            function wizFilter(val) {
+                _wizardFilter = val;
+                _wizardExcluded = {}; // reset manual exclusions when switching filter
+                _renderStep2();
+            }
+
+            function wizToggleDealer(dealerId, checked) {
+                if (checked) {
+                    delete _wizardExcluded[dealerId];
+                } else {
+                    _wizardExcluded[dealerId] = true;
+                }
                 _renderStep2();
             }
 
@@ -6604,10 +6672,14 @@
                 if (splits.length > 0) {
                     splits.forEach(function(split, i) {
                         var dayDate = new Date(dStart.getTime() + i * 86400000);
+                        var includedIds = (split.dealers || [])
+                            .filter(_isDealerIncluded)
+                            .map(function(d) { return d.dealer_id; });
                         days.push({
                             travel_date: dayDate.toISOString().slice(0, 10),
                             start_location: split.start_area || _wizardData.startLoc,
                             end_location: split.end_area || _wizardData.endLoc,
+                            dealer_ids: includedIds,
                         });
                     });
                 } else {
@@ -6714,7 +6786,7 @@
             return {
                 open: open, openTrip: openTrip, backToList: backToList, showForm: showForm,
                 closeForm: closeForm, createTrip: createTrip,
-                wizardNext: wizardNext, wizardBack: wizardBack, wizToggleDay: wizToggleDay,
+                wizardNext: wizardNext, wizardBack: wizardBack, wizToggleDay: wizToggleDay, wizFilter: wizFilter, wizToggleDealer: wizToggleDealer,
                 deleteTrip: deleteTrip, onRepChange: onRepChange, setTab: setTab,
                 selectDay: selectDay, toggleVisit: toggleVisit, toggleInclude: toggleInclude,
                 loadSuggestions: loadSuggestions, addSelected: addSelected,
@@ -9187,6 +9259,8 @@
         window.tmWizardNext = () => TripManager.wizardNext();
         window.tmWizardBack = () => TripManager.wizardBack();
         window.tmWizToggleDay = (i) => TripManager.wizToggleDay(i);
+        window.tmWizFilter = (v) => TripManager.wizFilter(v);
+        window.tmWizToggleDealer = (id, c) => TripManager.wizToggleDealer(id, c);
         window.tmDeleteTrip = (id) => TripManager.deleteTrip(id);
         window.tmRepChange = (id) => TripManager.onRepChange(id);
         window.tmSetTab = (tab) => TripManager.setTab(tab);
