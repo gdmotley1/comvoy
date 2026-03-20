@@ -7825,50 +7825,78 @@
                 let agingHTML = '';
                 let turnoverHTML = '';
                 if (aging.avg_days !== undefined) {
-                    agingHTML = `<div class="dash-card" style="animation-delay:${idx++ * 0.06}s">
+                    // Ring gauge for aging — max 30 days = full arc
+                    const agingR = 50, agingC = Math.PI * agingR;
+                    const agingPct = Math.min(aging.avg_days / 30, 1);
+                    const agingFill = agingPct * agingC;
+                    const agingColor = aging.avg_days > 30 ? '#ef4444' : aging.avg_days > 14 ? '#f97316' : '#00d4ff';
+                    agingHTML = `<div class="dash-card" style="animation-delay:${idx++ * 0.06}s;display:flex;flex-direction:column">
                         <div class="dash-card-title" style="color:#00d4ff">Inventory Aging</div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-                            <div style="text-align:center;padding:20px 16px;background:rgba(0,212,255,0.06);border-radius:14px;border:1px solid rgba(0,212,255,0.12)">
-                                <div style="font-size:36px;font-weight:700;color:#00d4ff;line-height:1.1">${aging.avg_days}</div>
-                                <div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-top:6px">Avg Days on Lot</div>
-                            </div>
-                            ${aging.median_days !== undefined ? `<div style="text-align:center;padding:20px 16px;background:rgba(0,212,255,0.06);border-radius:14px;border:1px solid rgba(0,212,255,0.12)">
-                                <div style="font-size:36px;font-weight:700;color:#00d4ff;line-height:1.1">${aging.median_days}</div>
-                                <div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-top:6px">Median Days</div>
+                        <div style="display:flex;justify-content:center;padding:8px 0 16px">
+                            <svg viewBox="0 0 120 75" style="width:160px">
+                                <path d="M 10 65 A 50 50 0 0 1 110 65" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10" stroke-linecap="round"/>
+                                <path class="dash-arc" d="M 10 65 A 50 50 0 0 1 110 65" fill="none" stroke="${agingColor}" stroke-width="10" stroke-linecap="round"
+                                    stroke-dasharray="${agingC}" stroke-dashoffset="${agingC}" data-offset="${agingC - agingFill}" style="filter:drop-shadow(0 0 6px ${agingColor}40)"/>
+                                <text x="60" y="50" text-anchor="middle" fill="var(--text-primary)" font-size="24" font-weight="700" font-family="inherit">${aging.avg_days}</text>
+                                <text x="60" y="66" text-anchor="middle" fill="var(--text-tertiary)" font-size="7" font-family="inherit">AVG DAYS ON LOT</text>
+                            </svg>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:0;flex:1">
+                            ${aging.median_days !== undefined ? `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid rgba(255,255,255,0.05)">
+                                <span style="font-size:12px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.4px">Median</span>
+                                <span style="font-size:18px;font-weight:700;color:var(--text-primary)">${aging.median_days} <span style="font-size:11px;font-weight:400;color:var(--text-tertiary)">days</span></span>
                             </div>` : ''}
-                            ${aging.over_30d !== undefined ? `<div style="text-align:center;padding:20px 16px;background:rgba(0,212,255,0.06);border-radius:14px;border:1px solid rgba(0,212,255,0.12)">
-                                <div style="font-size:36px;font-weight:700;color:${aging.over_30d > 0 ? '#f97316' : '#34d399'};line-height:1.1">${aging.over_30d}</div>
-                                <div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-top:6px">Over 30 Days</div>
+                            ${aging.over_30d !== undefined ? `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid rgba(255,255,255,0.05)">
+                                <span style="font-size:12px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.4px">Over 30 days</span>
+                                <span style="font-size:18px;font-weight:700;color:${aging.over_30d > 0 ? '#f97316' : 'var(--text-secondary)'}">${aging.over_30d}</span>
                             </div>` : ''}
-                            ${aging.over_60d !== undefined ? `<div style="text-align:center;padding:20px 16px;background:rgba(0,212,255,0.06);border-radius:14px;border:1px solid rgba(0,212,255,0.12)">
-                                <div style="font-size:36px;font-weight:700;color:${aging.over_60d > 0 ? '#ef4444' : '#34d399'};line-height:1.1">${aging.over_60d}</div>
-                                <div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-top:6px">Over 60 Days</div>
+                            ${aging.over_60d !== undefined ? `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid rgba(255,255,255,0.05)">
+                                <span style="font-size:12px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.4px">Over 60 days</span>
+                                <span style="font-size:18px;font-weight:700;color:${aging.over_60d > 0 ? '#ef4444' : 'var(--text-secondary)'}">${aging.over_60d}</span>
                             </div>` : ''}
                         </div>
                     </div>`;
                 }
                 if (turnover.sold !== undefined) {
-                    turnoverHTML = `<div class="dash-card" style="animation-delay:${idx++ * 0.06}s">
+                    const maxBar = Math.max(turnover.sold, turnover.added, 1);
+                    const soldW = (turnover.sold / maxBar * 100).toFixed(1);
+                    const addedW = (turnover.added / maxBar * 100).toFixed(1);
+                    const netColor = turnover.net_change >= 0 ? '#34d399' : '#ef4444';
+                    const netSign = turnover.net_change >= 0 ? '+' : '';
+                    turnoverHTML = `<div class="dash-card" style="animation-delay:${idx++ * 0.06}s;display:flex;flex-direction:column">
                         <div class="dash-card-title" style="color:#a855f7">Market Turnover</div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-                            <div style="text-align:center;padding:20px 16px;background:rgba(239,68,68,0.06);border-radius:14px;border:1px solid rgba(239,68,68,0.12)">
-                                <div style="font-size:36px;font-weight:700;color:#ef4444;line-height:1.1">${turnover.sold}</div>
-                                <div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-top:6px">Sold</div>
+                        <div style="flex:1;display:flex;flex-direction:column;gap:18px">
+                            <div>
+                                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+                                    <span style="font-size:12px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.4px">Sold</span>
+                                    <span style="font-size:20px;font-weight:700;color:#ef4444">${turnover.sold}</span>
+                                </div>
+                                <div style="height:6px;background:rgba(255,255,255,0.04);border-radius:3px;overflow:hidden">
+                                    <div class="dash-bar" data-w="${soldW}%" style="width:0%;height:100%;background:linear-gradient(90deg,#ef4444,#f97316);border-radius:3px;transition:width 0.8s cubic-bezier(.4,0,.2,1)"></div>
+                                </div>
                             </div>
-                            <div style="text-align:center;padding:20px 16px;background:rgba(52,211,153,0.06);border-radius:14px;border:1px solid rgba(52,211,153,0.12)">
-                                <div style="font-size:36px;font-weight:700;color:#34d399;line-height:1.1">${turnover.added}</div>
-                                <div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-top:6px">Added</div>
+                            <div>
+                                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+                                    <span style="font-size:12px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.4px">Added</span>
+                                    <span style="font-size:20px;font-weight:700;color:#34d399">${turnover.added}</span>
+                                </div>
+                                <div style="height:6px;background:rgba(255,255,255,0.04);border-radius:3px;overflow:hidden">
+                                    <div class="dash-bar" data-w="${addedW}%" style="width:0%;height:100%;background:linear-gradient(90deg,#34d399,#00d4ff);border-radius:3px;transition:width 0.8s cubic-bezier(.4,0,.2,1)"></div>
+                                </div>
                             </div>
-                            <div style="text-align:center;padding:20px 16px;background:rgba(168,85,247,0.06);border-radius:14px;border:1px solid rgba(168,85,247,0.12)">
-                                <div style="font-size:36px;font-weight:700;color:#a855f7;line-height:1.1">${turnover.price_changes}</div>
-                                <div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-top:6px">Price Changes</div>
+                            <div style="padding-top:14px;border-top:1px solid rgba(255,255,255,0.06)">
+                                <div style="display:flex;justify-content:space-between;align-items:center">
+                                    <div>
+                                        <div style="font-size:12px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.4px">Net Change</div>
+                                        <div style="font-size:10px;color:var(--text-tertiary);margin-top:3px">${turnover.period || ''}</div>
+                                    </div>
+                                    <span style="font-size:28px;font-weight:700;color:${netColor};line-height:1">${netSign}${turnover.net_change}</span>
+                                </div>
                             </div>
-                            <div style="text-align:center;padding:20px 16px;background:rgba(79,143,255,0.06);border-radius:14px;border:1px solid rgba(79,143,255,0.12)">
-                                <div style="font-size:36px;font-weight:700;color:${turnover.net_change >= 0 ? '#34d399' : '#ef4444'};line-height:1.1">${turnover.net_change >= 0 ? '+' : ''}${turnover.net_change}</div>
-                                <div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-top:6px">Net Change</div>
-                            </div>
+                            ${turnover.price_changes ? `<div>
+                                <span style="font-size:11px;padding:4px 12px;border-radius:8px;background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.12);color:#a855f7">${turnover.price_changes} price change${turnover.price_changes !== 1 ? 's' : ''}</span>
+                            </div>` : ''}
                         </div>
-                        <div style="margin-top:12px;font-size:11px;color:var(--text-tertiary);text-align:center">${turnover.period || ''}</div>
                     </div>`;
                 }
 
