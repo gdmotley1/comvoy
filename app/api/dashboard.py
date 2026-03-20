@@ -235,14 +235,16 @@ def get_dashboard(
                 city_counter[v["dealers"]["city"]] += 1
         by_city = [{"city": c, "vehicles": n} for c, n in city_counter.most_common(12)]
 
-    # ── Velocity metrics (aging + turnover summary) ──────────────────
+    # ── Velocity metrics (aging + turnover summary + dealer-level) ──────────────
     velocity_summary = {}
+    dealer_velocity_list = []
     try:
-        from app.api.velocity import compute_days_on_lot, compute_turnover, _get_snapshots
-        # Aging — use the vehicles we already fetched to compute average
         from datetime import datetime, date as date_type
         report_date = datetime.strptime(str(snap_date), "%Y-%m-%d").date() if isinstance(snap_date, str) else snap_date
+
+        # Aging — market-level + per-dealer
         ages = []
+        dealer_ages = defaultdict(list)
         for v in vehicles:
             fsd = v.get("first_seen_date")
             if fsd:
@@ -251,6 +253,7 @@ def get_dashboard(
                 age = (report_date - fsd).days
                 if age >= 0:
                     ages.append(age)
+                    dealer_ages[v["dealer_id"]].append(age)
         if ages:
             ages.sort()
             n = len(ages)
@@ -261,32 +264,87 @@ def get_dashboard(
                 "over_60d": sum(1 for a in ages if a > 60),
             }
 
-        # Turnover — fetch from vehicle_diffs
+        # Turnover — fetch from vehicle_diffs (with dealer_id for per-dealer grouping)
         prev_snap = db.table("report_snapshots").select(
             "id, report_date"
         ).order("report_date", desc=True).limit(2).execute()
+        dealer_diffs = defaultdict(lambda: {"sold": 0, "added": 0, "price_changes": 0})
+        period_str = ""
         if prev_snap.data and len(prev_snap.data) > 1:
             prev = prev_snap.data[1]
-            # Quick diff summary — filter by body_type and/or dealer set if filters active
-            diffs_q = db.table("vehicle_diffs").select("diff_type").eq(
-                "snapshot_id", snap_id
-            )
-            if body_type:
-                diffs_q = diffs_q.eq("body_type", body_type)
-            if state and filtered_dealer_ids:
-                diffs_q = diffs_q.in_("dealer_id", filtered_dealer_ids)
-            diffs_q = diffs_q.execute()
-            if diffs_q.data:
-                sold = sum(1 for d in diffs_q.data if d["diff_type"] == "sold")
-                added = sum(1 for d in diffs_q.data if d["diff_type"] == "new")
-                price_changes = sum(1 for d in diffs_q.data if d["diff_type"] == "price_change")
+            period_str = f"{prev['report_date']} → {snap_date}"
+            # Paginate diffs (could exceed 1000)
+            diffs_all = []
+            doff = 0
+            while True:
+                diffs_q = db.table("vehicle_diffs").select("diff_type, dealer_id").eq(
+                    "snapshot_id", snap_id
+                )
+                if body_type:
+                    diffs_q = diffs_q.eq("body_type", body_type)
+                if state and filtered_dealer_ids:
+                    diffs_q = diffs_q.in_("dealer_id", filtered_dealer_ids)
+                page = diffs_q.range(doff, doff + 999).execute()
+                if not page.data:
+                    break
+                diffs_all.extend(page.data)
+                if len(page.data) < 1000:
+                    break
+                doff += 1000
+            if diffs_all:
+                sold = added = price_changes = 0
+                for d in diffs_all:
+                    did = d.get("dealer_id")
+                    dt = d["diff_type"]
+                    if dt == "sold":
+                        sold += 1
+                        if did:
+                            dealer_diffs[did]["sold"] += 1
+                    elif dt == "new":
+                        added += 1
+                        if did:
+                            dealer_diffs[did]["added"] += 1
+                    elif dt == "price_change":
+                        price_changes += 1
+                        if did:
+                            dealer_diffs[did]["price_changes"] += 1
                 velocity_summary["turnover"] = {
-                    "period": f"{prev['report_date']} → {snap_date}",
+                    "period": period_str,
                     "sold": sold,
                     "added": added,
                     "price_changes": price_changes,
                     "net_change": added - sold,
                 }
+
+        # Build dealer-level velocity rows
+        all_dealer_ids = set(dealer_ages.keys()) | set(dealer_diffs.keys())
+        for did in all_dealer_ids:
+            if did not in dealer_info:
+                continue
+            info = dealer_info[did]
+            d_ages = dealer_ages.get(did, [])
+            dd = dealer_diffs.get(did, {"sold": 0, "added": 0, "price_changes": 0})
+            inv = dealer_vehicles.get(did, 0)
+            turnover_pct = round(dd["sold"] / inv * 100, 1) if inv else 0
+            row = {
+                "id": did,
+                "name": info["name"],
+                "city": info["city"],
+                "state": info["state"],
+                "inventory": inv,
+                "avg_days": round(sum(d_ages) / len(d_ages), 1) if d_ages else None,
+                "sold": dd["sold"],
+                "added": dd["added"],
+                "price_changes": dd["price_changes"],
+                "net_change": dd["added"] - dd["sold"],
+                "turnover_pct": turnover_pct,
+            }
+            ld = lead_by_dealer.get(did)
+            if ld:
+                row["score"] = ld.get("score", 0)
+                row["tier"] = ld.get("tier", "cold")
+            dealer_velocity_list.append(row)
+        dealer_velocity_list.sort(key=lambda x: x["sold"], reverse=True)
     except Exception as e:
         logger.debug(f"Velocity summary skipped: {e}")
 
@@ -333,6 +391,7 @@ def get_dashboard(
         "smyrna_price_position": smyrna_price_position,
         "by_city": by_city,
         "velocity": velocity_summary,
+        "dealer_velocity": dealer_velocity_list,
         "smyrna_intel": {
             "total_units": smyrna_count,
             "dealer_count": len(smyrna_by_dealer),

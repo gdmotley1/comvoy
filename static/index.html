@@ -7818,51 +7818,57 @@
                     </div>
                 </div>`;
 
-                // Velocity metrics panel
+                // Velocity metrics — two separate cards
                 const vel = d.velocity || {};
                 const aging = vel.aging || {};
                 const turnover = vel.turnover || {};
-                let velocityHTML = '';
-                if (aging.avg_days !== undefined || turnover.sold !== undefined) {
-                    velocityHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
-                        <div class="dash-card-title" style="color:#00d4ff">Velocity Metrics</div>
-                        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">
-                            ${aging.avg_days !== undefined ? `<div style="flex:1;min-width:100px;text-align:center;padding:12px;background:rgba(0,212,255,0.06);border-radius:12px;border:1px solid rgba(0,212,255,0.12)">
-                                <div style="font-size:28px;font-weight:700;color:#00d4ff">${aging.avg_days}</div>
-                                <div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px">Avg Days on Lot</div>
+                let agingHTML = '';
+                let turnoverHTML = '';
+                if (aging.avg_days !== undefined) {
+                    agingHTML = `<div class="dash-card" style="animation-delay:${idx++ * 0.06}s">
+                        <div class="dash-card-title" style="color:#00d4ff">Inventory Aging</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                            <div style="text-align:center;padding:20px 16px;background:rgba(0,212,255,0.06);border-radius:14px;border:1px solid rgba(0,212,255,0.12)">
+                                <div style="font-size:36px;font-weight:700;color:#00d4ff;line-height:1.1">${aging.avg_days}</div>
+                                <div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-top:6px">Avg Days on Lot</div>
+                            </div>
+                            ${aging.median_days !== undefined ? `<div style="text-align:center;padding:20px 16px;background:rgba(0,212,255,0.06);border-radius:14px;border:1px solid rgba(0,212,255,0.12)">
+                                <div style="font-size:36px;font-weight:700;color:#00d4ff;line-height:1.1">${aging.median_days}</div>
+                                <div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-top:6px">Median Days</div>
                             </div>` : ''}
-                            ${aging.median_days !== undefined ? `<div style="flex:1;min-width:100px;text-align:center;padding:12px;background:rgba(0,212,255,0.06);border-radius:12px;border:1px solid rgba(0,212,255,0.12)">
-                                <div style="font-size:28px;font-weight:700;color:#00d4ff">${aging.median_days}</div>
-                                <div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px">Median Days</div>
+                            ${aging.over_30d !== undefined ? `<div style="text-align:center;padding:20px 16px;background:rgba(0,212,255,0.06);border-radius:14px;border:1px solid rgba(0,212,255,0.12)">
+                                <div style="font-size:36px;font-weight:700;color:${aging.over_30d > 0 ? '#f97316' : '#34d399'};line-height:1.1">${aging.over_30d}</div>
+                                <div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-top:6px">Over 30 Days</div>
                             </div>` : ''}
-                            ${aging.over_30d !== undefined ? `<div style="flex:1;min-width:100px;text-align:center;padding:12px;background:rgba(0,212,255,0.06);border-radius:12px;border:1px solid rgba(0,212,255,0.12)">
-                                <div style="font-size:28px;font-weight:700;color:${aging.over_30d > 0 ? '#f97316' : '#34d399'}">${aging.over_30d}</div>
-                                <div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px">Over 30 Days</div>
-                            </div>` : ''}
-                            ${aging.over_60d !== undefined ? `<div style="flex:1;min-width:100px;text-align:center;padding:12px;background:rgba(0,212,255,0.06);border-radius:12px;border:1px solid rgba(0,212,255,0.12)">
-                                <div style="font-size:28px;font-weight:700;color:${aging.over_60d > 0 ? '#ef4444' : '#34d399'}">${aging.over_60d}</div>
-                                <div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px">Over 60 Days</div>
+                            ${aging.over_60d !== undefined ? `<div style="text-align:center;padding:20px 16px;background:rgba(0,212,255,0.06);border-radius:14px;border:1px solid rgba(0,212,255,0.12)">
+                                <div style="font-size:36px;font-weight:700;color:${aging.over_60d > 0 ? '#ef4444' : '#34d399'};line-height:1.1">${aging.over_60d}</div>
+                                <div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-top:6px">Over 60 Days</div>
                             </div>` : ''}
                         </div>
-                        ${turnover.sold !== undefined ? `<div style="display:flex;gap:12px;flex-wrap:wrap">
-                            <div style="flex:1;min-width:80px;text-align:center;padding:10px;background:rgba(239,68,68,0.06);border-radius:10px;border:1px solid rgba(239,68,68,0.12)">
-                                <div style="font-size:22px;font-weight:700;color:#ef4444">${turnover.sold}</div>
-                                <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase">Sold</div>
+                    </div>`;
+                }
+                if (turnover.sold !== undefined) {
+                    turnoverHTML = `<div class="dash-card" style="animation-delay:${idx++ * 0.06}s">
+                        <div class="dash-card-title" style="color:#a855f7">Market Turnover</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                            <div style="text-align:center;padding:20px 16px;background:rgba(239,68,68,0.06);border-radius:14px;border:1px solid rgba(239,68,68,0.12)">
+                                <div style="font-size:36px;font-weight:700;color:#ef4444;line-height:1.1">${turnover.sold}</div>
+                                <div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-top:6px">Sold</div>
                             </div>
-                            <div style="flex:1;min-width:80px;text-align:center;padding:10px;background:rgba(52,211,153,0.06);border-radius:10px;border:1px solid rgba(52,211,153,0.12)">
-                                <div style="font-size:22px;font-weight:700;color:#34d399">${turnover.added}</div>
-                                <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase">Added</div>
+                            <div style="text-align:center;padding:20px 16px;background:rgba(52,211,153,0.06);border-radius:14px;border:1px solid rgba(52,211,153,0.12)">
+                                <div style="font-size:36px;font-weight:700;color:#34d399;line-height:1.1">${turnover.added}</div>
+                                <div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-top:6px">Added</div>
                             </div>
-                            <div style="flex:1;min-width:80px;text-align:center;padding:10px;background:rgba(168,85,247,0.06);border-radius:10px;border:1px solid rgba(168,85,247,0.12)">
-                                <div style="font-size:22px;font-weight:700;color:#a855f7">${turnover.price_changes}</div>
-                                <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase">Price Changes</div>
+                            <div style="text-align:center;padding:20px 16px;background:rgba(168,85,247,0.06);border-radius:14px;border:1px solid rgba(168,85,247,0.12)">
+                                <div style="font-size:36px;font-weight:700;color:#a855f7;line-height:1.1">${turnover.price_changes}</div>
+                                <div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-top:6px">Price Changes</div>
                             </div>
-                            <div style="flex:1;min-width:80px;text-align:center;padding:10px;background:rgba(79,143,255,0.06);border-radius:10px;border:1px solid rgba(79,143,255,0.12)">
-                                <div style="font-size:22px;font-weight:700;color:${turnover.net_change >= 0 ? '#34d399' : '#ef4444'}">${turnover.net_change >= 0 ? '+' : ''}${turnover.net_change}</div>
-                                <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase">Net Change</div>
+                            <div style="text-align:center;padding:20px 16px;background:rgba(79,143,255,0.06);border-radius:14px;border:1px solid rgba(79,143,255,0.12)">
+                                <div style="font-size:36px;font-weight:700;color:${turnover.net_change >= 0 ? '#34d399' : '#ef4444'};line-height:1.1">${turnover.net_change >= 0 ? '+' : ''}${turnover.net_change}</div>
+                                <div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-top:6px">Net Change</div>
                             </div>
                         </div>
-                        <div style="margin-top:8px;font-size:10px;color:var(--text-tertiary);text-align:center">${turnover.period || ''}</div>` : ''}
+                        <div style="margin-top:12px;font-size:11px;color:var(--text-tertiary);text-align:center">${turnover.period || ''}</div>
                     </div>`;
                 }
 
@@ -7912,9 +7918,57 @@
                     </div>`).join('')}
                 </div>`;
 
+                // Dealer velocity table — full width
+                const dv = d.dealer_velocity || [];
+                let dealerVelHTML = '';
+                if (dv.length) {
+                    const tierDot = t => t === 'hot' ? '#ef4444' : t === 'warm' ? '#f97316' : '#64748b';
+                    dealerVelHTML = `<div class="dash-card" style="grid-column:1/-1;animation-delay:${idx++ * 0.06}s">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+                            <div class="dash-card-title" style="color:#00d4ff;margin-bottom:0">Dealer Velocity</div>
+                            <div style="display:flex;gap:6px;align-items:center">
+                                <input id="dv-search" type="text" placeholder="Search dealers..." style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px 12px;color:var(--text-primary);font-size:12px;width:180px;outline:none">
+                                <span style="font-size:11px;color:var(--text-tertiary)">${dv.length} dealers</span>
+                            </div>
+                        </div>
+                        <div style="overflow-x:auto;border-radius:10px;border:1px solid rgba(255,255,255,0.06)">
+                            <table id="dv-table" style="width:100%;border-collapse:collapse;font-size:12px">
+                                <thead>
+                                    <tr style="background:rgba(0,212,255,0.06)">
+                                        <th class="dv-th" data-col="name" style="text-align:left;padding:10px 12px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;font-size:10px;cursor:pointer;user-select:none;white-space:nowrap">Dealer <span class="dv-arrow"></span></th>
+                                        <th class="dv-th" data-col="state" style="text-align:left;padding:10px 8px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;font-size:10px;cursor:pointer;user-select:none;white-space:nowrap">State <span class="dv-arrow"></span></th>
+                                        <th class="dv-th" data-col="inventory" style="text-align:right;padding:10px 8px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;font-size:10px;cursor:pointer;user-select:none;white-space:nowrap">Inv <span class="dv-arrow"></span></th>
+                                        <th class="dv-th" data-col="avg_days" style="text-align:right;padding:10px 8px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;font-size:10px;cursor:pointer;user-select:none;white-space:nowrap">Avg Days <span class="dv-arrow"></span></th>
+                                        <th class="dv-th" data-col="sold" style="text-align:right;padding:10px 8px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;font-size:10px;cursor:pointer;user-select:none;white-space:nowrap">Sold <span class="dv-arrow"></span></th>
+                                        <th class="dv-th" data-col="added" style="text-align:right;padding:10px 8px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;font-size:10px;cursor:pointer;user-select:none;white-space:nowrap">Added <span class="dv-arrow"></span></th>
+                                        <th class="dv-th" data-col="price_changes" style="text-align:right;padding:10px 8px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;font-size:10px;cursor:pointer;user-select:none;white-space:nowrap">Price Chg <span class="dv-arrow"></span></th>
+                                        <th class="dv-th" data-col="net_change" style="text-align:right;padding:10px 8px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;font-size:10px;cursor:pointer;user-select:none;white-space:nowrap">Net <span class="dv-arrow"></span></th>
+                                        <th class="dv-th" data-col="turnover_pct" style="text-align:right;padding:10px 12px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;font-size:10px;cursor:pointer;user-select:none;white-space:nowrap">Turnover % <span class="dv-arrow"></span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dv-body">
+                                    ${dv.slice(0, 50).map((r, i) => `<tr class="dv-row" style="border-top:1px solid rgba(255,255,255,0.04);${i % 2 ? 'background:rgba(255,255,255,0.015)' : ''}">
+                                        <td style="padding:8px 12px;white-space:nowrap"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${tierDot(r.tier)};margin-right:6px;vertical-align:middle"></span>${r.name}<span style="color:var(--text-tertiary);margin-left:6px;font-size:10px">${r.city}</span></td>
+                                        <td style="padding:8px;color:var(--text-secondary)">${r.state}</td>
+                                        <td style="padding:8px;text-align:right;font-weight:600">${r.inventory}</td>
+                                        <td style="padding:8px;text-align:right;color:#00d4ff;font-weight:600">${r.avg_days ?? '—'}</td>
+                                        <td style="padding:8px;text-align:right;color:${r.sold > 0 ? '#ef4444' : 'var(--text-tertiary)'};font-weight:${r.sold > 0 ? '600' : '400'}">${r.sold}</td>
+                                        <td style="padding:8px;text-align:right;color:${r.added > 0 ? '#34d399' : 'var(--text-tertiary)'};font-weight:${r.added > 0 ? '600' : '400'}">${r.added}</td>
+                                        <td style="padding:8px;text-align:right;color:${r.price_changes > 0 ? '#a855f7' : 'var(--text-tertiary)'}">${r.price_changes}</td>
+                                        <td style="padding:8px;text-align:right;font-weight:600;color:${r.net_change > 0 ? '#34d399' : r.net_change < 0 ? '#ef4444' : 'var(--text-tertiary)'}">${r.net_change > 0 ? '+' : ''}${r.net_change}</td>
+                                        <td style="padding:8px 12px;text-align:right"><span style="padding:3px 8px;border-radius:6px;font-weight:600;font-size:11px;background:${r.turnover_pct > 10 ? 'rgba(239,68,68,0.12);color:#ef4444' : r.turnover_pct > 0 ? 'rgba(0,212,255,0.1);color:#00d4ff' : 'rgba(255,255,255,0.05);color:var(--text-tertiary)'}">${r.turnover_pct}%</span></td>
+                                    </tr>`).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        ${dv.length > 50 ? `<div id="dv-show-all" style="text-align:center;margin-top:12px;cursor:pointer;font-size:11px;color:#00d4ff;opacity:0.7">Show all ${dv.length} dealers</div>` : ''}
+                    </div>`;
+                }
+
                 wrap.innerHTML = filtersHTML + '<div class="dash-grid">' +
                     kpiHTML + brandHTML + priceHTML + bodyHTML + smyrnaPriceHTML +
-                    builderHTML + stateHTML + dealersHTML + velocityHTML + smyrnaHTML + leadHTML +
+                    builderHTML + stateHTML + dealersHTML + agingHTML + turnoverHTML + smyrnaHTML + leadHTML +
+                    dealerVelHTML +
                 '</div>';
 
                 // Animate bars and arcs after paint
@@ -7952,6 +8006,61 @@
                 // Price curve body type dropdown + crosshair
                 setupPriceBtDropdown();
                 setupPriceCrosshair();
+                setupDealerVelocityTable(d.dealer_velocity || []);
+            }
+
+            function setupDealerVelocityTable(data) {
+                if (!data.length) return;
+                const tbody = document.getElementById('dv-body');
+                const searchEl = document.getElementById('dv-search');
+                const showAllEl = document.getElementById('dv-show-all');
+                if (!tbody) return;
+
+                let sortCol = 'sold', sortAsc = false, showAll = data.length <= 50, filterText = '';
+                const tierDot = t => t === 'hot' ? '#ef4444' : t === 'warm' ? '#f97316' : '#64748b';
+
+                function render() {
+                    let rows = data.filter(r => !filterText || r.name.toLowerCase().includes(filterText) || r.city.toLowerCase().includes(filterText) || r.state.toLowerCase().includes(filterText));
+                    rows.sort((a, b) => {
+                        let av = a[sortCol], bv = b[sortCol];
+                        if (av == null) av = -Infinity;
+                        if (bv == null) bv = -Infinity;
+                        if (typeof av === 'string') return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+                        return sortAsc ? av - bv : bv - av;
+                    });
+                    const visible = showAll ? rows : rows.slice(0, 50);
+                    tbody.innerHTML = visible.map((r, i) => `<tr class="dv-row" style="border-top:1px solid rgba(255,255,255,0.04);${i % 2 ? 'background:rgba(255,255,255,0.015)' : ''}">
+                        <td style="padding:8px 12px;white-space:nowrap"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${tierDot(r.tier)};margin-right:6px;vertical-align:middle"></span>${r.name}<span style="color:var(--text-tertiary);margin-left:6px;font-size:10px">${r.city}</span></td>
+                        <td style="padding:8px;color:var(--text-secondary)">${r.state}</td>
+                        <td style="padding:8px;text-align:right;font-weight:600">${r.inventory}</td>
+                        <td style="padding:8px;text-align:right;color:#00d4ff;font-weight:600">${r.avg_days ?? '—'}</td>
+                        <td style="padding:8px;text-align:right;color:${r.sold > 0 ? '#ef4444' : 'var(--text-tertiary)'};font-weight:${r.sold > 0 ? '600' : '400'}">${r.sold}</td>
+                        <td style="padding:8px;text-align:right;color:${r.added > 0 ? '#34d399' : 'var(--text-tertiary)'};font-weight:${r.added > 0 ? '600' : '400'}">${r.added}</td>
+                        <td style="padding:8px;text-align:right;color:${r.price_changes > 0 ? '#a855f7' : 'var(--text-tertiary)'}">${r.price_changes}</td>
+                        <td style="padding:8px;text-align:right;font-weight:600;color:${r.net_change > 0 ? '#34d399' : r.net_change < 0 ? '#ef4444' : 'var(--text-tertiary)'}">${r.net_change > 0 ? '+' : ''}${r.net_change}</td>
+                        <td style="padding:8px 12px;text-align:right"><span style="padding:3px 8px;border-radius:6px;font-weight:600;font-size:11px;background:${r.turnover_pct > 10 ? 'rgba(239,68,68,0.12);color:#ef4444' : r.turnover_pct > 0 ? 'rgba(0,212,255,0.1);color:#00d4ff' : 'rgba(255,255,255,0.05);color:var(--text-tertiary)'}">${r.turnover_pct}%</span></td>
+                    </tr>`).join('');
+                    if (showAllEl) showAllEl.style.display = (showAll || rows.length <= 50) ? 'none' : '';
+                    // Update arrows
+                    document.querySelectorAll('.dv-th').forEach(th => {
+                        const arrow = th.querySelector('.dv-arrow');
+                        if (th.dataset.col === sortCol) arrow.textContent = sortAsc ? ' \u25B2' : ' \u25BC';
+                        else arrow.textContent = '';
+                    });
+                }
+
+                document.querySelectorAll('.dv-th').forEach(th => {
+                    th.addEventListener('click', () => {
+                        const col = th.dataset.col;
+                        if (sortCol === col) sortAsc = !sortAsc;
+                        else { sortCol = col; sortAsc = col === 'name' || col === 'state'; }
+                        render();
+                    });
+                });
+                if (searchEl) searchEl.addEventListener('input', e => { filterText = e.target.value.toLowerCase(); render(); });
+                if (showAllEl) showAllEl.addEventListener('click', () => { showAll = true; render(); });
+                // Set initial sort arrow
+                render();
             }
 
             function setup3DHover(container) {
