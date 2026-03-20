@@ -7961,7 +7961,6 @@
                                 </tbody>
                             </table>
                         </div>
-                        ${dv.length > 50 ? `<div id="dv-show-all" style="text-align:center;margin-top:12px;cursor:pointer;font-size:11px;color:#00d4ff;opacity:0.7">Show all ${dv.length} dealers</div>` : ''}
                     </div>`;
                 }
 
@@ -8016,7 +8015,7 @@
                 const showAllEl = document.getElementById('dv-show-all');
                 if (!tbody) return;
 
-                let sortCol = 'sold', sortAsc = false, showAll = data.length <= 50, filterText = '';
+                let sortCol = 'sold', sortAsc = false, showAll = true, filterText = '';
                 const tierDot = t => t === 'hot' ? '#ef4444' : t === 'warm' ? '#f97316' : '#64748b';
 
                 function render() {
