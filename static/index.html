@@ -3155,7 +3155,8 @@
         .tm-wiz-day-chevron { font-size: 12px; color: var(--text-tertiary); transition: transform 0.2s; }
         .tm-wiz-day-chevron.open { transform: rotate(180deg); }
 
-        .tm-wiz-dealer-list { border-top: 1px solid rgba(255,255,255,0.04); padding: 6px 14px 14px; animation: tmFadeIn 0.2s ease; }
+        .tm-wiz-dealer-list { border-top: 1px solid rgba(255,255,255,0.04); padding: 6px 14px 14px; }
+        .tm-wiz-day-card { contain: layout style; }
         .tm-wiz-dealer { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; transition: background 0.15s; }
         .tm-wiz-dealer:hover { background: rgba(255,255,255,0.03); }
         .tm-wiz-dealer-score-wrap { display: flex; flex-direction: column; align-items: center; gap: 2px; flex-shrink: 0; min-width: 40px; }
@@ -6730,15 +6731,28 @@
                         '<button class="tm-modal-btn primary" id="tmCreateBtn" onclick="tmCreateTrip()">Create Trip (' + totalIncluded + ' dealers)</button>' +
                     '</div></div>';
 
-                // Preserve scroll position across re-renders
+                // Smooth re-render: preserve scroll + avoid visual flash
                 var prevModal = overlay.querySelector('.tm-wiz-preview');
                 var savedScroll = prevModal ? prevModal.scrollTop : 0;
-                overlay.innerHTML = html;
-                if (savedScroll > 0) {
+                // Parse new HTML into a temp container to diff-swap
+                var tmp = document.createElement('div');
+                tmp.innerHTML = html;
+                var newModal = tmp.querySelector('.tm-wiz-preview');
+                if (prevModal && newModal) {
+                    // Swap inner content only — keeps the modal shell stable
+                    prevModal.innerHTML = newModal.innerHTML;
+                    prevModal.className = newModal.className;
                     requestAnimationFrame(function() {
-                        var newModal = overlay.querySelector('.tm-wiz-preview');
-                        if (newModal) newModal.scrollTop = savedScroll;
+                        prevModal.scrollTop = savedScroll;
                     });
+                } else {
+                    overlay.innerHTML = html;
+                    if (savedScroll > 0) {
+                        requestAnimationFrame(function() {
+                            var m = overlay.querySelector('.tm-wiz-preview');
+                            if (m) m.scrollTop = savedScroll;
+                        });
+                    }
                 }
             }
 
@@ -6746,9 +6760,87 @@
                 _showStep1();
             }
 
+            // --- Targeted stat update (avoids full re-render) ---
+            function _updateStep2Stats() {
+                var overlay = document.getElementById('tmOverlay');
+                if (!overlay || !_daySplits) return;
+                var splits = _daySplits.day_splits || [];
+                var totalAll = 0, totalIncluded = 0, hotIncl = 0, warmIncl = 0, coldIncl = 0, scoreSum = 0;
+                splits.forEach(function(s) {
+                    (s.dealers || []).forEach(function(d) {
+                        totalAll++;
+                        if (_isDealerIncluded(d)) {
+                            totalIncluded++;
+                            var tier = (d.lead_tier || 'cold').toLowerCase();
+                            if (tier === 'hot') hotIncl++;
+                            else if (tier === 'warm') warmIncl++;
+                            else coldIncl++;
+                            scoreSum += (d.lead_score || 0);
+                        }
+                    });
+                });
+                var avgScore = totalIncluded > 0 ? Math.round(scoreSum / totalIncluded) : 0;
+                // Update stat values in-place
+                var statVals = overlay.querySelectorAll('.tm-wiz-stat-val');
+                if (statVals[0]) statVals[0].innerHTML = totalIncluded + '<span style="font-size:12px;opacity:0.35;font-weight:400">/' + totalAll + '</span>';
+                if (statVals[2]) {
+                    statVals[2].style.color = avgScore >= 70 ? '#f97316' : avgScore >= 40 ? '#eab308' : 'var(--text-tertiary)';
+                    statVals[2].textContent = avgScore;
+                }
+                if (statVals[3]) {
+                    statVals[3].innerHTML =
+                        (hotIncl > 0 ? '<span style="color:#f97316">' + hotIncl + '</span>' : '') +
+                        (hotIncl > 0 && warmIncl > 0 ? '<span style="opacity:0.3;font-size:12px"> / </span>' : '') +
+                        (warmIncl > 0 ? '<span style="color:#eab308">' + warmIncl + '</span>' : '') +
+                        (hotIncl === 0 && warmIncl === 0 ? '<span style="opacity:0.4">0</span>' : '');
+                }
+                // Update create button text
+                var btn = document.getElementById('tmCreateBtn');
+                if (btn) btn.textContent = 'Create Trip (' + totalIncluded + ' dealers)';
+                // Update day header stop counts
+                var dayCards = overlay.querySelectorAll('.tm-wiz-day-card');
+                splits.forEach(function(split, i) {
+                    if (dayCards[i]) {
+                        var incl = (split.dealers || []).filter(_isDealerIncluded);
+                        var hotC = incl.filter(function(d) { return d.lead_tier === 'hot'; }).length;
+                        var warmC = incl.filter(function(d) { return d.lead_tier === 'warm'; }).length;
+                        var metaSpans = dayCards[i].querySelectorAll('.tm-wiz-day-meta');
+                        // The stop count is the last .tm-wiz-day-meta
+                        var stopSpan = metaSpans[metaSpans.length - 1];
+                        if (stopSpan) stopSpan.textContent = incl.length + ' stops';
+                        var hotSpan = dayCards[i].querySelector('.tm-wiz-day-hot');
+                        var warmSpan = dayCards[i].querySelector('.tm-wiz-day-warm');
+                        if (hotSpan) hotSpan.textContent = hotC > 0 ? hotC + ' hot' : '';
+                        if (hotSpan) hotSpan.style.display = hotC > 0 ? '' : 'none';
+                        if (warmSpan) warmSpan.textContent = warmC > 0 ? warmC + ' warm' : '';
+                        if (warmSpan) warmSpan.style.display = warmC > 0 ? '' : 'none';
+                    }
+                });
+            }
+
             function wizToggleDay(idx) {
                 _wizardExpanded[idx] = !_wizardExpanded[idx];
-                _renderStep2();
+                // Targeted DOM update: toggle expanded class + show/hide dealer list
+                var overlay = document.getElementById('tmOverlay');
+                var dayCards = overlay ? overlay.querySelectorAll('.tm-wiz-day-card') : [];
+                var card = dayCards[idx];
+                if (card) {
+                    var chevron = card.querySelector('.tm-wiz-day-chevron');
+                    var dealerList = card.querySelector('.tm-wiz-dealer-list');
+                    if (_wizardExpanded[idx]) {
+                        card.classList.add('expanded');
+                        if (chevron) chevron.classList.add('open');
+                        // If no dealer list yet, we need to render it — do a full re-render
+                        if (!dealerList) { _renderStep2(); return; }
+                        dealerList.style.display = '';
+                    } else {
+                        card.classList.remove('expanded');
+                        if (chevron) chevron.classList.remove('open');
+                        if (dealerList) dealerList.style.display = 'none';
+                    }
+                } else {
+                    _renderStep2();
+                }
             }
 
             function wizFilter(val) {
@@ -6763,7 +6855,22 @@
                 } else {
                     _wizardExcluded[dealerId] = true;
                 }
-                _renderStep2();
+                // Targeted DOM update: toggle the dealer row + update stats
+                var overlay = document.getElementById('tmOverlay');
+                if (!overlay) { _renderStep2(); return; }
+                var rows = overlay.querySelectorAll('.tm-wiz-dealer');
+                for (var i = 0; i < rows.length; i++) {
+                    var cb = rows[i].querySelector('.tm-check');
+                    if (cb && cb.getAttribute('onchange') && cb.getAttribute('onchange').indexOf(dealerId) !== -1) {
+                        if (checked) {
+                            rows[i].classList.remove('excluded');
+                        } else {
+                            rows[i].classList.add('excluded');
+                        }
+                        break;
+                    }
+                }
+                _updateStep2Stats();
             }
 
             function wizSetBrand(val) {
