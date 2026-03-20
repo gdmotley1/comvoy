@@ -2712,7 +2712,7 @@
         }
 
         .tm-container {
-            max-width: 680px;
+            max-width: 960px;
             margin: 0 auto;
             padding: 20px 0;
             width: 100%;
@@ -2784,7 +2784,7 @@
         /* TM KPI Row */
         .tm-kpi-row {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 12px;
             margin-bottom: 24px;
         }
@@ -2815,7 +2815,7 @@
         /* Trip management body */
         .tm-body {
             padding: 20px 28px 60px;
-            max-width: 640px;
+            max-width: 960px;
             margin: 0 auto;
         }
 
@@ -3109,6 +3109,10 @@
         .tm-stop-score { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 6px; }
         .tm-stop-veh { font-size: 11px; color: var(--text-tertiary); }
         .tm-stop-smyrna { font-size: 11px; color: #22c55e; font-weight: 500; }
+        .tm-stop-brand { font-size: 11px; color: var(--text-tertiary); font-style: italic; }
+        .tm-stop-kpi { font-size: 10px; padding: 3px 7px; border-radius: 6px; background: rgba(255,255,255,0.04); color: var(--text-tertiary); white-space: nowrap; }
+        .tm-stop-kpi.smyrna { background: rgba(34,197,94,0.1); color: #22c55e; }
+        .tm-stop-kpi.aging { background: rgba(249,115,22,0.08); color: #fb923c; }
         .tm-stop-toggle { background: none; border: none; color: var(--text-tertiary); font-size: 14px; cursor: pointer; padding: 4px 6px; border-radius: 6px; transition: all 0.2s; }
         .tm-stop-toggle:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
 
@@ -3126,7 +3130,7 @@
 
         /* Wizard steps */
         .tm-wiz-step { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent-blue); margin-bottom: 16px; }
-        .tm-wiz-preview { max-width: 640px; max-height: 85vh; display: flex; flex-direction: column; }
+        .tm-wiz-preview { max-width: 900px; max-height: 88vh; display: flex; flex-direction: column; }
         .tm-wiz-preview-header { flex-shrink: 0; }
         .tm-wiz-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0; }
         .tm-spinner { width: 32px; height: 32px; border: 3px solid rgba(79,143,255,0.15); border-top-color: var(--accent-blue); border-radius: 50%; animation: tmSpin 0.8s linear infinite; }
@@ -3170,6 +3174,10 @@
         .tm-wiz-filter.active { background: rgba(79,143,255,0.15); border-color: rgba(79,143,255,0.3); color: var(--accent-blue); }
         .tm-wiz-dealer.excluded { opacity: 0.35; }
         .tm-wiz-dealer.excluded .tm-wiz-dealer-name { text-decoration: line-through; }
+        .tm-wiz-dealer-kpis { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+        .tm-wiz-kpi { font-size: 10px; padding: 3px 7px; border-radius: 6px; background: rgba(255,255,255,0.04); color: var(--text-tertiary); white-space: nowrap; }
+        .tm-wiz-kpi.smyrna { background: rgba(34,197,94,0.1); color: #22c55e; }
+        .tm-wiz-kpi.aging { background: rgba(249,115,22,0.08); color: #fb923c; }
 
         /* Inline chat at bottom */
         .tm-chat-wrap {
@@ -4139,9 +4147,12 @@
             .tm-header-row { flex-direction: column; align-items: flex-start; gap: 12px; }
             .tm-header-controls { width: 100%; }
             .tm-header-controls .tm-rep-select { flex: 1; }
-            .tm-kpi-row { gap: 8px; }
+            .tm-kpi-row { gap: 8px; grid-template-columns: repeat(2, 1fr); }
             .tm-kpi-card { padding: 12px 10px; }
             .tm-kpi-value { font-size: 20px; }
+            .tm-wiz-dealer-kpis { display: none; }
+            .tm-stop-stats { flex-wrap: wrap; }
+            .tm-wiz-preview { max-width: calc(100vw - 16px); }
             .dash-grid { grid-template-columns: 1fr; }
             .dash-card.span-2, .dash-card.span-3, .dash-card.span-4 { grid-column: span 1; }
             .hero-cards { grid-template-columns: 1fr; }
@@ -6256,12 +6267,13 @@
                                     '<div class="tm-stop-order">' + (i + 1) + '</div>' +
                                     '<div class="tm-stop-info">' +
                                         '<div class="tm-stop-name">' + esc(s.dealer_name) + '</div>' +
-                                        '<div class="tm-stop-loc">' + esc(s.city) + ', ' + esc(s.state) + '</div>' +
+                                        '<div class="tm-stop-loc">' + esc(s.city) + ', ' + esc(s.state) + (s.top_brand ? ' <span class="tm-stop-brand">· ' + esc(s.top_brand) + '</span>' : '') + '</div>' +
                                     '</div>' +
                                     '<div class="tm-stop-stats">' +
                                         '<span class="tm-stop-score" style="background:' + tierClr + '20;color:' + tierClr + '">' + (s.lead_score || '—') + '</span>' +
-                                        '<span class="tm-stop-veh">' + (s.total_vehicles || 0) + ' veh</span>' +
-                                        (s.smyrna_units > 0 ? '<span class="tm-stop-smyrna">' + s.smyrna_units + ' Smyrna</span>' : '') +
+                                        '<span class="tm-stop-kpi">' + (s.total_vehicles || 0) + ' veh</span>' +
+                                        (s.smyrna_units > 0 ? '<span class="tm-stop-kpi smyrna">' + s.smyrna_units + ' Smyrna (' + (s.smyrna_pct || 0) + '%)</span>' : '') +
+                                        (s.avg_days_on_lot > 0 ? '<span class="tm-stop-kpi aging">' + s.avg_days_on_lot + 'd avg</span>' : '') +
                                     '</div>' +
                                     '<button class="tm-stop-toggle" onclick="tmToggleInclude(\'' + s.id + '\', ' + (included ? 'false' : 'true') + ')" title="' + (included ? 'Exclude' : 'Include') + '">' +
                                         (included ? '✕' : '✓') +
@@ -6530,7 +6542,7 @@
                 var repName = rep ? rep.name : 'Unknown';
 
                 // Count included dealers
-                var totalAll = 0, totalIncluded = 0, hotIncl = 0, warmIncl = 0;
+                var totalAll = 0, totalIncluded = 0, hotIncl = 0, warmIncl = 0, totalVeh = 0, totalSmyrna = 0;
                 splits.forEach(function(s) {
                     (s.dealers || []).forEach(function(d) {
                         totalAll++;
@@ -6538,6 +6550,8 @@
                             totalIncluded++;
                             if (d.lead_tier === 'hot') hotIncl++;
                             if (d.lead_tier === 'warm') warmIncl++;
+                            totalVeh += (d.total_vehicles || 0);
+                            totalSmyrna += (d.smyrna_units || 0);
                         }
                     });
                 });
@@ -6557,6 +6571,8 @@
                         '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">' + (_daySplits.suggested_days || 1) + '</span><span class="tm-wiz-stat-lbl">Days</span></div>' +
                         '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">' + hotIncl + '</span><span class="tm-wiz-stat-lbl">Hot</span></div>' +
                         '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">' + warmIncl + '</span><span class="tm-wiz-stat-lbl">Warm</span></div>' +
+                        '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val">' + totalVeh.toLocaleString() + '</span><span class="tm-wiz-stat-lbl">Vehicles</span></div>' +
+                        '<div class="tm-wiz-stat"><span class="tm-wiz-stat-val" style="color:#22c55e">' + totalSmyrna + '</span><span class="tm-wiz-stat-lbl">Smyrna</span></div>' +
                     '</div>' +
                     '<div class="tm-wiz-info">' +
                         '<span>' + esc(repName) + '</span>' +
@@ -6613,7 +6629,12 @@
                                 '<span class="tm-wiz-dealer-score" style="background:' + clr + '20;color:' + clr + '">' + (d.lead_score || '—') + '</span>' +
                                 '<div class="tm-wiz-dealer-info">' +
                                     '<div class="tm-wiz-dealer-name">' + esc(d.name) + '</div>' +
-                                    '<div class="tm-wiz-dealer-loc">' + esc(d.city) + ', ' + esc(d.state) + '</div>' +
+                                    '<div class="tm-wiz-dealer-loc">' + esc(d.city) + ', ' + esc(d.state) + (d.top_brand ? ' · ' + esc(d.top_brand) : '') + '</div>' +
+                                '</div>' +
+                                '<div class="tm-wiz-dealer-kpis">' +
+                                    '<span class="tm-wiz-kpi">' + (d.total_vehicles || 0) + ' veh</span>' +
+                                    (d.smyrna_units > 0 ? '<span class="tm-wiz-kpi smyrna">' + d.smyrna_units + ' Smyrna</span>' : '') +
+                                    (d.avg_days_on_lot > 0 ? '<span class="tm-wiz-kpi aging">' + d.avg_days_on_lot + 'd avg</span>' : '') +
                                 '</div>' +
                                 '<span class="tm-wiz-dealer-tier ' + tier + '">' + tier + '</span>' +
                             '</div>';

@@ -736,16 +736,54 @@ async def estimate_trip_days(
     dealer_ids = [d["dealer_id"] for d in all_dealers]
     snap = db.table("report_snapshots").select("id").order("report_date", desc=True).limit(1).execute()
     score_map = {}
+    inv_map = {}
+    aging_map = {}
+    snap_id = None
     if snap.data:
+        snap_id = snap.data[0]["id"]
         scores = db.table("lead_scores").select("dealer_id, score, tier").eq(
-            "snapshot_id", snap.data[0]["id"]
+            "snapshot_id", snap_id
         ).in_("dealer_id", dealer_ids).execute()
         score_map = {r["dealer_id"]: r for r in (scores.data or [])}
 
+        inv = db.table("dealer_snapshots").select(
+            "dealer_id, total_vehicles, smyrna_units, smyrna_percentage, top_brand"
+        ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).execute()
+        inv_map = {r["dealer_id"]: r for r in (inv.data or [])}
+
+    # Compute avg days on lot per dealer from vehicles.first_seen_date
+    if dealer_ids:
+        try:
+            from datetime import date as _date
+            vehicles = db.table("vehicles").select(
+                "dealer_id, first_seen_date"
+            ).in_("dealer_id", dealer_ids).execute()
+            today = _date.today()
+            dealer_ages = {}
+            for v in (vehicles.data or []):
+                fsd = v.get("first_seen_date")
+                if fsd:
+                    try:
+                        d_date = _date.fromisoformat(fsd) if isinstance(fsd, str) else fsd
+                        age = (today - d_date).days
+                        dealer_ages.setdefault(v["dealer_id"], []).append(age)
+                    except Exception:
+                        pass
+            for did, ages in dealer_ages.items():
+                aging_map[did] = round(sum(ages) / len(ages), 1) if ages else 0
+        except Exception:
+            pass
+
     for d in all_dealers:
         sc = score_map.get(d["dealer_id"], {})
+        inv = inv_map.get(d["dealer_id"], {})
         d["lead_score"] = sc.get("score", 0)
         d["lead_tier"] = sc.get("tier")
+        d["total_vehicles"] = inv.get("total_vehicles", 0)
+        d["smyrna_units"] = inv.get("smyrna_units", 0)
+        d["smyrna_pct"] = inv.get("smyrna_percentage", 0)
+        d["top_brand"] = inv.get("top_brand")
+        d["avg_days_on_lot"] = aging_map.get(d["dealer_id"], 0)
 
     total_drive_km = _haversine(
         start_coords[0], start_coords[1], end_coords[0], end_coords[1]
@@ -804,6 +842,11 @@ async def estimate_trip_days(
                 "route_position": round(d.get("route_position", 0), 3),
                 "lead_score": d.get("lead_score", 0),
                 "lead_tier": d.get("lead_tier"),
+                "total_vehicles": d.get("total_vehicles", 0),
+                "smyrna_units": d.get("smyrna_units", 0),
+                "smyrna_pct": d.get("smyrna_pct", 0),
+                "top_brand": d.get("top_brand"),
+                "avg_days_on_lot": d.get("avg_days_on_lot", 0),
             } for d in dealers_in_day],
         })
 
@@ -867,6 +910,30 @@ def get_trip_detail(trip_id: str):
             ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).execute()
             score_map = {r["dealer_id"]: r for r in (scores.data or [])}
 
+    # Compute avg days on lot per dealer
+    aging_map = {}
+    if dealer_ids:
+        try:
+            from datetime import date as _date
+            vehicles = db.table("vehicles").select(
+                "dealer_id, first_seen_date"
+            ).in_("dealer_id", dealer_ids).execute()
+            today = _date.today()
+            dealer_ages = {}
+            for v in (vehicles.data or []):
+                fsd = v.get("first_seen_date")
+                if fsd:
+                    try:
+                        d_date = _date.fromisoformat(fsd) if isinstance(fsd, str) else fsd
+                        age = (today - d_date).days
+                        dealer_ages.setdefault(v["dealer_id"], []).append(age)
+                    except Exception:
+                        pass
+            for did, ages in dealer_ages.items():
+                aging_map[did] = round(sum(ages) / len(ages), 1) if ages else 0
+        except Exception:
+            pass
+
     # Enrich stops and attach to days
     stop_by_day = {}
     for s in stops:
@@ -884,6 +951,7 @@ def get_trip_detail(trip_id: str):
         s["top_brand"] = inv.get("top_brand")
         s["lead_score"] = sc.get("score")
         s["lead_tier"] = sc.get("tier")
+        s["avg_days_on_lot"] = aging_map.get(s["dealer_id"], 0)
         stop_by_day.setdefault(s["trip_day_id"], []).append(s)
 
     for day in trip["days"]:
