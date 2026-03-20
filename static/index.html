@@ -4078,78 +4078,151 @@
             align-items: center;
             justify-content: center;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.4s ease;
+            overflow: hidden;
         }
         .auth-overlay.visible { display: flex; opacity: 1; }
         .auth-overlay.hidden { opacity: 0; pointer-events: none; }
+        /* Ambient background orbs */
+        .auth-bg-orb {
+            position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none;
+        }
+        .auth-bg-orb-1 {
+            width: 500px; height: 500px; top: -15%; left: -10%;
+            background: radial-gradient(circle, rgba(79,143,255,0.12) 0%, transparent 70%);
+            animation: authOrbFloat 14s ease-in-out infinite;
+        }
+        .auth-bg-orb-2 {
+            width: 400px; height: 400px; bottom: -10%; right: -8%;
+            background: radial-gradient(circle, rgba(168,85,247,0.1) 0%, transparent 70%);
+            animation: authOrbFloat 18s ease-in-out infinite reverse;
+        }
+        .auth-bg-orb-3 {
+            width: 300px; height: 300px; top: 40%; left: 60%;
+            background: radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%);
+            animation: authOrbFloat 10s ease-in-out infinite 2s;
+        }
+        @keyframes authOrbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -20px) scale(1.05); }
+            66% { transform: translate(-20px, 15px) scale(0.95); }
+        }
         .auth-card {
             width: 100%;
-            max-width: 420px;
-            padding: 48px 40px 40px;
-            border-radius: 24px;
-            border: 1px solid var(--glass-border);
-            background: rgba(12,15,25,0.95);
-            backdrop-filter: blur(40px);
-            -webkit-backdrop-filter: blur(40px);
-            box-shadow: 0 25px 80px rgba(0,0,0,0.5), 0 0 60px rgba(79,143,255,0.05);
+            max-width: 400px;
+            padding: 44px 36px 36px;
+            border-radius: 28px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(10,14,26,0.8);
+            backdrop-filter: blur(60px);
+            -webkit-backdrop-filter: blur(60px);
+            box-shadow: 0 30px 100px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
             text-align: center;
+            position: relative;
+            z-index: 1;
         }
-        .auth-logo {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 24px;
+        /* Eye container with orbital rings */
+        .auth-eye-wrap {
+            position: relative;
+            width: 100px; height: 100px;
+            margin: 0 auto 20px;
+        }
+        .auth-eye-ring {
+            position: absolute; inset: -8px; border-radius: 50%;
+            border: 1px solid rgba(79,143,255,0.15);
+            animation: authRingSpin 20s linear infinite;
+        }
+        .auth-eye-ring::after {
+            content: ''; position: absolute;
+            width: 6px; height: 6px; border-radius: 50%;
+            background: rgba(79,143,255,0.5);
+            top: -3px; left: 50%; transform: translateX(-50%);
+        }
+        .auth-eye-ring-2 {
+            position: absolute; inset: -18px; border-radius: 50%;
+            border: 1px solid rgba(168,85,247,0.08);
+            animation: authRingSpin 30s linear infinite reverse;
+        }
+        .auth-eye-ring-2::after {
+            content: ''; position: absolute;
+            width: 4px; height: 4px; border-radius: 50%;
+            background: rgba(168,85,247,0.35);
+            bottom: -2px; left: 50%; transform: translateX(-50%);
+        }
+        @keyframes authRingSpin { to { transform: rotate(360deg); } }
+        .auth-eye-svg { width: 100px; height: 100px; position: relative; z-index: 1; }
+        /* Subtle glow pulse behind eye */
+        .auth-eye-glow {
+            position: absolute; inset: -20px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(79,143,255,0.15) 0%, transparent 70%);
+            animation: authGlowPulse 4s ease-in-out infinite;
+        }
+        @keyframes authGlowPulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.08); }
         }
         .auth-title {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 700;
             color: var(--text-primary);
             margin-bottom: 4px;
+            letter-spacing: -0.3px;
         }
         .auth-subtitle {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-bottom: 32px;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
-        .auth-form { display: flex; flex-direction: column; gap: 14px; }
+        .auth-form { display: flex; flex-direction: column; gap: 12px; }
         .auth-field {
             width: 100%;
-            padding: 14px 16px;
+            padding: 13px 16px;
             border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.07);
+            background: rgba(255,255,255,0.03);
             color: var(--text-primary);
-            font-size: 15px;
+            font-size: 14px;
             font-family: inherit;
             outline: none;
-            transition: border-color 0.2s, background 0.2s;
+            transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
             box-sizing: border-box;
         }
         .auth-field:focus {
-            border-color: rgba(79,143,255,0.5);
-            background: rgba(79,143,255,0.06);
+            border-color: rgba(79,143,255,0.4);
+            background: rgba(79,143,255,0.04);
+            box-shadow: 0 0 0 3px rgba(79,143,255,0.08);
         }
-        .auth-field::placeholder { color: var(--text-tertiary); }
+        .auth-field::placeholder { color: rgba(255,255,255,0.2); }
         .auth-btn {
             width: 100%;
-            padding: 14px;
+            padding: 13px;
             border-radius: 12px;
             border: none;
-            background: linear-gradient(135deg, #4f8fff, #00d4ff);
+            background: linear-gradient(135deg, #4f8fff 0%, #7c3aed 50%, #00d4ff 100%);
+            background-size: 200% 200%;
+            animation: authBtnShimmer 4s ease-in-out infinite;
             color: #fff;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             font-family: inherit;
             cursor: pointer;
-            transition: all 0.25s;
+            transition: transform 0.2s, box-shadow 0.2s;
             margin-top: 4px;
+            letter-spacing: 0.3px;
         }
-        .auth-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(79,143,255,0.3); }
+        @keyframes authBtnShimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .auth-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(79,143,255,0.3); }
         .auth-btn:active { transform: translateY(0); }
-        .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .auth-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; animation: none; }
         .auth-toggle {
             margin-top: 20px;
-            font-size: 13px;
-            color: var(--text-secondary);
+            font-size: 12px;
+            color: var(--text-muted);
         }
         .auth-toggle a {
             color: #4f8fff;
@@ -4161,8 +4234,8 @@
         .auth-error {
             padding: 10px 14px;
             border-radius: 10px;
-            background: rgba(239,68,68,0.1);
-            border: 1px solid rgba(239,68,68,0.2);
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.15);
             color: #f87171;
             font-size: 13px;
             text-align: left;
@@ -4172,8 +4245,8 @@
         .auth-success {
             padding: 10px 14px;
             border-radius: 10px;
-            background: rgba(52,211,153,0.1);
-            border: 1px solid rgba(52,211,153,0.2);
+            background: rgba(52,211,153,0.08);
+            border: 1px solid rgba(52,211,153,0.15);
             color: #34d399;
             font-size: 13px;
             text-align: left;
@@ -4181,9 +4254,9 @@
         }
         .auth-success.show { display: block; }
         .auth-domain-note {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-tertiary);
-            margin-top: -6px;
+            margin-top: -4px;
             text-align: left;
             padding-left: 4px;
         }
@@ -4253,9 +4326,15 @@
 
     <!-- Auth Overlay — shown when not logged in -->
     <div class="auth-overlay" id="authOverlay">
+        <div class="auth-bg-orb auth-bg-orb-1"></div>
+        <div class="auth-bg-orb auth-bg-orb-2"></div>
+        <div class="auth-bg-orb auth-bg-orb-3"></div>
         <div class="auth-card">
-            <div class="auth-logo">
-                <svg viewBox="0 0 60 60" width="80" height="80"><defs><radialGradient id="authIris" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"/><stop offset="100%" stop-color="#1a1a3e"/></radialGradient></defs><circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="#4f8fff" stroke-width="2" opacity="0.9"/><circle cx="30" cy="30" r="22" fill="#4f8fff" opacity="0.18"/><circle cx="30" cy="30" r="16" fill="none" stroke="#4f8fff" stroke-width="2.5" opacity="0.45"/><circle cx="30" cy="30" r="11" fill="url(#authIris)" opacity="0.7"/><circle cx="30" cy="30" r="6" fill="#060810"/><circle cx="30" cy="30" r="4.5" fill="white" opacity="0.5"/><circle cx="23" cy="23" r="3" fill="white" opacity="0.25"/></svg>
+            <div class="auth-eye-wrap">
+                <div class="auth-eye-glow"></div>
+                <div class="auth-eye-ring"></div>
+                <div class="auth-eye-ring-2"></div>
+                <svg class="auth-eye-svg" viewBox="0 0 60 60"><defs><radialGradient id="authIris" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"><animate attributeName="stop-color" values="#4f8fff;#00d4ff;#a855f7;#4f8fff" dur="6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#1a1a3e"/></radialGradient></defs><circle cx="30" cy="30" r="29" fill="none" stroke="url(#authIris)" stroke-width="0.5" opacity="0.3"/><circle cx="30" cy="30" r="28" fill="#060810" stroke="url(#authIris)" stroke-width="2" opacity="0.9"/><circle cx="30" cy="30" r="22" fill="url(#authIris)" opacity="0.18" style="animation:irisRotate 12s linear infinite"/><circle cx="30" cy="30" r="16" fill="none" stroke="url(#authIris)" stroke-width="2.5" opacity="0.45" style="animation:irisRotate 8s linear infinite reverse"/><circle cx="30" cy="30" r="11" fill="url(#authIris)" opacity="0.7"/><circle cx="30" cy="30" r="6" fill="#000"/><circle cx="30" cy="30" r="4" fill="#000"/><circle cx="24" cy="24" r="2.5" fill="white" opacity="0.35"/><circle cx="26" cy="25.5" r="1.2" fill="white" opacity="0.55"/></svg>
             </div>
 
             <!-- Login Form -->
