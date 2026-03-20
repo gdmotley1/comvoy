@@ -127,6 +127,7 @@
             align-items: center;
             gap: 8px;
             margin-left: auto;
+            flex-shrink: 0;
         }
 
         .topbar > * { pointer-events: auto; }
@@ -4187,21 +4188,64 @@
             padding-left: 4px;
         }
         .auth-user-bar {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
-            border-radius: 20px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.08);
-            font-size: 13px;
-            color: var(--text-secondary);
+            position: relative;
             cursor: pointer;
-            transition: all 0.2s;
+            user-select: none;
+            margin-left: 4px;
         }
-        .auth-user-bar:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); }
-        .auth-user-bar svg { opacity: 0.5; }
-        .auth-user-name { color: var(--text-primary); font-weight: 500; }
+        .auth-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 700; color: #fff; text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: box-shadow 0.2s, transform 0.15s;
+            border: 2px solid transparent;
+        }
+        .auth-avatar:hover { box-shadow: 0 0 0 3px rgba(100,149,237,0.25); transform: scale(1.05); }
+        .auth-user-bar.active .auth-avatar { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(100,149,237,0.2); }
+        .profile-dropdown {
+            position: absolute; top: calc(100% + 8px); right: 0;
+            width: 240px; border-radius: 12px;
+            background: var(--bg-card); border: 1px solid var(--border);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+            opacity: 0; visibility: hidden; transform: translateY(-4px);
+            transition: all 0.2s ease; z-index: 100;
+            overflow: hidden;
+        }
+        .profile-dropdown.open { opacity: 1; visibility: visible; transform: translateY(0); }
+        .profile-header {
+            padding: 16px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 12px;
+        }
+        .profile-header .profile-avatar {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; font-weight: 600; color: #fff; text-transform: uppercase;
+            flex-shrink: 0;
+        }
+        .profile-header .profile-info { min-width: 0; }
+        .profile-header .profile-name {
+            font-size: 14px; font-weight: 600; color: var(--text-primary);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .profile-header .profile-email {
+            font-size: 11px; color: var(--text-muted); margin-top: 2px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .profile-meta {
+            padding: 12px 16px; border-bottom: 1px solid var(--border);
+            font-size: 11px; color: var(--text-muted);
+            display: flex; align-items: center; gap: 6px;
+        }
+        .profile-meta svg { opacity: 0.4; flex-shrink: 0; }
+        .profile-signout {
+            padding: 10px 16px; font-size: 13px; color: var(--text-secondary);
+            cursor: pointer; transition: all 0.15s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .profile-signout:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
@@ -4263,13 +4307,32 @@
             <span class="snapshot-count" id="snapshotCount"></span>
         </div>
         <div class="topbar-right">
-            <div class="auth-user-bar" id="authUserBar" onclick="Auth.logout()" title="Sign out" style="display:none"><svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg><span class="auth-user-name" id="authUserName"></span></div>
             <div class="usage-badge" id="usageBadge" title="Token usage this session"></div>
             <button class="btn-home" onclick="goHome()">Home</button>
             <button class="btn-map" onclick="openDealerMap()">Map</button>
             <button class="btn-dash" onclick="openDashboard()">Dashboard</button>
             <button class="btn-trips" onclick="openTripManager()">Trips</button>
             <button class="btn-ghost" onclick="clearChat()">New Chat</button>
+            <div class="auth-user-bar" id="authUserBar" onclick="Auth.toggleProfile(event)" style="display:none">
+                <span class="auth-avatar" id="authAvatar"></span>
+                <div class="profile-dropdown" id="profileDropdown" onclick="event.stopPropagation()">
+                    <div class="profile-header">
+                        <span class="profile-avatar" id="profileAvatar"></span>
+                        <div class="profile-info">
+                            <div class="profile-name" id="profileName"></div>
+                            <div class="profile-email" id="profileEmail"></div>
+                        </div>
+                    </div>
+                    <div class="profile-meta" id="profileMeta">
+                        <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zm0 14.5a6.5 6.5 0 110-13 6.5 6.5 0 010 13zM8 3.25a.75.75 0 01.75.75v3.69l2.28 2.28a.75.75 0 01-1.06 1.06l-2.5-2.5A.75.75 0 017.25 8V4A.75.75 0 018 3.25z"/></svg>
+                        <span id="profileSince"></span>
+                    </div>
+                    <div class="profile-signout" onclick="Auth.logout()">
+                        <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M2 2.75C2 1.784 2.784 1 3.75 1h2.5a.75.75 0 010 1.5h-2.5a.25.25 0 00-.25.25v10.5c0 .138.112.25.25.25h2.5a.75.75 0 010 1.5h-2.5A1.75 1.75 0 012 13.25V2.75zm10.44 4.5H6.75a.75.75 0 000 1.5h5.69l-1.97 1.97a.75.75 0 101.06 1.06l3.25-3.25a.75.75 0 000-1.06l-3.25-3.25a.75.75 0 10-1.06 1.06l1.97 1.97z"/></svg>
+                        Sign Out
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -4690,6 +4753,10 @@
             function _onAuth(user) {
                 _user = user;
                 _userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+                const initials = _userName.split(/[\s._-]+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+                const email = user.email || '';
+                const created = user.created_at ? new Date(user.created_at) : null;
+                const sinceStr = created ? 'Member since ' + created.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '';
                 // Hide auth overlay
                 const overlay = document.getElementById('authOverlay');
                 if (overlay) {
@@ -4697,14 +4764,39 @@
                     overlay.classList.remove('visible');
                     setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 300);
                 }
-                // Show user bar in topbar
+                // Show topbar avatar circle
                 const bar = document.getElementById('authUserBar');
-                const nameEl = document.getElementById('authUserName');
-                if (bar) bar.style.display = 'flex';
-                if (nameEl) nameEl.textContent = _userName;
+                if (bar) bar.style.display = 'block';
+                const avatarEl = document.getElementById('authAvatar');
+                if (avatarEl) avatarEl.textContent = initials;
+                // Populate profile dropdown
+                const pAvatar = document.getElementById('profileAvatar');
+                if (pAvatar) pAvatar.textContent = initials;
+                const pName = document.getElementById('profileName');
+                if (pName) pName.textContent = _userName;
+                const pEmail = document.getElementById('profileEmail');
+                if (pEmail) pEmail.textContent = email;
+                const pSince = document.getElementById('profileSince');
+                if (pSince) pSince.textContent = sinceStr;
                 // Set localStorage for chat session user_name
                 localStorage.setItem('otto_user', _userName);
             }
+
+            function toggleProfile(e) {
+                e.stopPropagation();
+                const dd = document.getElementById('profileDropdown');
+                const bar = document.getElementById('authUserBar');
+                if (dd) dd.classList.toggle('open');
+                if (bar) bar.classList.toggle('active', dd?.classList.contains('open'));
+            }
+
+            // Close profile dropdown on outside click
+            document.addEventListener('click', () => {
+                const dd = document.getElementById('profileDropdown');
+                const bar = document.getElementById('authUserBar');
+                if (dd) dd.classList.remove('open');
+                if (bar) bar.classList.remove('active');
+            });
 
             async function logout() {
                 if (!confirm('Sign out of Otto?')) return;
@@ -4742,7 +4834,7 @@
             init();
 
             return {
-                login, signup, logout, showLogin, showSignup,
+                login, signup, logout, showLogin, showSignup, toggleProfile,
                 getUser: () => _user,
                 getUserName: () => _userName,
             };
