@@ -3130,7 +3130,7 @@
 
         /* Wizard steps */
         .tm-wiz-step { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent-blue); margin-bottom: 16px; }
-        .tm-wiz-preview { max-width: 900px; max-height: 88vh; display: flex; flex-direction: column; }
+        .tm-modal.tm-wiz-preview { max-width: 900px; max-height: 88vh; display: flex; flex-direction: column; padding: 28px 32px; }
         .tm-wiz-preview-header { flex-shrink: 0; }
         .tm-wiz-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0; }
         .tm-spinner { width: 32px; height: 32px; border: 3px solid rgba(79,143,255,0.15); border-top-color: var(--accent-blue); border-radius: 50%; animation: tmSpin 0.8s linear infinite; }
@@ -6337,7 +6337,7 @@
                 overlay.className = 'tm-overlay';
                 overlay.id = 'tmOverlay';
                 overlay.onclick = function(e) { if (e.target === overlay) closeForm(); };
-                overlay.innerHTML = '<div class="tm-modal" style="max-width:560px;max-height:80vh;display:flex;flex-direction:column;">' +
+                overlay.innerHTML = '<div class="tm-modal" style="max-width:800px;max-height:85vh;display:flex;flex-direction:column;">' +
                     '<div class="tm-modal-title">Dealers Along Route — Day ' + day.day_number + '</div>' +
                     '<div style="flex:1;overflow-y:auto;padding:0 4px" id="tmSugList"><div style="color:var(--text-tertiary);font-size:13px;text-align:center;padding:20px">Searching for dealers...</div></div>' +
                     '<div class="tm-modal-actions">' +
@@ -6445,7 +6445,7 @@
                 var repOptions = '<option value="">Select rep...</option>' +
                     _reps.map(function(r) { return '<option value="' + r.id + '"' + (_wizardData.repId === r.id ? ' selected' : '') + '>' + esc(r.name) + '</option>'; }).join('');
 
-                overlay.innerHTML = '<div class="tm-modal" style="max-width:520px">' +
+                overlay.innerHTML = '<div class="tm-modal" style="max-width:580px">' +
                     '<div class="tm-modal-title">Plan a New Trip</div>' +
                     '<div class="tm-wiz-step">Step 1 of 2 — Route Setup</div>' +
                     '<div class="tm-field"><label>Trip Name <span style="opacity:0.4;font-weight:400">(auto-generates if blank)</span></label><input type="text" id="tmTripName" placeholder="e.g. March NC Service Run" value="' + esc(_wizardData.name || '') + '"></div>' +
@@ -6603,6 +6603,7 @@
                                 '<span class="tm-wiz-day-route">' + esc(split.start_area) + ' → ' + esc(split.end_area) + '</span>' +
                             '</div>' +
                             '<div class="tm-wiz-day-right">' +
+                                (split.estimated_hours ? '<span class="tm-wiz-day-meta" style="opacity:0.5">~' + split.estimated_hours + 'h</span>' : '') +
                                 '<span class="tm-wiz-day-meta">' + includedDealers.length + '/' + dealers.length + ' selected</span>' +
                                 (hotCount > 0 ? '<span class="tm-wiz-day-hot">' + hotCount + ' hot</span>' : '') +
                                 (warmCount > 0 ? '<span class="tm-wiz-day-warm">' + warmCount + ' warm</span>' : '') +
