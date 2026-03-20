@@ -6,13 +6,19 @@ Token-efficiency guardrails:
 - Sliding-window conversation history (30 messages)
 - Tool result truncation (12000 chars)
 - Per-request usage logging with cost estimates
+
+Persistent sessions:
+- Chat sessions saved to Supabase (survive cold starts / page refreshes)
+- Conversation memory: past session summaries injected into system prompt
+- Auto-summarization when sessions go stale
 """
 
 import asyncio
 import json
 import logging
+import re
 import time
-from datetime import date
+from datetime import date, datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
@@ -46,9 +52,9 @@ TOOL_STATUS_MAP = {
     "get_market_intel": "Gathering market intel...",
     "suggest_travel_plan": "Building travel plan...",
     "get_upload_report": "Loading report data...",
+    "get_dealer_velocity": "Checking velocity metrics...",
+    "get_market_metrics": "Loading market KPIs...",
 }
-
-import re
 
 # Simple query classifier — routes easy questions to Haiku for speed
 _SIMPLE_PATTERNS = [
@@ -65,7 +71,6 @@ _SIMPLE_RE = re.compile("|".join(_SIMPLE_PATTERNS), re.IGNORECASE)
 def _pick_model(message: str) -> str:
     """Route simple queries to Haiku, complex ones to Sonnet."""
     msg = message.strip()
-    # Short off-topic / greeting / simple count queries → fast model
     if len(msg) < 60 and _SIMPLE_RE.search(msg):
         logger.info(f"Routing to fast model (Haiku): {msg[:50]}")
         return settings.agent_model_fast
@@ -82,54 +87,291 @@ _rate_window: dict[str, list[float]] = {}
 _RATE_LIMIT = 20
 _RATE_WINDOW_SEC = 60
 
+# Track user_name per session (in-memory)
+_session_users: dict[str, str] = {}
+
 # --- Sonnet 4 pricing (per million tokens, June 2025) ---
-_INPUT_COST_PER_M = 3.00    # $3 per 1M input tokens
-_OUTPUT_COST_PER_M = 15.00   # $15 per 1M output tokens
+_INPUT_COST_PER_M = 3.00
+_OUTPUT_COST_PER_M = 15.00
 
 
 def _estimate_cost(input_tokens: int, output_tokens: int) -> float:
-    """Estimate cost in USD from token counts."""
     return (input_tokens * _INPUT_COST_PER_M / 1_000_000) + \
            (output_tokens * _OUTPUT_COST_PER_M / 1_000_000)
 
 
 def _prune_history(history: list, max_messages: int) -> list:
-    """Keep conversation history within budget using a sliding window.
-
-    Always keeps the first user message (for context) and the most
-    recent messages. Drops middle turns in pairs to keep role alternation.
-    """
     if len(history) <= max_messages:
         return history
-
-    # Keep first message + last (max_messages - 1) messages
     pruned = [history[0]] + history[-(max_messages - 1):]
     logger.info(f"Pruned history: {len(history)} → {len(pruned)} messages")
     return pruned
 
 
 def _truncate_tool_result(result: str, max_chars: int) -> str:
-    """Truncate tool results that exceed the character budget."""
     if len(result) <= max_chars:
         return result
-
-    # Try to truncate at a clean JSON boundary
     truncated = result[:max_chars]
     note = f'\n... [TRUNCATED — {len(result):,} chars → {max_chars:,}. Ask for specific filters to narrow results.]'
     logger.warning(f"Tool result truncated: {len(result):,} → {max_chars:,} chars")
     return truncated + note
 
 
+# ═══════════════════════════════════════════════════════════════════
+# SESSION PERSISTENCE — save/load from Supabase
+# ═══════════════════════════════════════════════════════════════════
+
+def _get_db():
+    """Get Supabase service client for chat persistence."""
+    try:
+        from app.database import get_service_client
+        return get_service_client()
+    except Exception as e:
+        logger.warning(f"Could not get DB client for chat persistence: {e}")
+        return None
+
+
+def _save_session(session_id: str, user_name: str, messages: list):
+    """Persist current session to Supabase (upsert)."""
+    db = _get_db()
+    if not db:
+        return
+    try:
+        # Only store user/assistant text messages (not tool_use blocks)
+        clean_msgs = []
+        for m in messages:
+            if isinstance(m, dict) and m.get("role") in ("user", "assistant"):
+                content = m.get("content", "")
+                if isinstance(content, str):
+                    clean_msgs.append({"role": m["role"], "content": content})
+
+        db.table("chat_sessions").upsert({
+            "session_id": session_id,
+            "user_name": user_name,
+            "messages": clean_msgs,
+            "last_active": datetime.now(timezone.utc).isoformat(),
+            "is_active": True,
+        }, on_conflict="session_id").execute()
+    except Exception as e:
+        logger.warning(f"Failed to save session {session_id}: {e}")
+
+
+def _load_session(session_id: str) -> dict | None:
+    """Load a session from Supabase by session_id."""
+    db = _get_db()
+    if not db:
+        return None
+    try:
+        result = db.table("chat_sessions").select("*").eq("session_id", session_id).limit(1).execute()
+        if result.data:
+            return result.data[0]
+    except Exception as e:
+        logger.warning(f"Failed to load session {session_id}: {e}")
+    return None
+
+
+def _load_last_session(user_name: str) -> dict | None:
+    """Load the most recent active session for a user."""
+    db = _get_db()
+    if not db:
+        return None
+    try:
+        result = (db.table("chat_sessions")
+                  .select("*")
+                  .eq("user_name", user_name)
+                  .eq("is_active", True)
+                  .order("last_active", desc=True)
+                  .limit(1)
+                  .execute())
+        if result.data:
+            return result.data[0]
+    except Exception as e:
+        logger.warning(f"Failed to load last session for {user_name}: {e}")
+    return None
+
+
+# ═══════════════════════════════════════════════════════════════════
+# CONVERSATION MEMORY — summarize + recall past sessions
+# ═══════════════════════════════════════════════════════════════════
+
+def _summarize_session(messages: list) -> str | None:
+    """Generate a 2-3 sentence summary of a chat session using Claude."""
+    if not settings.anthropic_api_key or not messages:
+        return None
+
+    # Build a compact transcript of just user/assistant text
+    transcript_lines = []
+    for m in messages:
+        if isinstance(m, dict) and isinstance(m.get("content"), str):
+            role = "Rep" if m["role"] == "user" else "Otto"
+            transcript_lines.append(f"{role}: {m['content'][:300]}")
+
+    if len(transcript_lines) < 2:
+        return None
+
+    transcript = "\n".join(transcript_lines[-20:])  # Last 20 exchanges max
+
+    try:
+        client = Anthropic(api_key=settings.anthropic_api_key, timeout=30.0)
+        response = client.messages.create(
+            model=settings.agent_model_fast,  # Use Haiku for cheap summaries
+            max_tokens=200,
+            system="You summarize sales chat sessions in 2-3 sentences. Focus on: which dealers/states discussed, what the rep was looking for, any decisions or next steps. Be specific with names and numbers.",
+            messages=[{"role": "user", "content": f"Summarize this chat session:\n\n{transcript}"}],
+        )
+        text = response.content[0].text.strip()
+        logger.info(f"Session summary generated: {text[:80]}...")
+        return text
+    except Exception as e:
+        logger.warning(f"Failed to summarize session: {e}")
+        return None
+
+
+def _close_session(session_id: str):
+    """Mark session as inactive and generate summary."""
+    db = _get_db()
+    if not db:
+        return
+
+    try:
+        # Load session
+        result = db.table("chat_sessions").select("messages,user_name").eq("session_id", session_id).limit(1).execute()
+        if not result.data:
+            return
+
+        session = result.data[0]
+        messages = session.get("messages", [])
+
+        # Generate summary
+        summary = _summarize_session(messages)
+
+        # Update session: mark inactive, store summary
+        update = {"is_active": False}
+        if summary:
+            update["summary"] = summary
+
+        db.table("chat_sessions").update(update).eq("session_id", session_id).execute()
+        logger.info(f"Closed session {session_id} (summary: {'yes' if summary else 'no'})")
+    except Exception as e:
+        logger.warning(f"Failed to close session {session_id}: {e}")
+
+
+def _get_conversation_memory(user_name: str, current_message: str) -> str:
+    """Retrieve relevant past conversation summaries for system prompt injection.
+
+    Two strategies:
+    1. Always include last 3 sessions (recency)
+    2. Full-text search for sessions relevant to the current query
+    """
+    db = _get_db()
+    if not db:
+        return ""
+
+    memories = []
+    seen_ids = set()
+
+    try:
+        # Strategy 1: Last 3 completed sessions (recency)
+        recent = (db.table("chat_sessions")
+                  .select("id,summary,last_active")
+                  .eq("user_name", user_name)
+                  .eq("is_active", False)
+                  .not_.is_("summary", "null")
+                  .order("last_active", desc=True)
+                  .limit(3)
+                  .execute())
+
+        for row in (recent.data or []):
+            if row["id"] not in seen_ids:
+                seen_ids.add(row["id"])
+                ts = row.get("last_active", "")[:10]  # Just the date
+                memories.append(f"[{ts}] {row['summary']}")
+
+        # Strategy 2: Full-text search for relevant past sessions
+        # Build search query from current message keywords
+        words = re.findall(r'\b[a-zA-Z]{3,}\b', current_message.lower())
+        # Filter out stop words
+        stop = {'the','and','for','are','but','not','you','all','can','had','her','was','one','our','out',
+                'has','his','how','its','may','new','now','old','see','way','who','did','get','let','say',
+                'she','too','use','what','where','which','show','give','tell','about','from','this','that',
+                'with','have','will','your','them','been','some','when','just','also','into','over','such'}
+        keywords = [w for w in words if w not in stop][:5]  # Max 5 keywords
+
+        if keywords:
+            tsquery = " | ".join(keywords)  # OR search
+            try:
+                search = (db.rpc("search_chat_summaries", {
+                    "search_query": tsquery,
+                    "p_user_name": user_name,
+                    "p_limit": 3,
+                }).execute())
+
+                for row in (search.data or []):
+                    if row["id"] not in seen_ids:
+                        seen_ids.add(row["id"])
+                        ts = row.get("last_active", "")[:10]
+                        memories.append(f"[{ts}] {row['summary']}")
+            except Exception:
+                # RPC may not exist yet — fall back to no search results
+                pass
+
+    except Exception as e:
+        logger.warning(f"Failed to load conversation memory: {e}")
+        return ""
+
+    if not memories:
+        return ""
+
+    header = f"\n\n═══ CONVERSATION MEMORY ({user_name}) ═══\nPast conversations with this rep (use as context, don't repeat back):\n"
+    return header + "\n".join(f"• {m}" for m in memories[:5])
+
+
+# ═══════════════════════════════════════════════════════════════════
+# API ENDPOINTS
+# ═══════════════════════════════════════════════════════════════════
+
 @router.get("/status")
 async def api_status():
-    """Check if the API key is configured (lightweight, no API call)."""
     return {"api_key_configured": bool(settings.anthropic_api_key)}
 
 
+@router.get("/chat-session")
+async def get_session(user_name: str = "unknown"):
+    """Get the most recent active session for a user (for session recovery)."""
+    session = _load_last_session(user_name)
+    if session:
+        return {
+            "session_id": session["session_id"],
+            "messages": session.get("messages", []),
+            "user_name": session.get("user_name", "unknown"),
+            "last_active": session.get("last_active"),
+        }
+    return {"session_id": None, "messages": [], "user_name": user_name}
+
+
+@router.get("/chat-history")
+async def get_history(user_name: str = "unknown", limit: int = 10):
+    """Get past session summaries for a user (for UI display)."""
+    db = _get_db()
+    if not db:
+        return {"sessions": []}
+    try:
+        result = (db.table("chat_sessions")
+                  .select("session_id,summary,created_at,last_active")
+                  .eq("user_name", user_name)
+                  .eq("is_active", False)
+                  .not_.is_("summary", "null")
+                  .order("last_active", desc=True)
+                  .limit(limit)
+                  .execute())
+        return {"sessions": result.data or []}
+    except Exception as e:
+        logger.warning(f"Failed to load history: {e}")
+        return {"sessions": []}
+
+
 def _prepare_chat(msg: ChatMessage, session_id: str):
-    """Shared setup for both streaming and non-streaming chat endpoints.
-    Returns (history, system_prompt, client) or raises HTTPException.
-    """
+    """Shared setup for both streaming and non-streaming chat endpoints."""
     # Rate limiting
     now = time.time()
     hits = _rate_window.get(session_id, [])
@@ -139,20 +381,25 @@ def _prepare_chat(msg: ChatMessage, session_id: str):
     hits.append(now)
     _rate_window[session_id] = hits
 
-    # Expire stale sessions
+    # Expire stale sessions (and summarize them)
     _session_last_active[session_id] = now
     stale = [sid for sid, ts in _session_last_active.items() if now - ts > _SESSION_TTL]
     for sid_key in stale:
         _conversations.pop(sid_key, None)
         _session_last_active.pop(sid_key, None)
         _rate_window.pop(sid_key, None)
+        # Close stale session in background (summarize + mark inactive)
+        _close_session(sid_key)
 
-    # No API key
     if not settings.anthropic_api_key:
         logger.warning("No Anthropic API key configured")
         return None
 
     client = Anthropic(api_key=settings.anthropic_api_key, timeout=180.0)
+
+    # Track user name
+    user_name = msg.user_name or "unknown"
+    _session_users[session_id] = user_name
 
     # History recovery & pruning
     if session_id not in _conversations:
@@ -160,15 +407,34 @@ def _prepare_chat(msg: ChatMessage, session_id: str):
             _conversations[session_id] = msg.history
             logger.info(f"Recovered {len(msg.history)} messages from client for session {session_id}")
         else:
-            _conversations[session_id] = []
+            # Try loading from DB
+            saved = _load_session(session_id)
+            if saved and saved.get("messages"):
+                _conversations[session_id] = saved["messages"]
+                logger.info(f"Recovered {len(saved['messages'])} messages from DB for session {session_id}")
+            else:
+                _conversations[session_id] = []
 
     history = _conversations[session_id]
     history.append({"role": "user", "content": msg.message})
     history = _prune_history(history, settings.agent_max_history)
     _conversations[session_id] = history
 
-    system_prompt = f"TODAY: {date.today().isoformat()}\n\n{SALES_KNOWLEDGE_BASE}\n\n{SALES_AGENT_SYSTEM_PROMPT}"
+    # Build system prompt with conversation memory
+    memory_section = _get_conversation_memory(user_name, msg.message)
+
+    # Add rep-specific context
+    rep_context = ""
+    if user_name.lower() in ("wesley", "wesley white"):
+        rep_context = "\n\nCURRENT USER: Wesley White — covers GA, TN, NC, SC, AL. Tailor territory insights to these states."
+    elif user_name.lower() in ("kenneth", "kenneth greene"):
+        rep_context = "\n\nCURRENT USER: Kenneth Greene — covers TX, LA, OK, AR, MS. Tailor territory insights to these states."
+
+    system_prompt = f"TODAY: {date.today().isoformat()}{rep_context}{memory_section}\n\n{SALES_KNOWLEDGE_BASE}\n\n{SALES_AGENT_SYSTEM_PROMPT}"
     model = _pick_model(msg.message)
+
+    # Save session to DB (async-safe, non-blocking)
+    _save_session(session_id, user_name, history)
 
     return history, system_prompt, client, model
 
@@ -220,7 +486,6 @@ async def chat(msg: ChatMessage, session_id: str = "default"):
                 tools_called.append(block.name)
 
             if len(tool_blocks) > 1:
-                # Parallel execution for multiple tools
                 import concurrent.futures
                 with concurrent.futures.ThreadPoolExecutor() as pool:
                     futures = {pool.submit(execute_tool, b.name, b.input): b for b in tool_blocks}
@@ -241,6 +506,10 @@ async def chat(msg: ChatMessage, session_id: str = "default"):
         text_parts = [block.text for block in response.content if hasattr(block, "text")]
         assistant_text = "\n".join(text_parts)
         history.append({"role": "assistant", "content": assistant_text})
+
+        # Save updated session
+        user_name = _session_users.get(session_id, "unknown")
+        _save_session(session_id, user_name, history)
 
         elapsed = time.time() - start_time
         cost = _estimate_cost(total_input_tokens, total_output_tokens)
@@ -271,7 +540,6 @@ async def chat(msg: ChatMessage, session_id: str = "default"):
 
 
 def _sse_event(event: str, data: dict) -> str:
-    """Format a Server-Sent Event."""
     return f"event: {event}\ndata: {json.dumps(data)}\n\n"
 
 
@@ -298,9 +566,6 @@ async def chat_stream(msg: ChatMessage, session_id: str = "default"):
             loop = asyncio.get_running_loop()
 
             for iteration in range(settings.agent_max_loop):
-                # Stream every API call. Tool-use iterations accumulate the
-                # full response before processing; the final text response
-                # yields deltas to the client in real-time.
                 chunk_q = asyncio.Queue()
                 final_msg_box = []
 
@@ -326,9 +591,6 @@ async def chat_stream(msg: ChatMessage, session_id: str = "default"):
                         None, _make_stream_runner(history, TOOL_DEFINITIONS)
                     )
 
-                    # Yield text deltas in real-time as they arrive from the API.
-                    # For tool-use iterations this is usually preamble text like
-                    # "Let me look that up..." which is fine to show.
                     full_text = ""
                     while True:
                         chunk = await chunk_q.get()
@@ -337,7 +599,7 @@ async def chat_stream(msg: ChatMessage, session_id: str = "default"):
                         full_text += chunk
                         yield _sse_event("delta", {"text": chunk})
 
-                    await future  # propagate exceptions
+                    await future
                 except AuthenticationError:
                     yield _sse_event("error", {"message": "API key is invalid."})
                     return
@@ -360,14 +622,12 @@ async def chat_stream(msg: ChatMessage, session_id: str = "default"):
                     history.append({"role": "assistant", "content": response.content})
                     tool_blocks = [b for b in response.content if b.type == "tool_use"]
 
-                    # Emit status for all tools first
                     for block in tool_blocks:
                         status_msg = TOOL_STATUS_MAP.get(block.name, "Working...")
                         yield _sse_event("status", {"status": status_msg, "tool": block.name})
                         logger.info(f"Agent tool [{iteration+1}/{settings.agent_max_loop}]: {block.name}")
                         tools_called.append(block.name)
 
-                    # Execute tools in parallel when multiple
                     if len(tool_blocks) > 1:
                         async def _run_tool(b):
                             return b.id, await asyncio.to_thread(execute_tool, b.name, b.input)
@@ -386,10 +646,13 @@ async def chat_stream(msg: ChatMessage, session_id: str = "default"):
                     history.append({"role": "user", "content": tool_results})
                     continue
 
-                # Final text response — deltas already yielded above
+                # Final text response
                 history.append({"role": "assistant", "content": full_text})
 
-                # Done event with usage
+                # Save updated session to DB
+                user_name = _session_users.get(session_id, "unknown")
+                _save_session(session_id, user_name, history)
+
                 elapsed = time.time() - start_time
                 cost = _estimate_cost(total_input_tokens, total_output_tokens)
                 logger.info(f"Stream complete — {total_input_tokens:,} in + {total_output_tokens:,} out = ~${cost:.4f} | {len(tools_called)} tools | {elapsed:.1f}s")
@@ -431,6 +694,9 @@ async def chat_stream(msg: ChatMessage, session_id: str = "default"):
 
 @router.delete("/chat/{session_id}")
 async def clear_chat(session_id: str):
-    """Clear conversation history for a session."""
+    """Clear conversation history — summarize and close the session."""
+    # Close session in DB (generates summary, marks inactive)
+    _close_session(session_id)
     _conversations.pop(session_id, None)
+    _session_users.pop(session_id, None)
     return {"status": "cleared"}

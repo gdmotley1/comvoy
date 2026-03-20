@@ -11,6 +11,7 @@ class IngestRequest(BaseModel):
 class ChatMessage(BaseModel):
     message: str = Field(..., min_length=1, max_length=50000)
     history: list[dict] | None = Field(None, max_length=30)
+    user_name: str | None = Field(None, max_length=100)
 
 
 class NearbyQuery(BaseModel):

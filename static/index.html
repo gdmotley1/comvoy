@@ -377,6 +377,41 @@
             width: 100%;
             margin-bottom: 24px;
         }
+        .rep-select-btn {
+            padding: 12px 28px;
+            border-radius: 14px;
+            border: 1px solid rgba(0,212,255,0.25);
+            background: rgba(0,212,255,0.08);
+            color: #00d4ff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s var(--smooth);
+            font-family: inherit;
+        }
+        .rep-select-btn:hover {
+            background: rgba(0,212,255,0.18);
+            border-color: rgba(0,212,255,0.45);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,212,255,0.15);
+        }
+        .rep-user-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: rgba(0,212,255,0.08);
+            border: 1px solid rgba(0,212,255,0.2);
+            font-size: 12px;
+            color: #00d4ff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .rep-user-pill:hover {
+            background: rgba(0,212,255,0.15);
+            border-color: rgba(0,212,255,0.35);
+        }
         .hero-card {
             padding: 28px 20px 24px;
             border-radius: 18px;
@@ -4089,6 +4124,7 @@
             <span class="snapshot-count" id="snapshotCount"></span>
         </div>
         <div class="topbar-right">
+            <span class="rep-user-pill" id="topbarUserPill" onclick="Chat.switchUser()" style="display:none" title="Click to switch user"></span>
             <div class="usage-badge" id="usageBadge" title="Token usage this session"></div>
             <button class="btn-home" onclick="goHome()">Home</button>
             <button class="btn-map" onclick="openDealerMap()">Map</button>
@@ -4347,6 +4383,15 @@
                     <div class="eye-glow"></div>
                     <svg class="otto-eye" viewBox="0 0 60 60"><defs><radialGradient id="irisGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"><animate attributeName="stop-color" values="#4f8fff;#00d4ff;#a855f7;#4f8fff" dur="6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#1a1a3e"/></radialGradient><radialGradient id="pupilGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient></defs><circle cx="30" cy="30" r="29" fill="none" stroke="url(#irisGrad)" stroke-width="0.5" opacity="0.3"/><circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="url(#irisGrad)" stroke-width="2" opacity="0.9"/><circle cx="30" cy="30" r="27" fill="url(#irisGrad)" opacity="0.06"/><circle cx="30" cy="30" r="22" fill="url(#irisGrad)" opacity="0.18" style="animation:irisRotate 12s linear infinite"/><circle cx="30" cy="30" r="16" fill="none" stroke="url(#irisGrad)" stroke-width="2.5" opacity="0.45" style="animation:irisRotate 8s linear infinite reverse"/><circle cx="30" cy="30" r="11" fill="url(#irisGrad)" opacity="0.7"/><circle class="otto-pupil" cx="30" cy="30" r="6" fill="#060810"/><circle class="pupil-glow" cx="30" cy="30" r="4.5" fill="url(#pupilGlow)" opacity="0.6"/><circle class="specular-1" cx="23" cy="23" r="3" fill="white" opacity="0.25"/><circle class="specular-2" cx="25" cy="25" r="1.5" fill="white" opacity="0.45"/></svg>
                 </div>
+                <div id="repSelector" style="display:none;text-align:center;padding:20px 0">
+                    <div style="color:var(--text-secondary);font-size:14px;margin-bottom:16px">Who's using Otto?</div>
+                    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+                        <button onclick="Chat.setUser('Wesley White')" class="rep-select-btn">Wesley White</button>
+                        <button onclick="Chat.setUser('Kenneth Greene')" class="rep-select-btn">Kenneth Greene</button>
+                    </div>
+                </div>
+                <div id="resumeBar" style="display:none;justify-content:center;align-items:center;padding:8px 16px;margin:0 auto 12px;max-width:500px;border-radius:12px;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.15);font-size:13px;color:var(--text-secondary)"></div>
+                <div id="welcomeContent">
                 <div class="chat-greeting-text welcome-greet-text" id="welcomeGreet"></div>
                 <div class="hero-cards">
                     <div class="hero-card" onclick="openDealerMap()">
@@ -4371,6 +4416,7 @@
                     </div>
                 </div>
                 <div class="action-cards" id="actionCards" style="display:none"></div>
+                </div><!-- /welcomeContent -->
                 <div class="api-notice" id="apiNotice"><div class="api-notice-icon"><svg viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg></div><div class="api-notice-text"><strong>API key required.</strong> Add <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">ANTHROPIC_API_KEY</code> to your <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">.env</code> file and restart the server.</div></div>
             </div>
         </div>
@@ -4600,12 +4646,15 @@
             const sendBtn = $('sendBtn');
             let busy = false;
             let messagesDiv = null;
-            const sid = 'otto_' + Date.now();
+            let sid = localStorage.getItem('otto_sid') || ('otto_' + Date.now());
+            localStorage.setItem('otto_sid', sid);
             let _chatHistory = [];
             let sessionTokens = 0;
             let sessionCost = 0;
             let _repsLoaded = false;
             let _snapshots = [];
+            let _currentUser = localStorage.getItem('otto_user') || '';
+            let _sessionRecovered = false;
 
             // Snapshot glass dropdown
             let _ddOpen = false;
@@ -4623,6 +4672,81 @@
                 } else {
                     el.style.overflow = 'hidden';
                 }
+            }
+
+            function setUser(name) {
+                _currentUser = name;
+                localStorage.setItem('otto_user', name);
+                // Hide rep selector, show welcome content
+                const sel = document.getElementById('repSelector');
+                if (sel) sel.style.display = 'none';
+                const wc = document.getElementById('welcomeContent');
+                if (wc) wc.style.display = '';
+                _updateUserPill();
+                // New session for this user
+                sid = 'otto_' + Date.now();
+                localStorage.setItem('otto_sid', sid);
+                // Try to recover last session for this user
+                _recoverSession();
+            }
+
+            async function _recoverSession() {
+                if (!_currentUser || _sessionRecovered) return;
+                try {
+                    const res = await fetchT(API_BASE + '/api/chat-session?user_name=' + encodeURIComponent(_currentUser));
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    if (data.session_id && data.messages && data.messages.length > 0) {
+                        // Offer to resume
+                        const resumeBar = document.getElementById('resumeBar');
+                        if (resumeBar) {
+                            const msgCount = data.messages.filter(m => m.role === 'user').length;
+                            resumeBar.innerHTML = '<span>Resume your last conversation (' + msgCount + ' messages)?</span>' +
+                                '<button onclick="Chat.resumeSession(\'' + data.session_id + '\')" style="margin-left:8px;padding:4px 12px;border-radius:8px;border:1px solid rgba(0,212,255,0.3);background:rgba(0,212,255,0.1);color:#00d4ff;cursor:pointer;font-size:13px">Resume</button>' +
+                                '<button onclick="Chat.dismissResume()" style="margin-left:4px;padding:4px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:var(--text-secondary);cursor:pointer;font-size:13px">New Chat</button>';
+                            resumeBar.style.display = 'flex';
+                        }
+                        _sessionRecovered = true;
+                        // Store recovered data for potential resume
+                        Chat._recoveredData = data;
+                    }
+                } catch(_) {}
+            }
+
+            function resumeSession(oldSid) {
+                const data = Chat._recoveredData;
+                if (!data) return;
+                // Use the old session ID so backend finds it
+                sid = data.session_id;
+                localStorage.setItem('otto_sid', sid);
+                _chatHistory = data.messages || [];
+                // Render the messages
+                const msgs = ensureMessages();
+                for (const m of _chatHistory) {
+                    if (m.role === 'user') {
+                        const el = document.createElement('div');
+                        el.className = 'msg user';
+                        el.innerHTML = '<div class="msg-bubble">' + esc(m.content) + '</div>';
+                        msgs.appendChild(el);
+                    } else if (m.role === 'assistant') {
+                        const el = document.createElement('div');
+                        el.className = 'msg assistant';
+                        el.innerHTML = '<div class="msg-orb">' + ottoEyeSvg() + '</div><div class="msg-bubble">' + fmt(m.content) + '</div>';
+                        msgs.appendChild(el);
+                    }
+                }
+                scrollDown();
+                const resumeBar = document.getElementById('resumeBar');
+                if (resumeBar) resumeBar.style.display = 'none';
+            }
+
+            function dismissResume() {
+                // Start fresh — new session ID
+                sid = 'otto_' + Date.now();
+                localStorage.setItem('otto_sid', sid);
+                _chatHistory = [];
+                const resumeBar = document.getElementById('resumeBar');
+                if (resumeBar) resumeBar.style.display = 'none';
             }
 
             function ask(text) { input.value = text; send(); }
@@ -4743,7 +4867,7 @@
                 try {
                     await Core.streamChat(
                         API_BASE + '/api/chat/stream?session_id=' + sid,
-                        { message: text, history: _chatHistory },
+                        { message: text, history: _chatHistory, user_name: _currentUser || null },
                         {
                             onStatus(data) {
                                 const s = think.querySelector('.think-status');
@@ -4849,9 +4973,23 @@
                 const eye = ottoEyeSvgFull();
                 const greet = _pickGreet(null);
                 _lastHomeGreet = greet;
+                const hasUser = !!_currentUser;
+                const repSelectorStyle = hasUser ? 'display:none' : '';
+                const contentStyle = hasUser ? '' : 'display:none';
+                const userPill = hasUser ? `<div style="text-align:center;padding:8px 0"><span class="rep-user-pill" onclick="Chat.switchUser()" title="Switch user"><svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor" style="opacity:0.7"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg>${esc(_currentUser)}</span></div>` : '';
                 return `<div class="welcome" id="welcome">
 <div class="orb-hero"><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
 <div class="eye-glow"></div>${eye}</div>
+<div id="repSelector" style="${repSelectorStyle};text-align:center;padding:20px 0">
+<div style="color:var(--text-secondary);font-size:14px;margin-bottom:16px">Who's using Otto?</div>
+<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+<button onclick="Chat.setUser('Wesley White')" class="rep-select-btn">Wesley White</button>
+<button onclick="Chat.setUser('Kenneth Greene')" class="rep-select-btn">Kenneth Greene</button>
+</div>
+</div>
+<div id="resumeBar" style="display:none;justify-content:center;align-items:center;padding:8px 16px;margin:0 auto 12px;max-width:500px;border-radius:12px;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.15);font-size:13px;color:var(--text-secondary)"></div>
+<div id="welcomeContent" style="${contentStyle}">
+${userPill}
 <div class="chat-greeting-text welcome-greet-text">${greet}</div>
 <div class="hero-cards">
 <div class="hero-card" onclick="openDealerMap()">
@@ -4876,6 +5014,7 @@
 </div>
 </div>
 <div class="action-cards" id="actionCards" style="display:none"></div>
+</div>
 <div class="api-notice" id="apiNotice"><div class="api-notice-icon"><svg viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg></div><div class="api-notice-text"><strong>API key required.</strong> Add <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">ANTHROPIC_API_KEY</code> to your <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">.env</code> file and restart the server.</div></div>
 </div>`;
             }
@@ -4980,7 +5119,11 @@
 
             async function clearChat() {
                 try { await fetchT(API_BASE + '/api/chat/' + sid, { method: 'DELETE' }); } catch(_) {}
+                // New session ID (old one gets summarized + closed by backend)
+                sid = 'otto_' + Date.now();
+                localStorage.setItem('otto_sid', sid);
                 _chatHistory = [];
+                _sessionRecovered = false;
                 sessionTokens = 0; sessionCost = 0;
                 const ub = $('usageBadge'); if (ub) { ub.textContent = ''; ub.classList.remove('warn'); }
                 _repsLoaded = false;
@@ -5067,10 +5210,48 @@
                 } catch(_) {}
             }
 
+            function switchUser() {
+                // Clear current user, show selector
+                _currentUser = '';
+                localStorage.removeItem('otto_user');
+                // Generate new session
+                sid = 'otto_' + Date.now();
+                localStorage.setItem('otto_sid', sid);
+                _chatHistory = [];
+                _sessionRecovered = false;
+                sessionTokens = 0; sessionCost = 0;
+                const ub = $('usageBadge'); if (ub) { ub.textContent = ''; ub.classList.remove('warn'); }
+                goHome();
+            }
+
+            function _updateUserPill() {
+                const pill = document.getElementById('topbarUserPill');
+                if (!pill) return;
+                if (_currentUser) {
+                    pill.innerHTML = '<svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor" style="opacity:0.7"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg> ' + esc(_currentUser);
+                    pill.style.display = 'inline-flex';
+                } else {
+                    pill.style.display = 'none';
+                }
+            }
+
+            function _initRepSelector() {
+                _updateUserPill();
+                if (!_currentUser) {
+                    const sel = document.getElementById('repSelector');
+                    if (sel) sel.style.display = '';
+                    const wc = document.getElementById('welcomeContent');
+                    if (wc) wc.style.display = 'none';
+                } else {
+                    _recoverSession();
+                }
+            }
+
             // Init on load
             loadSnapshots();
             loadReps();
             checkApiStatus();
+            setTimeout(_initRepSelector, 100);
 
             return {
                 ask, send, addBot, ensureMessages, clearChat, openChat, goHome, scrollDown,
@@ -5081,6 +5262,8 @@
                 submitTrip, submitDealer, submitTerritory, loadReps,
                 toggleDropdown, selectSnapshot, checkApiStatus,
                 _pickGreet, _setLastHomeGreet: g => { _lastHomeGreet = g; },
+                setUser, switchUser, resumeSession, dismissResume,
+                getUser: () => _currentUser,
             };
         })();
 
@@ -5164,7 +5347,7 @@
                 try {
                     await Core.streamChat(
                         Core.API_BASE + '/api/chat/stream?session_id=' + sid,
-                        { message: text, history: _chatHistory },
+                        { message: text, history: _chatHistory, user_name: localStorage.getItem('otto_user') || null },
                         {
                             onStatus(data) {
                                 const s = think.querySelector('.think-status');
