@@ -26,7 +26,7 @@ _cache: dict[str, tuple[float, dict]] = {}
 _CACHE_TTL = 300
 
 # Excluded dealers (consistent with other modules)
-EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc ']
+EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc ', 'ryder']
 
 
 def _is_excluded(name: str) -> bool:

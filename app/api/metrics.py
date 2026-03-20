@@ -8,7 +8,7 @@ from app.database import get_service_client
 
 logger = logging.getLogger(__name__)
 
-EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc ']
+EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc ', 'ryder']
 
 
 def _is_excluded(name: str) -> bool:

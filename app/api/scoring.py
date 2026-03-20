@@ -24,7 +24,7 @@ router = APIRouter(prefix="/api/scoring", tags=["scoring"])
 logger = logging.getLogger(__name__)
 
 # ── Excluded Dealers ─────────────────────────────────────────────────────────
-EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc ']
+EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc ', 'ryder']
 
 
 def _is_excluded(name: str) -> bool:

@@ -70,6 +70,7 @@ PROGRESS_SAVE_EVERY = 10 # save progress every N combos
 EXCLUDED_DEALER_PATTERNS = [
     'penske',
     'mhc ',
+    'ryder',
 ]
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

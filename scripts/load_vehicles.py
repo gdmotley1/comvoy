@@ -29,7 +29,7 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 # ── Excluded Dealers ─────────────────────────────────────────────────────────
-EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc ']
+EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc ', 'ryder']
 
 
 def _is_excluded(name: str) -> bool:

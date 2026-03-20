@@ -17,7 +17,7 @@ _CACHE_TTL = 300  # 5 minutes
 
 # ── Excluded Dealers ─────────────────────────────────────────────────────────
 # Rental/national chains — not sales prospects, excluded from all results
-EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc ']
+EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc ', 'ryder']
 
 
 def _is_excluded(name: str) -> bool:
