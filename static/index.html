@@ -8198,7 +8198,8 @@
             $('routeTripLabel').textContent = 'Loading...';
             clearOverlay();
             try {
-                const res = await fetchT(API_BASE + `/api/travel/plans/${repId}`);
+                // Load from unified trips system (trip_days flattened)
+                const res = await fetchT(API_BASE + `/api/travel/trips/rep-days?rep_id=${repId}`);
                 if (!res.ok) throw new Error('Failed to load trips');
                 _routeTrips = await res.json();
                 const menu = $('routeTripMenu');
@@ -8213,9 +8214,12 @@
                 menu.innerHTML = _routeTrips.map(t => {
                     const d = new Date(t.travel_date + 'T12:00:00');
                     const dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                    const dayLabel = t.day_number > 1 ? ` (Day ${t.day_number})` : '';
+                    const tripLabel = t.trip_name ? esc(t.trip_name) + dayLabel : '';
+                    const routeDesc = t.is_round_trip ? '↻ ' + esc(t.start_location) + ' (round trip)' : esc(t.start_location) + ' → ' + esc(t.end_location);
                     return `<div class="route-dropdown-item" data-id="${t.id}" onclick="selectRouteTrip('${t.id}')">
-                        <div>${dateStr}</div>
-                        <div class="route-dropdown-item-sub">${t.is_round_trip ? '↻ ' + esc(t.start_location) + ' (round trip)' : esc(t.start_location) + ' → ' + esc(t.end_location)}</div>
+                        <div>${dateStr}${tripLabel ? ' — ' + tripLabel : ''}</div>
+                        <div class="route-dropdown-item-sub">${routeDesc}</div>
                     </div>`;
                 }).join('');
             } catch(e) {
@@ -8224,8 +8228,8 @@
             }
         }
 
-        async function selectRouteTrip(tripId) {
-            let trip = _routeTrips.find(t => t.id === tripId);
+        async function selectRouteTrip(tripDayId) {
+            let trip = _routeTrips.find(t => t.id === tripDayId);
             if (!trip) return;
             _routeSelectedTrip = trip;
             const d = new Date(trip.travel_date + 'T12:00:00');
@@ -8234,25 +8238,23 @@
             $('routeTripDropdown').classList.remove('open');
             _routeTripDdOpen = false;
             $('routeTripMenu').querySelectorAll('.route-dropdown-item').forEach(el => {
-                el.classList.toggle('active', el.dataset.id === tripId);
+                el.classList.toggle('active', el.dataset.id === tripDayId);
             });
             $('routeClearBtn').style.display = 'flex';
             document.body.classList.add('route-active');
             _routeActive = true;
             clearOverlay();
 
-            // Re-fetch trip data to get the (potentially backfilled) real driving polyline
-            // Do this BEFORE loadDealers so backend has polyline for corridor search
-            if (!trip.route_polyline) {
+            // Backfill polyline if missing via preview-route
+            if (!trip.route_polyline && !trip.is_round_trip) {
                 try {
-                    // Trigger backfill via preview-route (also geocodes if needed)
                     const bfRes = await fetchT(API_BASE + `/api/travel/preview-route?start=${encodeURIComponent(trip.start_location)}&end=${encodeURIComponent(trip.end_location)}`);
                     if (bfRes.ok) {
                         const bfData = await bfRes.json();
                         if (bfData.route_polyline) {
                             trip.route_polyline = bfData.route_polyline;
                             _routeSelectedTrip = trip;
-                            const idx = _routeTrips.findIndex(t => t.id === tripId);
+                            const idx = _routeTrips.findIndex(t => t.id === tripDayId);
                             if (idx >= 0) _routeTrips[idx] = trip;
                         }
                     }
@@ -8262,11 +8264,9 @@
             // Draw route polyline first so it's visible while dealers load
             drawPolyline(trip);
             updateLegend(true);
-
-            // Dim non-route dealers via CSS (no duplicate markers needed)
             document.body.classList.add('route-preview');
 
-            // Load backend-computed route dealers (definitive set with scores + distance)
+            // Load dealers via unified trip-day endpoint
             await loadDealers(trip);
 
             // Fit bounds to include route + dealer markers
@@ -8336,13 +8336,8 @@
                 const _map = DealerMap.getMap();
                 _routeDealerLayer = L.featureGroup().addTo(_map);
             try {
-                const params = new URLSearchParams({
-                    rep_id: _routeSelectedRep,
-                    travel_date: trip.travel_date,
-                    buffer_miles: '25',
-                    limit: '50',
-                });
-                const res = await fetchT(API_BASE + `/api/travel/route-dealers?${params}`);
+                // Use unified trip-day endpoint (reads from trips/trip_days, not rep_travel_plans)
+                const res = await fetchT(API_BASE + `/api/travel/trip-day-dealers/${trip.id}?buffer_miles=25&limit=50`);
                 if (!res.ok) throw new Error('Failed to load route dealers');
                 const data = await res.json();
                 if (_routeSelectedTrip?.id !== trip.id) return;
@@ -9366,7 +9361,7 @@
         window.selectRouteRep = (id, name) => RouteOverlay.selectRep(id, name);
         window.selectRouteTrip = (id) => RouteOverlay.selectTrip(id);
         window.clearRoute = () => RouteOverlay.clear();
-        window.openTripCreatePanel = () => TripCreate.open();
+        window.openTripCreatePanel = () => { openTripManager(); TripManager.showForm(); };
         window.closeTripCreatePanel = () => TripCreate.close();
         window.saveMapTrip = () => TripCreate.save();
         window.showTripForm = () => TripManager.showForm();

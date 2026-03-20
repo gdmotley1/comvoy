@@ -15,7 +15,7 @@ auto-generates a route briefing email with dealer intel — zero Claude cost.
 import asyncio
 import logging
 import math
-from datetime import date
+from datetime import date, datetime, timezone
 
 from typing import Optional
 
@@ -690,6 +690,183 @@ def list_trips(
     return trips
 
 
+@router.get("/trips/rep-days")
+def get_rep_trip_days(
+    rep_id: str = Query(..., description="Rep UUID"),
+):
+    """Get all trip days for a rep, flattened for the map route overlay.
+
+    Returns trip_day rows enriched with trip name, so the route panel
+    can show: 'West GA Tour — Day 1 (Mar 25)'.
+    """
+    db = get_service_client()
+
+    trips = db.table("trips").select("id, name, status, start_date, end_date").eq(
+        "rep_id", rep_id
+    ).order("start_date", desc=True).limit(50).execute()
+
+    if not trips.data:
+        return []
+
+    trip_ids = [t["id"] for t in trips.data]
+    trip_map = {t["id"]: t for t in trips.data}
+
+    days = db.table("trip_days").select("*").in_("trip_id", trip_ids).order("travel_date").execute()
+    if not days.data:
+        return []
+
+    result = []
+    for d in days.data:
+        t = trip_map.get(d["trip_id"], {})
+        result.append({
+            "id": d["id"],
+            "trip_id": d["trip_id"],
+            "trip_name": t.get("name", ""),
+            "trip_status": t.get("status", ""),
+            "day_number": d["day_number"],
+            "travel_date": d["travel_date"],
+            "start_location": d["start_location"],
+            "end_location": d["end_location"],
+            "start_lat": d["start_lat"],
+            "start_lng": d["start_lng"],
+            "end_lat": d["end_lat"],
+            "end_lng": d["end_lng"],
+            "is_round_trip": d.get("is_round_trip", False),
+            "route_polyline": d.get("route_polyline"),
+        })
+
+    return result
+
+
+@router.get("/trip-day-dealers/{trip_day_id}")
+async def get_trip_day_dealers(
+    trip_day_id: str,
+    buffer_miles: float = Query(20, description="How far off-route to search (miles)"),
+    limit: int = Query(25, le=50),
+):
+    """Find dealers along a trip day's route. Like route-dealers but reads from trip_days."""
+    db = get_service_client()
+
+    day = db.table("trip_days").select("*").eq("id", trip_day_id).execute()
+    if not day.data:
+        raise HTTPException(404, "Trip day not found")
+
+    p = day.data[0]
+
+    # Auto-backfill polyline if missing
+    if not p.get("route_polyline") and not p.get("is_round_trip"):
+        try:
+            route_wkt = await get_driving_route(
+                p["start_lat"], p["start_lng"], p["end_lat"], p["end_lng"]
+            )
+            if route_wkt:
+                db.table("trip_days").update(
+                    {"route_polyline": route_wkt}
+                ).eq("id", p["id"]).execute()
+                p["route_polyline"] = route_wkt
+                logger.info(f"Backfilled route polyline for trip_day {p['id']}")
+        except Exception as e:
+            logger.warning(f"Polyline backfill failed: {e}")
+
+    # Detect round trip / same-location
+    dist_km = _haversine(p["start_lat"], p["start_lng"], p["end_lat"], p["end_lng"])
+    is_day_trip = dist_km < 0.8
+
+    rpc_params = {
+        "p_start_lat": p["start_lat"],
+        "p_start_lng": p["start_lng"],
+        "p_end_lat": p["end_lat"],
+        "p_end_lng": p["end_lng"],
+        "p_buffer_miles": buffer_miles,
+    }
+    if p.get("route_polyline"):
+        rpc_params["p_polyline_wkt"] = p["route_polyline"]
+
+    route_dealers = db.rpc("find_dealers_along_route", rpc_params).execute()
+
+    if not route_dealers.data:
+        return {
+            "trip_day_id": trip_day_id,
+            "start": p["start_location"],
+            "end": p["end_location"],
+            "dealers": [],
+            "total": 0,
+        }
+
+    dealer_ids = [r["dealer_id"] for r in route_dealers.data]
+    dist_map = {r["dealer_id"]: r["distance_miles"] for r in route_dealers.data}
+    pos_map = {r["dealer_id"]: r.get("route_position", 0) for r in route_dealers.data}
+
+    # Get latest snapshot data
+    snap = db.table("report_snapshots").select("id").order("report_date", desc=True).limit(1).execute()
+    snap_id = snap.data[0]["id"] if snap.data else None
+
+    inv_map = {}
+    if snap_id:
+        inv = db.table("dealer_snapshots").select(
+            "dealer_id, total_vehicles, smyrna_units, smyrna_percentage, rank, top_brand"
+        ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).execute()
+        inv_map = {r["dealer_id"]: r for r in inv.data}
+
+    score_map = {}
+    if snap_id:
+        scores = db.table("lead_scores").select(
+            "dealer_id, score, tier"
+        ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).execute()
+        score_map = {r["dealer_id"]: r for r in scores.data}
+
+    dealers = []
+    for rd in route_dealers.data:
+        did = rd["dealer_id"]
+        inv = inv_map.get(did, {})
+        sc = score_map.get(did, {})
+        dealers.append({
+            "dealer_id": did,
+            "name": rd["dealer_name"],
+            "city": rd["city"],
+            "state": rd["state"],
+            "lat": rd["latitude"],
+            "lng": rd["longitude"],
+            "route_position": round(pos_map.get(did, 0), 3),
+            "dist_from_route_mi": dist_map.get(did, 0),
+            "vehicles": inv.get("total_vehicles", 0),
+            "smyrna_units": inv.get("smyrna_units", 0),
+            "rank": inv.get("rank"),
+            "top_brand": inv.get("top_brand"),
+            "lead_score": sc.get("score"),
+            "lead_tier": sc.get("tier"),
+        })
+
+    if is_day_trip:
+        dealers.sort(key=lambda x: x["dist_from_route_mi"])
+        dealers = dealers[:limit]
+    else:
+        n_segments = min(limit, 10)
+        seg_size = 1.0 / n_segments
+        selected = []
+        remaining = []
+        for seg_i in range(n_segments):
+            seg_start = seg_i * seg_size
+            seg_end = seg_start + seg_size
+            seg_dealers = [d for d in dealers if seg_start <= d["route_position"] < seg_end]
+            seg_dealers.sort(key=lambda x: (-(x.get("lead_score") or 0), x["dist_from_route_mi"]))
+            per_seg = max(1, limit // n_segments)
+            selected.extend(seg_dealers[:per_seg])
+            remaining.extend(seg_dealers[per_seg:])
+        remaining.sort(key=lambda x: (-(x.get("lead_score") or 0), x["dist_from_route_mi"]))
+        selected.extend(remaining[:max(0, limit - len(selected))])
+        selected.sort(key=lambda x: x["route_position"])
+        dealers = selected[:limit]
+
+    return {
+        "trip_day_id": trip_day_id,
+        "start": p["start_location"],
+        "end": p["end_location"],
+        "dealers": dealers,
+        "total": len(dealers),
+    }
+
+
 @router.get("/trips/estimate-days")
 async def estimate_trip_days(
     start: str = Query(...),
@@ -1061,7 +1238,7 @@ def update_trip(trip_id: str, body: TripUpdate):
     if not updates:
         return {"status": "no_changes"}
 
-    updates["updated_at"] = "now()"
+    updates["updated_at"] = datetime.now(timezone.utc).isoformat()
     result = db.table("trips").update(updates).eq("id", trip_id).execute()
     return {"status": "updated", "trip": result.data[0] if result.data else None}
 
