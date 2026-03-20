@@ -6,6 +6,7 @@ import time
 from fastapi import APIRouter, Query, HTTPException, Response
 
 from app.database import get_service_client
+from app.config import is_excluded_dealer
 from app.models import DealerSummary, DealerBriefing, NearbyQuery, SnapshotInfo
 
 router = APIRouter(prefix="/api/dealers", tags=["dealers"])
@@ -15,15 +16,6 @@ logger = logging.getLogger(__name__)
 _cache: dict[str, tuple[float, dict]] = {}
 _CACHE_TTL = 300  # 5 minutes
 
-# ── Excluded Dealers ─────────────────────────────────────────────────────────
-# Rental/national chains — not sales prospects, excluded from all results
-EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc ', 'ryder']
-
-
-def _is_excluded(name: str) -> bool:
-    """Check if dealer name matches an excluded pattern."""
-    n = name.lower()
-    return any(pat in n for pat in EXCLUDED_DEALER_PATTERNS)
 
 
 def _latest_snapshot_id(db) -> str:
@@ -74,7 +66,7 @@ def search_dealers(
         d = row["dealers"]
         if q and q.lower() not in d["name"].lower():
             continue
-        if _is_excluded(d["name"]):
+        if is_excluded_dealer(d["name"]):
             continue
         dealers.append(DealerSummary(
             id=d["id"],
@@ -122,7 +114,7 @@ def find_nearby(query: NearbyQuery):
     dealers = []
     for row in snapshots.data:
         d = row["dealers"]
-        if _is_excluded(d["name"]):
+        if is_excluded_dealer(d["name"]):
             continue
         dealers.append(DealerSummary(
             id=d["id"],
@@ -303,7 +295,7 @@ def get_map_data(response: Response):
         if not d.get("latitude") or not d.get("longitude"):
             continue
         # Skip excluded dealers (Penske, MHC, etc.)
-        if _is_excluded(d["name"]):
+        if is_excluded_dealer(d["name"]):
             continue
         sc = score_map.get(d["id"], {})
         pl = places_map.get(d["id"], {})
@@ -358,7 +350,7 @@ def get_territory_summary(state: str):
     if not result.data:
         raise HTTPException(404, f"No dealers found in {state.upper()}")
 
-    filtered = [r for r in result.data if not _is_excluded(r["dealers"]["name"])]
+    filtered = [r for r in result.data if not is_excluded_dealer(r["dealers"]["name"])]
 
     total_dealers = len(filtered)
     total_vehicles = sum(r["total_vehicles"] or 0 for r in filtered)

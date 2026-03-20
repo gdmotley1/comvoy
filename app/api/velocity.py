@@ -17,6 +17,7 @@ from datetime import date, datetime
 from fastapi import APIRouter, Query, HTTPException, Response
 
 from app.database import get_service_client
+from app.config import is_excluded_dealer
 
 router = APIRouter(prefix="/api/velocity", tags=["velocity"])
 logger = logging.getLogger(__name__)
@@ -26,12 +27,7 @@ _cache: dict[str, tuple[float, dict]] = {}
 _CACHE_TTL = 300
 
 # Excluded dealers (consistent with other modules)
-EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc ', 'ryder']
 
-
-def _is_excluded(name: str) -> bool:
-    n = name.lower()
-    return any(pat in n for pat in EXCLUDED_DEALER_PATTERNS)
 
 
 def _get_snapshots(db):
@@ -80,7 +76,7 @@ def compute_days_on_lot(db, snap_id: str, snap_date: str, dealer_id: str = None,
             break
         vehicles.extend(
             v for v in page.data
-            if not _is_excluded(v.get("dealers", {}).get("name", ""))
+            if not is_excluded_dealer(v.get("dealers", {}).get("name", ""))
         )
         if len(page.data) < page_size:
             break
@@ -186,7 +182,7 @@ def compute_turnover(db, current_snap: dict, prev_snap: dict, dealer_id: str = N
             break
         diffs.extend(
             d for d in page.data
-            if not _is_excluded(d.get("dealers", {}).get("name", ""))
+            if not is_excluded_dealer(d.get("dealers", {}).get("name", ""))
         )
         if len(page.data) < page_size:
             break
@@ -206,7 +202,7 @@ def compute_turnover(db, current_snap: dict, prev_snap: dict, dealer_id: str = N
     dealer_info = {}
     for r in (prev_data.data or []):
         d = r.get("dealers", {})
-        if _is_excluded(d.get("name", "")):
+        if is_excluded_dealer(d.get("name", "")):
             continue
         did = r["dealer_id"]
         prev_inv[did] = r["total_vehicles"] or 0
@@ -302,7 +298,7 @@ def compute_markdown_velocity(db, current_snap: dict, prev_snap: dict = None, de
             break
         diffs.extend(
             d for d in page.data
-            if not _is_excluded(d.get("dealers", {}).get("name", ""))
+            if not is_excluded_dealer(d.get("dealers", {}).get("name", ""))
         )
         if len(page.data) < page_size:
             break

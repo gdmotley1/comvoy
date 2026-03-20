@@ -5,15 +5,11 @@ from collections import Counter, defaultdict
 from datetime import datetime
 
 from app.database import get_service_client
+from app.config import is_excluded_dealer
 
 logger = logging.getLogger(__name__)
 
-EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc ', 'ryder']
 
-
-def _is_excluded(name: str) -> bool:
-    n = name.lower()
-    return any(pat in n for pat in EXCLUDED_DEALER_PATTERNS)
 
 
 def _paginate(db, table, select, filters, page_size=1000):
@@ -47,7 +43,7 @@ def compute_snapshot_metrics(snapshot_id: str, prev_snapshot_id: str = None):
         "vin, brand, body_type, body_builder, price, dealer_id, first_seen_date, is_smyrna, "
         "dealers!inner(name, city, state)",
         [("snapshot_id", snapshot_id)])
-    vehicles = [v for v in vehicles if not _is_excluded(v.get("dealers", {}).get("name", ""))]
+    vehicles = [v for v in vehicles if not is_excluded_dealer(v.get("dealers", {}).get("name", ""))]
 
     if not vehicles:
         logger.warning("No vehicles found — skipping metrics")
@@ -117,7 +113,7 @@ def compute_snapshot_metrics(snapshot_id: str, prev_snapshot_id: str = None):
         prev_vehicles = _paginate(db, "vehicles",
             "dealer_id, dealers!inner(name)",
             [("snapshot_id", prev_snapshot_id)])
-        prev_vehicles = [v for v in prev_vehicles if not _is_excluded(v.get("dealers", {}).get("name", ""))]
+        prev_vehicles = [v for v in prev_vehicles if not is_excluded_dealer(v.get("dealers", {}).get("name", ""))]
         for v in prev_vehicles:
             prev_dealer_counts[v["dealer_id"]] = prev_dealer_counts.get(v["dealer_id"], 0) + 1
 

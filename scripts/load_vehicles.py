@@ -22,19 +22,13 @@ from datetime import datetime
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from app.database import get_service_client
+from app.config import is_excluded_dealer
 from app.etl.geocoder import geocode_single
 from app.etl.places import search_place
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
-# ── Excluded Dealers ─────────────────────────────────────────────────────────
-EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc ', 'ryder']
-
-
-def _is_excluded(name: str) -> bool:
-    n = name.lower()
-    return any(pat in n for pat in EXCLUDED_DEALER_PATTERNS)
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(message)s", datefmt="%H:%M:%S")
 logger = logging.getLogger(__name__)
@@ -111,7 +105,7 @@ def upsert_dealers_from_csv(db, csv_path):
             dealers.add((row["dealer_name"], row["city"], row["state"]))
 
     # Filter out excluded dealers (Penske, MHC, etc.)
-    dealers = {d for d in dealers if not _is_excluded(d[0])}
+    dealers = {d for d in dealers if not is_excluded_dealer(d[0])}
     rows = [{"name": d[0], "city": d[1], "state": d[2]} for d in dealers]
     for i in range(0, len(rows), BATCH_SIZE):
         batch = rows[i:i + BATCH_SIZE]
@@ -215,7 +209,7 @@ def load_vehicles(db, csv_path, snapshot_id, dealer_map, smyrna_vins):
         seen_vins.add(vin)
 
         # Skip excluded dealers (Penske, MHC, etc.)
-        if _is_excluded(row.get("dealer_name", "")):
+        if is_excluded_dealer(row.get("dealer_name", "")):
             skipped += 1
             continue
         # Skip used vehicles — Comvoy only sells new
@@ -291,7 +285,7 @@ def load_aggregate_snapshots(db, csv_path, snapshot_id, dealer_map):
         seen_vins.add(vin)
 
         # Skip excluded dealers and used vehicles (same filters as vehicle insert)
-        if _is_excluded(row.get("dealer_name", "")):
+        if is_excluded_dealer(row.get("dealer_name", "")):
             continue
         if row.get("condition", "").strip().lower() != "new":
             continue

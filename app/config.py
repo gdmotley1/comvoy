@@ -1,5 +1,15 @@
 from pydantic_settings import BaseSettings
 
+# Dealers to exclude everywhere: rental/national chains, not sales prospects.
+# Checked via case-insensitive substring match on dealer name.
+EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc ', 'ryder']
+
+
+def is_excluded_dealer(name: str) -> bool:
+    """Return True if dealer name matches any excluded pattern."""
+    n = name.lower()
+    return any(pat in n for pat in EXCLUDED_DEALER_PATTERNS)
+
 
 class Settings(BaseSettings):
     supabase_url: str = ""

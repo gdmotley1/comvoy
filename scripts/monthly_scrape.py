@@ -66,12 +66,8 @@ REQUEST_TIMEOUT = 30
 PROGRESS_SAVE_EVERY = 10 # save progress every N combos
 
 # ── Excluded Dealers ─────────────────────────────────────────────────────────
-# Dealers to exclude from scrape results (rental/national chains, not prospects)
-EXCLUDED_DEALER_PATTERNS = [
-    'penske',
-    'mhc ',
-    'ryder',
-]
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from app.config import EXCLUDED_DEALER_PATTERNS, is_excluded_dealer
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(BASE_DIR, '..', 'scrape_output')

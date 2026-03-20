@@ -15,6 +15,7 @@ import logging
 from datetime import datetime
 
 from app.database import get_service_client
+from app.config import is_excluded_dealer
 from app.etl.geocoder import geocode_dealers
 
 logger = logging.getLogger(__name__)
@@ -22,15 +23,6 @@ logger = logging.getLogger(__name__)
 # Supabase batch insert limit
 BATCH_SIZE = 500
 
-# ── Excluded Dealers ─────────────────────────────────────────────────────────
-# Rental/national chains — not sales prospects, excluded from all loads
-EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc ', 'ryder']
-
-
-def _is_excluded_dealer(name: str) -> bool:
-    """Check if dealer name matches an excluded pattern."""
-    n = name.lower()
-    return any(pat in n for pat in EXCLUDED_DEALER_PATTERNS)
 
 
 async def load_report(parsed: dict, file_name: str) -> dict:
@@ -158,7 +150,7 @@ def _upsert_body_types(db, body_types: list[dict]) -> dict[str, int]:
 def _upsert_dealers(db, dealers: list[dict]) -> dict[tuple, str]:
     """Upsert dealer rows in batches, return {(name, city, state): id} map."""
     # Filter out excluded dealers (Penske, MHC, etc.)
-    dealers = [d for d in dealers if not _is_excluded_dealer(d["name"])]
+    dealers = [d for d in dealers if not is_excluded_dealer(d["name"])]
     rows = []
     for d in dealers:
         row = {

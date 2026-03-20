@@ -19,17 +19,11 @@ from datetime import datetime
 from fastapi import APIRouter, Query, HTTPException
 
 from app.database import get_service_client
+from app.config import is_excluded_dealer
 
 router = APIRouter(prefix="/api/scoring", tags=["scoring"])
 logger = logging.getLogger(__name__)
 
-# ── Excluded Dealers ─────────────────────────────────────────────────────────
-EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc ', 'ryder']
-
-
-def _is_excluded(name: str) -> bool:
-    n = name.lower()
-    return any(pat in n for pat in EXCLUDED_DEALER_PATTERNS)
 
 # ═══════════════════════════════════════════════════════════════════════
 # SCORING CONFIGURATION — CEO-adjustable weights
@@ -286,7 +280,7 @@ def get_lead_scores(
     for row in result.data:
         d = row["dealers"]
         # Skip excluded dealers (Penske, MHC, etc.)
-        if _is_excluded(d["name"]):
+        if is_excluded_dealer(d["name"]):
             continue
         leads.append({
             "dealer_id": d["id"],

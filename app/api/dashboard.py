@@ -7,6 +7,7 @@ from collections import Counter, defaultdict
 from fastapi import APIRouter, Query, HTTPException, Response
 
 from app.database import get_service_client
+from app.config import is_excluded_dealer
 
 # In-memory TTL cache — data only changes after monthly scrape
 _cache: dict[str, tuple[float, dict]] = {}
@@ -15,13 +16,6 @@ _CACHE_TTL = 300  # 5 minutes
 router = APIRouter(prefix="/api", tags=["dashboard"])
 logger = logging.getLogger(__name__)
 
-# ── Excluded Dealers ─────────────────────────────────────────────────────────
-EXCLUDED_DEALER_PATTERNS = ['penske', 'mhc ', 'ryder']
-
-
-def _is_excluded(name: str) -> bool:
-    n = name.lower()
-    return any(pat in n for pat in EXCLUDED_DEALER_PATTERNS)
 
 
 def _latest_snapshot_id(db) -> str:
@@ -55,7 +49,7 @@ def _paginate_vehicles(db, snap_id, state=None, body_type=None):
         # Filter out excluded dealers
         vehicles.extend(
             v for v in page.data
-            if not _is_excluded(v.get("dealers", {}).get("name", ""))
+            if not is_excluded_dealer(v.get("dealers", {}).get("name", ""))
         )
         if len(page.data) < page_size:
             break
