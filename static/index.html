@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://maps.googleapis.com; connect-src 'self' https://comvoy-api.vercel.app https://raw.githubusercontent.com http://localhost:*;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://maps.googleapis.com; connect-src 'self' https://comvoy-api.vercel.app https://raw.githubusercontent.com https://ihcgsmlvnjmerziwvsqo.supabase.co http://localhost:*;">
     <title>Otto — Comvoy Sales Intelligence</title>
     <meta name="description" content="Otto — Sales intelligence platform for Comvoy. Market data, lead scoring, territory analytics, and dealer briefings across 12 states.">
     <meta name="theme-color" content="#0a0e1a">
@@ -376,41 +376,6 @@
             max-width: 820px;
             width: 100%;
             margin-bottom: 24px;
-        }
-        .rep-select-btn {
-            padding: 12px 28px;
-            border-radius: 14px;
-            border: 1px solid rgba(0,212,255,0.25);
-            background: rgba(0,212,255,0.08);
-            color: #00d4ff;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.25s var(--smooth);
-            font-family: inherit;
-        }
-        .rep-select-btn:hover {
-            background: rgba(0,212,255,0.18);
-            border-color: rgba(0,212,255,0.45);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0,212,255,0.15);
-        }
-        .rep-user-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            border-radius: 20px;
-            background: rgba(0,212,255,0.08);
-            border: 1px solid rgba(0,212,255,0.2);
-            font-size: 12px;
-            color: #00d4ff;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .rep-user-pill:hover {
-            background: rgba(0,212,255,0.15);
-            border-color: rgba(0,212,255,0.35);
         }
         .hero-card {
             padding: 28px 20px 24px;
@@ -4102,9 +4067,182 @@
             .btn-ghost, .btn-map, .btn-dash, .btn-trips, .btn-home { font-size: 10px; padding: 10px 8px; }
             .wordmark-text { font-size: 20px; }
         }
+        /* ═══ Auth Screen ═══ */
+        .auth-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: var(--bg-deep);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 0.4s ease;
+        }
+        .auth-overlay.hidden { opacity: 0; pointer-events: none; }
+        .auth-card {
+            width: 100%;
+            max-width: 420px;
+            padding: 48px 40px 40px;
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            background: rgba(12,15,25,0.95);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            box-shadow: 0 25px 80px rgba(0,0,0,0.5), 0 0 60px rgba(79,143,255,0.05);
+            text-align: center;
+        }
+        .auth-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+        }
+        .auth-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .auth-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+        .auth-form { display: flex; flex-direction: column; gap: 14px; }
+        .auth-field {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.04);
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s, background 0.2s;
+            box-sizing: border-box;
+        }
+        .auth-field:focus {
+            border-color: rgba(79,143,255,0.5);
+            background: rgba(79,143,255,0.06);
+        }
+        .auth-field::placeholder { color: var(--text-tertiary); }
+        .auth-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, #4f8fff, #00d4ff);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.25s;
+            margin-top: 4px;
+        }
+        .auth-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(79,143,255,0.3); }
+        .auth-btn:active { transform: translateY(0); }
+        .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .auth-toggle {
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .auth-toggle a {
+            color: #4f8fff;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .auth-toggle a:hover { text-decoration: underline; }
+        .auth-error {
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.2);
+            color: #f87171;
+            font-size: 13px;
+            text-align: left;
+            display: none;
+        }
+        .auth-error.show { display: block; }
+        .auth-success {
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: rgba(52,211,153,0.1);
+            border: 1px solid rgba(52,211,153,0.2);
+            color: #34d399;
+            font-size: 13px;
+            text-align: left;
+            display: none;
+        }
+        .auth-success.show { display: block; }
+        .auth-domain-note {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-top: -6px;
+            text-align: left;
+            padding-left: 4px;
+        }
+        .auth-user-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .auth-user-bar:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); }
+        .auth-user-bar svg { opacity: 0.5; }
+        .auth-user-name { color: var(--text-primary); font-weight: 500; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
+
+    <!-- Auth Overlay — shown when not logged in -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <svg viewBox="0 0 60 60" width="80" height="80"><defs><radialGradient id="authIris" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"/><stop offset="100%" stop-color="#1a1a3e"/></radialGradient></defs><circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="#4f8fff" stroke-width="2" opacity="0.9"/><circle cx="30" cy="30" r="22" fill="#4f8fff" opacity="0.18"/><circle cx="30" cy="30" r="16" fill="none" stroke="#4f8fff" stroke-width="2.5" opacity="0.45"/><circle cx="30" cy="30" r="11" fill="url(#authIris)" opacity="0.7"/><circle cx="30" cy="30" r="6" fill="#060810"/><circle cx="30" cy="30" r="4.5" fill="white" opacity="0.5"/><circle cx="23" cy="23" r="3" fill="white" opacity="0.25"/></svg>
+            </div>
+
+            <!-- Login Form -->
+            <div id="loginForm">
+                <div class="auth-title">Welcome to Otto</div>
+                <div class="auth-subtitle">Comvoy Sales Intelligence</div>
+                <div class="auth-error" id="loginError"></div>
+                <form class="auth-form" onsubmit="Auth.login(event)">
+                    <input class="auth-field" type="email" id="loginEmail" placeholder="Email address" required autocomplete="email">
+                    <input class="auth-field" type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
+                    <button class="auth-btn" type="submit" id="loginBtn">Sign In</button>
+                </form>
+                <div class="auth-toggle">Don't have an account? <a onclick="Auth.showSignup()">Sign up</a></div>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="signupForm" style="display:none">
+                <div class="auth-title">Create Account</div>
+                <div class="auth-subtitle">Comvoy Sales Intelligence</div>
+                <div class="auth-error" id="signupError"></div>
+                <div class="auth-success" id="signupSuccess"></div>
+                <form class="auth-form" onsubmit="Auth.signup(event)">
+                    <input class="auth-field" type="text" id="signupName" placeholder="Full name" required autocomplete="name">
+                    <input class="auth-field" type="email" id="signupEmail" placeholder="Email address" required autocomplete="email">
+                    <div class="auth-domain-note">Must be a @foutsbrosinc.com or @smyrnatruck.com address</div>
+                    <input class="auth-field" type="password" id="signupPassword" placeholder="Password (min 6 characters)" required minlength="6" autocomplete="new-password">
+                    <button class="auth-btn" type="submit" id="signupBtn">Create Account</button>
+                </form>
+                <div class="auth-toggle">Already have an account? <a onclick="Auth.showLogin()">Sign in</a></div>
+            </div>
+        </div>
+    </div>
 
     <div class="bg-canvas"><div class="bg-orb-3"></div></div>
 
@@ -4124,7 +4262,7 @@
             <span class="snapshot-count" id="snapshotCount"></span>
         </div>
         <div class="topbar-right">
-            <span class="rep-user-pill" id="topbarUserPill" onclick="Chat.switchUser()" style="display:none" title="Click to switch user"></span>
+            <div class="auth-user-bar" id="authUserBar" onclick="Auth.logout()" title="Sign out" style="display:none"><svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg><span class="auth-user-name" id="authUserName"></span></div>
             <div class="usage-badge" id="usageBadge" title="Token usage this session"></div>
             <button class="btn-home" onclick="goHome()">Home</button>
             <button class="btn-map" onclick="openDealerMap()">Map</button>
@@ -4383,15 +4521,7 @@
                     <div class="eye-glow"></div>
                     <svg class="otto-eye" viewBox="0 0 60 60"><defs><radialGradient id="irisGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"><animate attributeName="stop-color" values="#4f8fff;#00d4ff;#a855f7;#4f8fff" dur="6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#1a1a3e"/></radialGradient><radialGradient id="pupilGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient></defs><circle cx="30" cy="30" r="29" fill="none" stroke="url(#irisGrad)" stroke-width="0.5" opacity="0.3"/><circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="url(#irisGrad)" stroke-width="2" opacity="0.9"/><circle cx="30" cy="30" r="27" fill="url(#irisGrad)" opacity="0.06"/><circle cx="30" cy="30" r="22" fill="url(#irisGrad)" opacity="0.18" style="animation:irisRotate 12s linear infinite"/><circle cx="30" cy="30" r="16" fill="none" stroke="url(#irisGrad)" stroke-width="2.5" opacity="0.45" style="animation:irisRotate 8s linear infinite reverse"/><circle cx="30" cy="30" r="11" fill="url(#irisGrad)" opacity="0.7"/><circle class="otto-pupil" cx="30" cy="30" r="6" fill="#060810"/><circle class="pupil-glow" cx="30" cy="30" r="4.5" fill="url(#pupilGlow)" opacity="0.6"/><circle class="specular-1" cx="23" cy="23" r="3" fill="white" opacity="0.25"/><circle class="specular-2" cx="25" cy="25" r="1.5" fill="white" opacity="0.45"/></svg>
                 </div>
-                <div id="repSelector" style="display:none;text-align:center;padding:20px 0">
-                    <div style="color:var(--text-secondary);font-size:14px;margin-bottom:16px">Who's using Otto?</div>
-                    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-                        <button onclick="Chat.setUser('Wesley White')" class="rep-select-btn">Wesley White</button>
-                        <button onclick="Chat.setUser('Kenneth Greene')" class="rep-select-btn">Kenneth Greene</button>
-                    </div>
-                </div>
                 <div id="resumeBar" style="display:none;justify-content:center;align-items:center;padding:8px 16px;margin:0 auto 12px;max-width:500px;border-radius:12px;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.15);font-size:13px;color:var(--text-secondary)"></div>
-                <div id="welcomeContent">
                 <div class="chat-greeting-text welcome-greet-text" id="welcomeGreet"></div>
                 <div class="hero-cards">
                     <div class="hero-card" onclick="openDealerMap()">
@@ -4416,7 +4546,6 @@
                     </div>
                 </div>
                 <div class="action-cards" id="actionCards" style="display:none"></div>
-                </div><!-- /welcomeContent -->
                 <div class="api-notice" id="apiNotice"><div class="api-notice-icon"><svg viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg></div><div class="api-notice-text"><strong>API key required.</strong> Add <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">ANTHROPIC_API_KEY</code> to your <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">.env</code> file and restart the server.</div></div>
             </div>
         </div>
@@ -4447,6 +4576,169 @@
     </div>
 
     <script>
+        // =====================================================================
+        // AUTH — Supabase Auth (must run before anything else)
+        // =====================================================================
+        const Auth = (function() {
+            const SUPABASE_URL = 'https://ihcgsmlvnjmerziwvsqo.supabase.co';
+            const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImloY2dzbWx2bmptZXJ6aXd2c3FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MjU1NDIsImV4cCI6MjA4ODQwMTU0Mn0.MyUD6rgBV3mJb7n5Iy3eEMpG3iHsHHlCjcYmQfBJpp0';
+            const ALLOWED_DOMAINS = ['foutsbrosinc.com', 'smyrnatruck.com'];
+
+            const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+            let _user = null;
+            let _userName = '';
+
+            function _getDomain(email) {
+                return (email || '').split('@')[1]?.toLowerCase() || '';
+            }
+
+            function _isAllowedDomain(email) {
+                return ALLOWED_DOMAINS.includes(_getDomain(email));
+            }
+
+            function _showError(id, msg) {
+                const el = document.getElementById(id);
+                if (el) { el.textContent = msg; el.classList.add('show'); }
+            }
+
+            function _hideError(id) {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('show');
+            }
+
+            function showLogin() {
+                document.getElementById('loginForm').style.display = '';
+                document.getElementById('signupForm').style.display = 'none';
+                _hideError('loginError');
+                _hideError('signupError');
+            }
+
+            function showSignup() {
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('signupForm').style.display = '';
+                _hideError('loginError');
+                _hideError('signupError');
+            }
+
+            async function login(e) {
+                e.preventDefault();
+                _hideError('loginError');
+                const email = document.getElementById('loginEmail').value.trim();
+                const password = document.getElementById('loginPassword').value;
+                const btn = document.getElementById('loginBtn');
+                btn.disabled = true;
+                btn.textContent = 'Signing in...';
+
+                try {
+                    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+                    if (error) { _showError('loginError', error.message); return; }
+                    _onAuth(data.user);
+                } catch (err) {
+                    _showError('loginError', 'Something went wrong. Try again.');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Sign In';
+                }
+            }
+
+            async function signup(e) {
+                e.preventDefault();
+                _hideError('signupError');
+                const name = document.getElementById('signupName').value.trim();
+                const email = document.getElementById('signupEmail').value.trim();
+                const password = document.getElementById('signupPassword').value;
+                const btn = document.getElementById('signupBtn');
+
+                if (!_isAllowedDomain(email)) {
+                    _showError('signupError', 'Only @foutsbrosinc.com and @smyrnatruck.com email addresses are allowed.');
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.textContent = 'Creating account...';
+
+                try {
+                    const { data, error } = await sb.auth.signUp({
+                        email,
+                        password,
+                        options: { data: { full_name: name } }
+                    });
+                    if (error) { _showError('signupError', error.message); return; }
+                    // Supabase may require email confirmation
+                    if (data.user && !data.user.confirmed_at && data.user.identities?.length === 0) {
+                        _showError('signupError', 'An account with this email already exists.');
+                    } else if (data.session) {
+                        // Auto-confirmed — log them in
+                        _onAuth(data.user);
+                    } else {
+                        // Email confirmation required
+                        const success = document.getElementById('signupSuccess');
+                        if (success) {
+                            success.textContent = 'Account created! Check your email to confirm, then sign in.';
+                            success.classList.add('show');
+                        }
+                    }
+                } catch (err) {
+                    _showError('signupError', 'Something went wrong. Try again.');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Create Account';
+                }
+            }
+
+            function _onAuth(user) {
+                _user = user;
+                _userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+                // Update UI
+                const overlay = document.getElementById('authOverlay');
+                if (overlay) overlay.classList.add('hidden');
+                setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 400);
+                // Show user bar in topbar
+                const bar = document.getElementById('authUserBar');
+                const nameEl = document.getElementById('authUserName');
+                if (bar) bar.style.display = 'flex';
+                if (nameEl) nameEl.textContent = _userName;
+                // Set localStorage for chat session user_name
+                localStorage.setItem('otto_user', _userName);
+            }
+
+            async function logout() {
+                if (!confirm('Sign out of Otto?')) return;
+                await sb.auth.signOut();
+                _user = null;
+                _userName = '';
+                localStorage.removeItem('otto_user');
+                localStorage.removeItem('otto_sid');
+                // Show auth overlay
+                const overlay = document.getElementById('authOverlay');
+                if (overlay) { overlay.style.display = 'flex'; overlay.classList.remove('hidden'); }
+                const bar = document.getElementById('authUserBar');
+                if (bar) bar.style.display = 'none';
+                showLogin();
+            }
+
+            // Check session on page load
+            async function init() {
+                const { data: { session } } = await sb.auth.getSession();
+                if (session?.user) {
+                    _onAuth(session.user);
+                }
+                // Listen for auth state changes
+                sb.auth.onAuthStateChange((event, session) => {
+                    if (event === 'SIGNED_IN' && session?.user) _onAuth(session.user);
+                });
+            }
+
+            // Run immediately
+            init();
+
+            return {
+                login, signup, logout, showLogin, showSignup,
+                getUser: () => _user,
+                getUserName: () => _userName,
+            };
+        })();
+
         // =====================================================================
         // MODULE 0: Core — shared utilities used by all modules
         // =====================================================================
@@ -4653,7 +4945,6 @@
             let sessionCost = 0;
             let _repsLoaded = false;
             let _snapshots = [];
-            let _currentUser = localStorage.getItem('otto_user') || '';
             let _sessionRecovered = false;
 
             // Snapshot glass dropdown
@@ -4674,30 +4965,14 @@
                 }
             }
 
-            function setUser(name) {
-                _currentUser = name;
-                localStorage.setItem('otto_user', name);
-                // Hide rep selector, show welcome content
-                const sel = document.getElementById('repSelector');
-                if (sel) sel.style.display = 'none';
-                const wc = document.getElementById('welcomeContent');
-                if (wc) wc.style.display = '';
-                _updateUserPill();
-                // New session for this user
-                sid = 'otto_' + Date.now();
-                localStorage.setItem('otto_sid', sid);
-                // Try to recover last session for this user
-                _recoverSession();
-            }
-
             async function _recoverSession() {
-                if (!_currentUser || _sessionRecovered) return;
+                const userName = Auth.getUserName();
+                if (!userName || _sessionRecovered) return;
                 try {
-                    const res = await fetchT(API_BASE + '/api/chat-session?user_name=' + encodeURIComponent(_currentUser));
+                    const res = await fetchT(API_BASE + '/api/chat-session?user_name=' + encodeURIComponent(userName));
                     if (!res.ok) return;
                     const data = await res.json();
                     if (data.session_id && data.messages && data.messages.length > 0) {
-                        // Offer to resume
                         const resumeBar = document.getElementById('resumeBar');
                         if (resumeBar) {
                             const msgCount = data.messages.filter(m => m.role === 'user').length;
@@ -4707,7 +4982,6 @@
                             resumeBar.style.display = 'flex';
                         }
                         _sessionRecovered = true;
-                        // Store recovered data for potential resume
                         Chat._recoveredData = data;
                     }
                 } catch(_) {}
@@ -4716,11 +4990,9 @@
             function resumeSession(oldSid) {
                 const data = Chat._recoveredData;
                 if (!data) return;
-                // Use the old session ID so backend finds it
                 sid = data.session_id;
                 localStorage.setItem('otto_sid', sid);
                 _chatHistory = data.messages || [];
-                // Render the messages
                 const msgs = ensureMessages();
                 for (const m of _chatHistory) {
                     if (m.role === 'user') {
@@ -4741,7 +5013,6 @@
             }
 
             function dismissResume() {
-                // Start fresh — new session ID
                 sid = 'otto_' + Date.now();
                 localStorage.setItem('otto_sid', sid);
                 _chatHistory = [];
@@ -4867,7 +5138,7 @@
                 try {
                     await Core.streamChat(
                         API_BASE + '/api/chat/stream?session_id=' + sid,
-                        { message: text, history: _chatHistory, user_name: _currentUser || null },
+                        { message: text, history: _chatHistory, user_name: Auth.getUserName() || null },
                         {
                             onStatus(data) {
                                 const s = think.querySelector('.think-status');
@@ -4973,23 +5244,10 @@
                 const eye = ottoEyeSvgFull();
                 const greet = _pickGreet(null);
                 _lastHomeGreet = greet;
-                const hasUser = !!_currentUser;
-                const repSelectorStyle = hasUser ? 'display:none' : '';
-                const contentStyle = hasUser ? '' : 'display:none';
-                const userPill = hasUser ? `<div style="text-align:center;padding:8px 0"><span class="rep-user-pill" onclick="Chat.switchUser()" title="Switch user"><svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor" style="opacity:0.7"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg>${esc(_currentUser)}</span></div>` : '';
                 return `<div class="welcome" id="welcome">
 <div class="orb-hero"><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
 <div class="eye-glow"></div>${eye}</div>
-<div id="repSelector" style="${repSelectorStyle};text-align:center;padding:20px 0">
-<div style="color:var(--text-secondary);font-size:14px;margin-bottom:16px">Who's using Otto?</div>
-<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-<button onclick="Chat.setUser('Wesley White')" class="rep-select-btn">Wesley White</button>
-<button onclick="Chat.setUser('Kenneth Greene')" class="rep-select-btn">Kenneth Greene</button>
-</div>
-</div>
 <div id="resumeBar" style="display:none;justify-content:center;align-items:center;padding:8px 16px;margin:0 auto 12px;max-width:500px;border-radius:12px;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.15);font-size:13px;color:var(--text-secondary)"></div>
-<div id="welcomeContent" style="${contentStyle}">
-${userPill}
 <div class="chat-greeting-text welcome-greet-text">${greet}</div>
 <div class="hero-cards">
 <div class="hero-card" onclick="openDealerMap()">
@@ -5014,7 +5272,6 @@ ${userPill}
 </div>
 </div>
 <div class="action-cards" id="actionCards" style="display:none"></div>
-</div>
 <div class="api-notice" id="apiNotice"><div class="api-notice-icon"><svg viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg></div><div class="api-notice-text"><strong>API key required.</strong> Add <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">ANTHROPIC_API_KEY</code> to your <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">.env</code> file and restart the server.</div></div>
 </div>`;
             }
@@ -5210,48 +5467,12 @@ ${userPill}
                 } catch(_) {}
             }
 
-            function switchUser() {
-                // Clear current user, show selector
-                _currentUser = '';
-                localStorage.removeItem('otto_user');
-                // Generate new session
-                sid = 'otto_' + Date.now();
-                localStorage.setItem('otto_sid', sid);
-                _chatHistory = [];
-                _sessionRecovered = false;
-                sessionTokens = 0; sessionCost = 0;
-                const ub = $('usageBadge'); if (ub) { ub.textContent = ''; ub.classList.remove('warn'); }
-                goHome();
-            }
-
-            function _updateUserPill() {
-                const pill = document.getElementById('topbarUserPill');
-                if (!pill) return;
-                if (_currentUser) {
-                    pill.innerHTML = '<svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor" style="opacity:0.7"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg> ' + esc(_currentUser);
-                    pill.style.display = 'inline-flex';
-                } else {
-                    pill.style.display = 'none';
-                }
-            }
-
-            function _initRepSelector() {
-                _updateUserPill();
-                if (!_currentUser) {
-                    const sel = document.getElementById('repSelector');
-                    if (sel) sel.style.display = '';
-                    const wc = document.getElementById('welcomeContent');
-                    if (wc) wc.style.display = 'none';
-                } else {
-                    _recoverSession();
-                }
-            }
-
             // Init on load
             loadSnapshots();
             loadReps();
             checkApiStatus();
-            setTimeout(_initRepSelector, 100);
+            // Try session recovery after auth resolves
+            setTimeout(() => { if (Auth.getUserName()) _recoverSession(); }, 500);
 
             return {
                 ask, send, addBot, ensureMessages, clearChat, openChat, goHome, scrollDown,
@@ -5262,8 +5483,8 @@ ${userPill}
                 submitTrip, submitDealer, submitTerritory, loadReps,
                 toggleDropdown, selectSnapshot, checkApiStatus,
                 _pickGreet, _setLastHomeGreet: g => { _lastHomeGreet = g; },
-                setUser, switchUser, resumeSession, dismissResume,
-                getUser: () => _currentUser,
+                resumeSession, dismissResume,
+                getUser: () => Auth.getUserName(),
             };
         })();
 
