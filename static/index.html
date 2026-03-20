@@ -7931,10 +7931,10 @@
                                 <span style="font-size:11px;color:var(--text-tertiary)">${dv.length} dealers</span>
                             </div>
                         </div>
-                        <div style="overflow-x:auto;border-radius:10px;border:1px solid rgba(255,255,255,0.06)">
+                        <div style="overflow:auto;max-height:520px;border-radius:10px;border:1px solid rgba(255,255,255,0.06)">
                             <table id="dv-table" style="width:100%;border-collapse:collapse;font-size:12px">
-                                <thead>
-                                    <tr style="background:rgba(0,212,255,0.06)">
+                                <thead style="position:sticky;top:0;z-index:2">
+                                    <tr style="background:rgba(10,12,20,0.97);backdrop-filter:blur(8px);border-bottom:1px solid rgba(0,212,255,0.15)">
                                         <th class="dv-th" data-col="name" style="text-align:left;padding:10px 12px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;font-size:10px;cursor:pointer;user-select:none;white-space:nowrap">Dealer <span class="dv-arrow"></span></th>
                                         <th class="dv-th" data-col="state" style="text-align:left;padding:10px 8px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;font-size:10px;cursor:pointer;user-select:none;white-space:nowrap">State <span class="dv-arrow"></span></th>
                                         <th class="dv-th" data-col="inventory" style="text-align:right;padding:10px 8px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;font-size:10px;cursor:pointer;user-select:none;white-space:nowrap">Inv <span class="dv-arrow"></span></th>
@@ -8072,6 +8072,8 @@
                             const x = e.clientX - r.left, y = e.clientY - r.top;
                             card.style.setProperty('--spot-x', x + 'px');
                             card.style.setProperty('--spot-y', y + 'px');
+                            // Skip 3D tilt on tall cards (dealer velocity table)
+                            if (r.height > 600) { card.style.transform = ''; return; }
                             const nx = (x / r.width - 0.5), ny = (y / r.height - 0.5);
                             card.style.transform = `perspective(800px) rotateX(${-ny * 3}deg) rotateY(${nx * 3}deg)`;
                         } else {
