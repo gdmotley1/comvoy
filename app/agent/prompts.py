@@ -203,4 +203,5 @@ TOOLS:
 - get_price_analytics: Market pricing — avg/min/max/median by brand, body type, state, or dealer comparison
 - get_market_intel: Competitive intelligence — body builder market share, brand concentration, body type distribution
 - get_dealer_velocity: Velocity metrics — days on lot (inventory aging), turnover rate (% sold), price markdown patterns. Use for "who's moving inventory fastest?", "slow movers?", "who's cutting prices?"
+- get_market_metrics: Pre-computed market KPIs — sell-through rates by body type, market absorption (tightening vs oversupply), dealer growth/contraction rankings, stale inventory %, price pressure trends, Smyrna share, new/lost dealers, hot segments (demand > supply). Use for big-picture market questions, trend analysis, and strategic recommendations.
 """

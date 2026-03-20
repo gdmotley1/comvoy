@@ -563,6 +563,7 @@ def main():
         logger.info(f"Loaded {len(smyrna_detail_rows)} Smyrna detail rows")
 
     # Diffs
+    prev_id = None
     if args.diff:
         snapshots = db.table("report_snapshots").select("id, report_date").order("report_date", desc=True).limit(2).execute()
         if len(snapshots.data) >= 2:
@@ -570,6 +571,13 @@ def main():
             compute_diffs(db, snapshot_id, prev_id)
         else:
             logger.info("Only one snapshot — skipping diff")
+
+    # Snapshot metrics (market KPIs for agent intelligence)
+    try:
+        from app.api.metrics import compute_snapshot_metrics
+        compute_snapshot_metrics(snapshot_id, prev_id)
+    except Exception as e:
+        logger.warning(f"Snapshot metrics failed (non-fatal): {e}")
 
     logger.info("=" * 60)
     logger.info("LOAD COMPLETE")

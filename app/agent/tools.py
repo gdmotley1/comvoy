@@ -597,6 +597,35 @@ TOOL_DEFINITIONS = [
             "required": [],
         },
     },
+    {
+        "name": "get_market_metrics",
+        "description": (
+            "Get pre-computed market intelligence KPIs. Answers: 'which body types move fastest?' "
+            "(sell-through rate), 'is the market tightening?' (absorption rate), 'which dealers are "
+            "growing/shrinking?' (dealer growth), 'stale inventory?' (aging %), 'price pressure?' "
+            "(markdown trends), 'Smyrna share trend?', 'new/lost dealers?', 'hot market segments?' "
+            "(demand > supply). Returns week-over-week metrics. Use for big-picture market questions."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "description": (
+                        "Which metric category: 'sell_through' (body type sell-through rates), "
+                        "'absorption' (sold vs added ratio), 'dealer_growth' (growing/shrinking dealers), "
+                        "'stale_inventory' (aging %), 'price_pressure' (markdown trends by body type), "
+                        "'smyrna_share' (Smyrna penetration details), 'new_lost_dealers' (dealer churn), "
+                        "'hot_segments' (body types where demand > supply), 'summary' (overview), or 'all'."
+                    ),
+                    "enum": ["sell_through", "absorption", "dealer_growth", "stale_inventory",
+                             "price_pressure", "smyrna_share", "new_lost_dealers", "hot_segments", "summary", "all"],
+                    "default": "all",
+                },
+            },
+            "required": [],
+        },
+    },
 ]
 
 
@@ -2030,6 +2059,49 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                 output["note"] = "Turnover and markdown need 2+ snapshots."
 
             return json.dumps(output, default=str)
+
+        elif tool_name == "get_market_metrics":
+            db = get_service_client()
+            # Get latest snapshot metrics
+            row = db.table("snapshot_metrics").select("metrics, computed_at").order(
+                "computed_at", desc=True
+            ).limit(1).execute()
+            if not row.data:
+                return json.dumps({"error": "No market metrics computed yet. Run compute_snapshot_metrics after data load."})
+            metrics = row.data[0]["metrics"]
+            category = tool_input.get("category", "all")
+            if category == "all":
+                # Return everything but trim dealer_growth to top 10 each
+                output = dict(metrics)
+                if "dealer_growth" in output:
+                    output["dealer_growth"] = {
+                        "top_growers": output["dealer_growth"]["top_growers"][:10],
+                        "top_shrinkers": output["dealer_growth"]["top_shrinkers"][:10],
+                    }
+                return json.dumps(output, default=str)
+            # Map category names to metric keys
+            key_map = {
+                "sell_through": "sell_through_by_body_type",
+                "absorption": "absorption_rate",
+                "dealer_growth": "dealer_growth",
+                "stale_inventory": "stale_inventory",
+                "price_pressure": "price_pressure",
+                "smyrna_share": "smyrna_share",
+                "new_lost_dealers": None,  # combine new_dealers + lost_dealers + dealer_churn
+                "hot_segments": "hot_segments",
+                "summary": "summary",
+            }
+            if category == "new_lost_dealers":
+                result = {
+                    "new_dealers": metrics.get("new_dealers", []),
+                    "lost_dealers": metrics.get("lost_dealers", []),
+                    "dealer_churn": metrics.get("dealer_churn", {}),
+                }
+                return json.dumps(result, default=str)
+            key = key_map.get(category)
+            if key and key in metrics:
+                return json.dumps({category: metrics[key]}, default=str)
+            return json.dumps({"error": f"Unknown category: {category}"})
 
         else:
             return json.dumps({"error": f"Unknown tool: {tool_name}"})
