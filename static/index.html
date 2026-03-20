@@ -3052,6 +3052,85 @@
         .tm-dealer-name { font-weight: 500; color: var(--text-primary); flex: 1; }
         .tm-dealer-dist { color: var(--text-tertiary); font-size: 11px; white-space: nowrap; }
 
+        /* Trip card — new named trips */
+        .tm-card-name { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+        .tm-card-meta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-tertiary); }
+        .tm-meta-dot { opacity: 0.4; }
+        .tm-card-rep { margin-left: auto; font-size: 11px; color: var(--text-tertiary); }
+        .tm-status-badge { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 3px 10px; border-radius: 100px; }
+        .tm-trip-card { cursor: pointer; }
+
+        .tm-progress-bar { height: 4px; border-radius: 4px; background: rgba(255,255,255,0.06); margin-top: 10px; overflow: hidden; }
+        .tm-progress-bar.lg { height: 6px; border-radius: 6px; }
+        .tm-progress-fill { height: 100%; border-radius: inherit; transition: width 0.4s ease; }
+
+        .tm-kpi-row { grid-template-columns: repeat(4, 1fr); }
+
+        /* Detail view */
+        .tm-detail-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .tm-back-btn { display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--accent-blue); font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; padding: 6px 0; }
+        .tm-back-btn:hover { opacity: 0.8; }
+        .tm-detail-name { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
+        .tm-detail-info { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+        .tm-detail-status { font-size: 11px; font-weight: 600; text-transform: uppercase; padding: 4px 12px; border-radius: 100px; cursor: pointer; font-family: inherit; appearance: none; -webkit-appearance: none; }
+        .tm-detail-dates { font-size: 13px; color: var(--text-secondary); }
+        .tm-detail-rep { font-size: 13px; color: var(--text-tertiary); }
+        .tm-detail-notes { font-size: 13px; color: var(--text-tertiary); font-style: italic; margin-bottom: 16px; line-height: 1.5; }
+        .tm-detail-progress { margin-bottom: 20px; }
+        .tm-detail-progress-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500; }
+        .tm-detail-actions { display: flex; gap: 8px; }
+
+        /* Day tabs */
+        .tm-day-tabs { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; }
+        .tm-day-tab { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 16px; border-radius: 12px; border: 1px solid var(--glass-border); background: var(--glass); cursor: pointer; font-family: inherit; transition: all 0.2s; min-width: 72px; }
+        .tm-day-tab:hover { border-color: rgba(79,143,255,0.3); }
+        .tm-day-tab.active { border-color: var(--accent-blue); background: rgba(79,143,255,0.08); }
+        .tm-day-tab-num { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+        .tm-day-tab-date { font-size: 10px; color: var(--text-tertiary); }
+        .tm-day-tab-count { font-size: 10px; color: var(--accent-blue); font-weight: 600; }
+
+        /* Day route header */
+        .tm-day-route { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; padding: 10px 14px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 10px; }
+
+        /* Stop cards — checklist */
+        .tm-stops-list { display: flex; flex-direction: column; gap: 4px; }
+        .tm-stop-card { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; transition: all 0.2s; }
+        .tm-stop-card:hover { border-color: rgba(79,143,255,0.2); background: rgba(255,255,255,0.04); }
+        .tm-stop-card.visited { border-left: 3px solid #22c55e; }
+        .tm-stop-card.excluded { opacity: 0.35; }
+        .tm-stop-check { flex-shrink: 0; }
+        .tm-check { width: 18px; height: 18px; accent-color: #22c55e; cursor: pointer; }
+        .tm-stop-order { width: 22px; height: 22px; border-radius: 50%; background: rgba(79,143,255,0.12); color: var(--accent-blue); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .tm-stop-info { flex: 1; min-width: 0; }
+        .tm-stop-name { font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tm-stop-loc { font-size: 11px; color: var(--text-tertiary); }
+        .tm-stop-stats { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+        .tm-stop-score { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 6px; }
+        .tm-stop-veh { font-size: 11px; color: var(--text-tertiary); }
+        .tm-stop-smyrna { font-size: 11px; color: #22c55e; font-weight: 500; }
+        .tm-stop-toggle { background: none; border: none; color: var(--text-tertiary); font-size: 14px; cursor: pointer; padding: 4px 6px; border-radius: 6px; transition: all 0.2s; }
+        .tm-stop-toggle:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+
+        .tm-add-dealers-btn { display: block; width: 100%; padding: 12px; margin-top: 8px; border: 1px dashed rgba(79,143,255,0.3); border-radius: 12px; background: none; color: var(--accent-blue); font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+        .tm-add-dealers-btn:hover { background: rgba(79,143,255,0.06); border-color: rgba(79,143,255,0.5); }
+
+        /* Suggestions modal */
+        .tm-sug-row { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.04); cursor: pointer; transition: background 0.15s; }
+        .tm-sug-row:hover { background: rgba(255,255,255,0.03); }
+        .tm-sug-row.already { opacity: 0.4; }
+        .tm-sug-score { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 6px; min-width: 28px; text-align: center; }
+        .tm-sug-name { font-size: 13px; font-weight: 500; color: var(--text-primary); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tm-sug-loc { font-size: 11px; color: var(--text-tertiary); white-space: nowrap; }
+        .tm-sug-dist { font-size: 11px; color: var(--text-tertiary); white-space: nowrap; }
+
+        /* Estimate result */
+        .tm-estimate-result { margin: 12px 0; padding: 14px; background: rgba(79,143,255,0.05); border: 1px solid rgba(79,143,255,0.15); border-radius: 12px; }
+        .tm-estimate-header { font-size: 13px; font-weight: 600; color: var(--accent-blue); margin-bottom: 10px; }
+        .tm-estimate-day { padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.04); }
+        .tm-estimate-day:first-of-type { border-top: none; }
+        .tm-estimate-day-title { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+        .tm-estimate-day-meta { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+
         /* Inline chat at bottom */
         .tm-chat-wrap {
             position: fixed;
@@ -5856,80 +5935,87 @@
         Effects.initEyeTracking();
 
         // =====================================================================
-        // MODULE 4: TripManager — Trip History & Planner
+        // MODULE 4: TripManager — Named Multi-Day Trips
         // =====================================================================
         const TripManager = (function() {
             const { API_BASE, $, fetchT, esc, fmt, ottoEyeSvg, streamChat, tierColor } = Core;
-            let _tmTrips = [];
-            let _tmEditId = null;
+            let _trips = [];
             let _reps = [];
             let _selectedRepId = null;
             let _tmTab = 'upcoming';
+            let _currentTrip = null;   // full detail of open trip
+            let _viewMode = 'list';    // 'list' | 'detail' | 'create'
+            let _selectedDayIdx = 0;
+            let _suggestions = [];     // dealer suggestions for current day
+            let _daySplits = null;     // smart day-splitting result
             let _tmChatHistory = [];
             let _tmChatBusy = false;
             let _tmChatSid = null;
-            let _expandedPlan = null;
-            let _hotLeadCount = 0;
 
-            const ICONS = {
-                fire: '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 2c.6 0 1.14.38 1.34.94C12.46 5.84 14 7.5 14 10a4 4 0 01-8 0c0-1.3.4-2.5 1.06-3.5-.02.5.2 1 .6 1.3A5.5 5.5 0 0110 2z"/></svg>',
-                trending: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 14l4-4 3 3 5-7"/><path d="M12 6h4v4"/></svg>',
-                target: '<svg viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="1.5"/></svg>',
-                map: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M1 3l6-2 6 2 6-2v14l-6 2-6-2-6 2V3z"/><path d="M7 1v14M13 5v14"/></svg>'
-            };
+            function _fmtDate(s) {
+                if (!s) return '';
+                var p = s.split('-'), m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                return m[parseInt(p[1])-1] + ' ' + parseInt(p[2]) + ', ' + p[0];
+            }
+            function _fmtDateShort(s) {
+                if (!s) return '';
+                var p = s.split('-'), m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                return m[parseInt(p[1])-1] + ' ' + parseInt(p[2]);
+            }
+            function _statusColor(s) {
+                if (s === 'active') return '#22c55e';
+                if (s === 'planned') return '#4f8fff';
+                if (s === 'completed') return 'var(--text-tertiary)';
+                return '#a855f7';
+            }
 
             async function open() {
-                // Move input bar back to its home before replacing scroll content
-                const bar = document.querySelector('.input-bar');
-                const area = document.querySelector('.input-area');
+                var bar = document.querySelector('.input-bar');
+                var area = document.querySelector('.input-area');
                 if (bar && area) area.appendChild(bar);
                 document.body.classList.remove('chatting', 'map-view', 'dashboard', 'greeting-mode');
                 document.body.classList.add('trip-manager');
-                const w = document.getElementById('welcome');
+                var w = document.getElementById('welcome');
                 if (w) w.remove();
                 Chat.setMessagesDiv(null);
-                Chat.getScroll().innerHTML = buildHTML();
-                renderTrips();
+                _viewMode = 'list';
+                _currentTrip = null;
+                Chat.getScroll().innerHTML = buildListHTML();
                 loadReps();
             }
 
 
 
-            function buildHTML() {
+            /* ---- LIST VIEW HTML ---- */
+            function buildListHTML() {
                 var plusIcon = '<svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg>';
                 var userIcon = '<svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="7" r="3.5"/><path d="M3 17.5c0-3.5 3-5.5 7-5.5s7 2 7 5.5"/></svg>';
-                return '<div class="tm-container" id="tmContainer">' +
-                    '<div class="tm-body">' +
-                        /* Header Row: title left, rep controls right */
-                        '<div class="tm-header-row">' +
-                            '<div class="tm-header-title">Trip Planner</div>' +
-                            '<div class="tm-header-controls">' +
-                                '<select class="tm-rep-select" id="tmRepSelect" onchange="tmRepChange(this.value)">' +
-                                    '<option value="">Select rep...</option>' +
-                                '</select>' +
-                                '<button class="tm-icon-btn" onclick="tmShowAddRep()" title="Add Rep">' + userIcon + ' Add Rep</button>' +
-                            '</div>' +
+                return '<div class="tm-container" id="tmContainer"><div class="tm-body">' +
+                    '<div class="tm-header-row">' +
+                        '<div class="tm-header-title">Trips</div>' +
+                        '<div class="tm-header-controls">' +
+                            '<select class="tm-rep-select" id="tmRepSelect" onchange="tmRepChange(this.value)">' +
+                                '<option value="">All reps</option>' +
+                            '</select>' +
+                            '<button class="tm-icon-btn" onclick="tmShowAddRep()" title="Add Rep">' + userIcon + '</button>' +
                         '</div>' +
-
-                        /* KPI Row */
-                        '<div class="tm-kpi-row" id="tmKpiRow">' +
-                            '<div class="tm-kpi-card"><div class="tm-kpi-value" id="tmKpiTrips">&mdash;</div><div class="tm-kpi-label">Upcoming</div></div>' +
-                            '<div class="tm-kpi-card"><div class="tm-kpi-value" id="tmKpiStops">&mdash;</div><div class="tm-kpi-label">Total Trips</div></div>' +
-                            '<div class="tm-kpi-card"><div class="tm-kpi-value" id="tmKpiHot">&mdash;</div><div class="tm-kpi-label">Hot on Route</div></div>' +
-                        '</div>' +
-
-                        /* Single Toolbar: tabs + new trip */
-                        '<div class="tm-controls">' +
-                            '<div class="tm-tab-bar">' +
-                                '<button class="tm-tab active" id="tmTabUpcoming" onclick="tmSetTab(\'upcoming\')">Upcoming</button>' +
-                                '<button class="tm-tab" id="tmTabPast" onclick="tmSetTab(\'past\')">Past</button>' +
-                            '</div>' +
-                            '<button class="tm-new-trip-btn" onclick="showTripForm()">' + plusIcon + ' New Trip</button>' +
-                        '</div>' +
-
-                        '<div class="tm-trips-list" id="tmTripsList"></div>' +
                     '</div>' +
-                '</div>';
+                    '<div class="tm-kpi-row" id="tmKpiRow">' +
+                        '<div class="tm-kpi-card"><div class="tm-kpi-value" id="tmKpiTrips">&mdash;</div><div class="tm-kpi-label">Active</div></div>' +
+                        '<div class="tm-kpi-card"><div class="tm-kpi-value" id="tmKpiStops">&mdash;</div><div class="tm-kpi-label">Dealers</div></div>' +
+                        '<div class="tm-kpi-card"><div class="tm-kpi-value" id="tmKpiVisited">&mdash;</div><div class="tm-kpi-label">Visited</div></div>' +
+                        '<div class="tm-kpi-card"><div class="tm-kpi-value" id="tmKpiCoverage">&mdash;</div><div class="tm-kpi-label">Coverage</div></div>' +
+                    '</div>' +
+                    '<div class="tm-controls">' +
+                        '<div class="tm-tab-bar">' +
+                            '<button class="tm-tab active" id="tmTabUpcoming" onclick="tmSetTab(\'upcoming\')">Upcoming</button>' +
+                            '<button class="tm-tab" id="tmTabPast" onclick="tmSetTab(\'past\')">Past</button>' +
+                            '<button class="tm-tab" id="tmTabAll" onclick="tmSetTab(\'all\')">All</button>' +
+                        '</div>' +
+                        '<button class="tm-new-trip-btn" onclick="showTripForm()">' + plusIcon + ' New Trip</button>' +
+                    '</div>' +
+                    '<div class="tm-trips-list" id="tmTripsList"></div>' +
+                '</div></div>';
             }
 
             async function loadReps() {
@@ -5939,53 +6025,31 @@
                     _reps = await res.json();
                     var sel = document.getElementById('tmRepSelect');
                     if (!sel) return;
-                    sel.innerHTML = '<option value="">Select rep...</option>' +
-                        _reps.map(function(r) {
-                            return '<option value="' + r.id + '">' + esc(r.name) + '</option>';
-                        }).join('');
-                    if (_selectedRepId) {
-                        sel.value = _selectedRepId;
-                        loadTrips();
-                    } else if (_reps.length === 1) {
-                        sel.value = _reps[0].id;
-                        onRepChange(_reps[0].id);
-                    }
+                    sel.innerHTML = '<option value="">All reps</option>' +
+                        _reps.map(function(r) { return '<option value="' + r.id + '">' + esc(r.name) + '</option>'; }).join('');
+                    if (_selectedRepId) sel.value = _selectedRepId;
+                    loadTrips();
                 } catch(e) { console.error('Failed to load reps:', e); }
             }
 
             function onRepChange(repId) {
                 _selectedRepId = repId || null;
-                _expandedPlan = null;
-                if (_selectedRepId) loadTrips();
-                else {
-                    var list = document.getElementById('tmTripsList');
-                    if (list) list.innerHTML = '';
-                }
+                loadTrips();
             }
 
             async function loadTrips() {
-                if (!_selectedRepId) return;
                 var list = document.getElementById('tmTripsList');
                 if (list) list.innerHTML = '<div class="tm-empty">Loading trips...</div>';
                 try {
-                    var [tripsRes, hotRes] = await Promise.all([
-                        fetchT(API_BASE + '/api/travel/plans/' + _selectedRepId),
-                        fetchT(API_BASE + '/api/travel/route-hot-count/' + _selectedRepId).catch(function() { return null; })
-                    ]);
-                    if (!tripsRes.ok) throw new Error('Failed');
-                    _tmTrips = await tripsRes.json();
-                    if (!Array.isArray(_tmTrips)) _tmTrips = _tmTrips.plans || _tmTrips.data || [];
-
-                    var hotCount = 0;
-                    if (hotRes && hotRes.ok) {
-                        var hd = await hotRes.json();
-                        hotCount = hd.hot_count || 0;
-                    }
-                    _hotLeadCount = hotCount;
+                    var url = API_BASE + '/api/travel/trips?limit=50';
+                    if (_selectedRepId) url += '&rep_id=' + _selectedRepId;
+                    var res = await fetchT(url);
+                    if (!res.ok) throw new Error('Failed');
+                    _trips = await res.json();
+                    if (!Array.isArray(_trips)) _trips = [];
                     renderTrips();
                 } catch(e) {
-                    if (list) list.innerHTML = '<div class="tm-empty"><div class="tm-empty-title">Failed to load trips</div><div class="tm-empty-sub">Check your connection and try again.</div></div>';
-                    updateKPIs('—', '—', '—');
+                    if (list) list.innerHTML = '<div class="tm-empty"><div class="tm-empty-title">Failed to load trips</div></div>';
                 }
             }
 
@@ -5994,36 +6058,30 @@
                 if (!list) return;
                 var today = new Date().toISOString().slice(0, 10);
 
-                if (!_selectedRepId) {
-                    list.innerHTML = '<div class="tm-empty">' +
-                        '<div class="tm-empty-icon"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="18" r="8"/><path d="M8 42c0-8 7-13 16-13s16 5 16 13"/></svg></div>' +
-                        '<div class="tm-empty-title">Select a rep</div>' +
-                        '<div class="tm-empty-sub">Choose a sales rep to view and manage their trip schedule.</div>' +
-                    '</div>';
-                    updateKPIs(0, 0, 0);
-                    return;
-                }
-
-                var filtered = _tmTrips.filter(function(t) {
-                    if (_tmTab === 'upcoming') return t.travel_date >= today;
-                    return t.travel_date < today;
-                }).sort(function(a, b) {
-                    return _tmTab === 'upcoming'
-                        ? a.travel_date.localeCompare(b.travel_date)
-                        : b.travel_date.localeCompare(a.travel_date);
+                var filtered = _trips.filter(function(t) {
+                    if (_tmTab === 'upcoming') return t.end_date >= today && t.status !== 'completed';
+                    if (_tmTab === 'past') return t.end_date < today || t.status === 'completed';
+                    return true;
                 });
 
-                var upcoming = _tmTrips.filter(function(t) { return t.travel_date >= today; });
-                updateKPIs(upcoming.length, _tmTrips.length, _hotLeadCount);
+                // KPIs
+                var active = _trips.filter(function(t) { return t.status === 'active' || (t.status === 'planned' && t.start_date <= today && t.end_date >= today); });
+                var totalDealers = 0, totalVisited = 0;
+                _trips.forEach(function(t) { totalDealers += (t.dealer_count || 0); totalVisited += (t.visited_count || 0); });
+                var coverage = totalDealers > 0 ? Math.round(totalVisited / totalDealers * 100) : 0;
+
+                var el;
+                el = document.getElementById('tmKpiTrips'); if (el) el.textContent = active.length;
+                el = document.getElementById('tmKpiStops'); if (el) el.textContent = totalDealers;
+                el = document.getElementById('tmKpiVisited'); if (el) el.textContent = totalVisited;
+                el = document.getElementById('tmKpiCoverage'); if (el) el.textContent = coverage + '%';
 
                 if (filtered.length === 0) {
-                    var routeIcon = '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 36V16a8 8 0 0116 0v16a8 8 0 0016 0V12"/><circle cx="12" cy="40" r="4"/><circle cx="44" cy="8" r="4"/></svg>';
                     var plusSvg = '<svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 4v12M4 10h12"/></svg>';
                     list.innerHTML = '<div class="tm-empty">' +
-                        '<div class="tm-empty-icon">' + routeIcon + '</div>' +
-                        '<div class="tm-empty-title">' + (_tmTab === 'upcoming' ? 'No upcoming trips' : 'No past trips') + '</div>' +
-                        '<div class="tm-empty-sub">' + (_tmTab === 'upcoming' ? 'Plan your next route to start visiting dealers in your territory.' : 'Completed trips will appear here.') + '</div>' +
-                        (_tmTab === 'upcoming' ? '<button class="tm-empty-btn" onclick="showTripForm()">' + plusSvg + ' New Trip</button>' : '') +
+                        '<div class="tm-empty-title">No trips yet</div>' +
+                        '<div class="tm-empty-sub">Plan a multi-day trip to start tracking dealer visits.</div>' +
+                        '<button class="tm-empty-btn" onclick="showTripForm()">' + plusSvg + ' New Trip</button>' +
                     '</div>';
                     return;
                 }
@@ -6031,392 +6089,476 @@
                 list.innerHTML = filtered.map(function(t) { return buildTripCard(t, today); }).join('');
             }
 
-            function updateKPIs(tripCount, stopCount, hotCount) {
-                var el;
-                el = document.getElementById('tmKpiTrips');
-                if (el) el.textContent = tripCount;
-                el = document.getElementById('tmKpiStops');
-                if (el) el.textContent = stopCount;
-                el = document.getElementById('tmKpiHot');
-                if (el) el.textContent = hotCount;
+            function buildTripCard(trip, today) {
+                var isActive = trip.start_date <= today && trip.end_date >= today && trip.status !== 'completed';
+                var isPast = trip.end_date < today || trip.status === 'completed';
+                var borderColor = isActive ? '#22c55e' : (isPast ? 'rgba(255,255,255,0.12)' : 'rgba(79,143,255,0.5)');
+
+                var progress = trip.dealer_count > 0 ? Math.round((trip.visited_count || 0) / trip.dealer_count * 100) : 0;
+                var dayCount = trip.day_count || 0;
+                var dateRange = _fmtDateShort(trip.start_date);
+                if (trip.start_date !== trip.end_date) dateRange += ' — ' + _fmtDateShort(trip.end_date);
+
+                var statusBadge = '<span class="tm-status-badge" style="background:' + _statusColor(trip.status) + '20;color:' + _statusColor(trip.status) + '">' + (trip.status || 'draft') + '</span>';
+
+                return '<div class="tm-trip-card" style="border-left-color:' + borderColor + '" onclick="tmOpenTrip(\'' + trip.id + '\')">' +
+                    '<div class="tm-trip-top">' +
+                        statusBadge +
+                        '<span class="tm-card-date">' + dateRange + '</span>' +
+                        '<span class="tm-card-rep">' + esc(trip.rep_name || '') + '</span>' +
+                    '</div>' +
+                    '<div class="tm-card-name">' + esc(trip.name) + '</div>' +
+                    '<div class="tm-card-meta">' +
+                        '<span>' + dayCount + ' day' + (dayCount !== 1 ? 's' : '') + '</span>' +
+                        '<span class="tm-meta-dot">·</span>' +
+                        '<span>' + (trip.dealer_count || 0) + ' dealers</span>' +
+                        '<span class="tm-meta-dot">·</span>' +
+                        '<span>' + (trip.visited_count || 0) + ' visited</span>' +
+                    '</div>' +
+                    (trip.dealer_count > 0 ? '<div class="tm-progress-bar"><div class="tm-progress-fill" style="width:' + progress + '%;background:' + (progress >= 80 ? '#22c55e' : progress >= 40 ? '#eab308' : '#4f8fff') + '"></div></div>' : '') +
+                '</div>';
             }
 
-            function buildTripCard(trip, today) {
-                var d = trip.travel_date;
-                var isToday = d === today;
-                var isPast = d < today;
-                var badgeClass = isToday ? 'today' : (isPast ? 'past' : 'upcoming');
-                var badgeText = isToday ? 'Today' : _formatDate(d);
-                var arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
-                var expanded = _expandedPlan === trip.id;
+            /* ---- DETAIL VIEW ---- */
+            async function openTrip(tripId) {
+                _viewMode = 'detail';
+                var scroll = Chat.getScroll();
+                scroll.innerHTML = '<div class="tm-container"><div class="tm-body"><div class="tm-empty">Loading trip...</div></div></div>';
+                try {
+                    var res = await fetchT(API_BASE + '/api/travel/trips/' + tripId);
+                    if (!res.ok) throw new Error('Not found');
+                    _currentTrip = await res.json();
+                    _selectedDayIdx = 0;
+                    renderDetail();
+                } catch(e) {
+                    scroll.innerHTML = '<div class="tm-container"><div class="tm-body"><div class="tm-empty"><div class="tm-empty-title">Failed to load trip</div></div></div></div>';
+                }
+            }
 
-                var cardClass = isToday ? 'today-card' : (isPast ? 'past-card' : '');
-                var html = '<div class="tm-trip-card ' + cardClass + '" id="tmCard_' + trip.id + '">' +
-                    '<div class="tm-trip-top">' +
-                        '<span class="tm-card-badge ' + badgeClass + '">' + badgeText + '</span>' +
-                        '<span class="tm-card-date">' + (trip.start_location || '?') + '</span>' +
+            function renderDetail() {
+                var t = _currentTrip;
+                if (!t) return;
+                var scroll = Chat.getScroll();
+                var days = t.days || [];
+                var today = new Date().toISOString().slice(0, 10);
+
+                var backArrow = '<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 10H5M5 10l5-5M5 10l5 5"/></svg>';
+
+                var totalStops = 0, visitedStops = 0;
+                days.forEach(function(d) { (d.stops || []).forEach(function(s) { if (s.is_included) { totalStops++; if (s.visited) visitedStops++; } }); });
+                var progress = totalStops > 0 ? Math.round(visitedStops / totalStops * 100) : 0;
+
+                var statusOpts = ['draft','planned','active','completed'];
+                var statusSel = '<select class="tm-detail-status" onchange="tmUpdateTripStatus(this.value)" style="background:' + _statusColor(t.status) + '20;color:' + _statusColor(t.status) + ';border:1px solid ' + _statusColor(t.status) + '40">' +
+                    statusOpts.map(function(s) { return '<option value="' + s + '"' + (s === t.status ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select>';
+
+                var html = '<div class="tm-container"><div class="tm-body">' +
+                    '<div class="tm-detail-header">' +
+                        '<button class="tm-back-btn" onclick="tmBackToList()">' + backArrow + ' Trips</button>' +
+                        '<div class="tm-detail-actions">' +
+                            '<button class="tm-card-act danger" onclick="tmDeleteTrip(\'' + t.id + '\')">Delete</button>' +
+                        '</div>' +
                     '</div>' +
-                    '<div class="tm-card-route">' + (trip.is_round_trip ? '&#x21BB; ' + esc(trip.start_location || '') + '  (round trip)' : arrow + ' ' + esc(trip.start_location || '') + '  →  ' + esc(trip.end_location || '')) + '</div>' +
-                    (trip.notes ? '<div class="tm-card-notes">' + esc(trip.notes) + '</div>' : '') +
-                    '<div class="tm-card-actions">' +
-                        '<button class="tm-card-act primary" onclick="tmExpandDealers(\'' + trip.id + '\')">' + (expanded ? 'Hide Dealers' : 'View Dealers') + '</button>' +
-                        '<button class="tm-card-act primary" onclick="tmViewOnMap(\'' + trip.id + '\')">View on Map</button>' +
-                        '<button class="tm-card-act" onclick="showTripForm(\'' + trip.id + '\')">Edit</button>' +
-                        '<button class="tm-card-act danger" onclick="deleteTripPlan(\'' + trip.id + '\')">Delete</button>' +
+                    '<div class="tm-detail-name">' + esc(t.name) + '</div>' +
+                    '<div class="tm-detail-info">' +
+                        statusSel +
+                        '<span class="tm-detail-dates">' + _fmtDateShort(t.start_date) + ' — ' + _fmtDateShort(t.end_date) + '</span>' +
+                        '<span class="tm-detail-rep">' + esc(t.rep_name || '') + '</span>' +
+                    '</div>' +
+                    (t.notes ? '<div class="tm-detail-notes">' + esc(t.notes) + '</div>' : '') +
+                    '<div class="tm-detail-progress">' +
+                        '<div class="tm-detail-progress-label">' + visitedStops + ' / ' + totalStops + ' dealers visited (' + progress + '%)</div>' +
+                        '<div class="tm-progress-bar lg"><div class="tm-progress-fill" style="width:' + progress + '%;background:' + (progress >= 80 ? '#22c55e' : progress >= 40 ? '#eab308' : '#4f8fff') + '"></div></div>' +
                     '</div>';
 
-                if (expanded) {
-                    html += '<div class="tm-dealers" id="tmDealers_' + trip.id + '"><div style="color:var(--text-tertiary);font-size:12px">Loading dealers...</div></div>';
-                }
-                html += '</div>';
-                return html;
-            }
+                // Day tabs
+                if (days.length > 0) {
+                    html += '<div class="tm-day-tabs">';
+                    days.forEach(function(d, i) {
+                        var dayStops = (d.stops || []).filter(function(s) { return s.is_included; });
+                        var dayVisited = dayStops.filter(function(s) { return s.visited; }).length;
+                        var isSelected = i === _selectedDayIdx;
+                        html += '<button class="tm-day-tab' + (isSelected ? ' active' : '') + '" onclick="tmSelectDay(' + i + ')">' +
+                            '<span class="tm-day-tab-num">Day ' + d.day_number + '</span>' +
+                            '<span class="tm-day-tab-date">' + _fmtDateShort(d.travel_date) + '</span>' +
+                            '<span class="tm-day-tab-count">' + dayVisited + '/' + dayStops.length + '</span>' +
+                        '</button>';
+                    });
+                    html += '</div>';
 
-            function _formatDate(dateStr) {
-                var parts = dateStr.split('-');
-                var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-                return months[parseInt(parts[1])-1] + ' ' + parseInt(parts[2]) + ', ' + parts[0];
-            }
-
-            function setTab(tab) {
-                _tmTab = tab;
-                _expandedPlan = null;
-                var u = document.getElementById('tmTabUpcoming');
-                var p = document.getElementById('tmTabPast');
-                if (u) u.classList.toggle('active', tab === 'upcoming');
-                if (p) p.classList.toggle('active', tab === 'past');
-                renderTrips();
-            }
-
-            async function expandDealers(planId) {
-                if (_expandedPlan === planId) {
-                    _expandedPlan = null;
-                    renderTrips();
-                    return;
-                }
-                _expandedPlan = planId;
-                renderTrips();
-                var container = document.getElementById('tmDealers_' + planId);
-                if (!container) return;
-                var trip = _tmTrips.find(function(t) { return t.id === planId; });
-                if (!trip) return;
-                try {
-                    var res = await fetchT(API_BASE + '/api/travel/route-dealers?rep_id=' + _selectedRepId + '&travel_date=' + trip.travel_date + '&buffer_miles=25&limit=50');
-                    if (!res.ok) throw new Error('Failed');
-                    var data = await res.json();
-                    var dealers = data.dealers || [];
-                    if (dealers.length === 0) {
-                        container.innerHTML = '<div style="color:var(--text-tertiary);font-size:12px">No dealers found along this route</div>';
-                        return;
-                    }
-                    container.innerHTML = dealers.map(function(d) {
-                        var tier = (d.lead_tier || d.tier || 'cold').toLowerCase();
-                        return '<div class="tm-dealer-row">' +
-                            '<span class="tm-dealer-score ' + tier + '">' + (d.lead_score || d.score || '—') + '</span>' +
-                            '<span class="tm-dealer-name">' + esc(d.name) + '</span>' +
-                            '<span class="tm-dealer-dist">' + (d.dist_from_route_mi != null ? d.dist_from_route_mi.toFixed(1) + ' mi' : '') + '</span>' +
+                    // Current day content
+                    var day = days[_selectedDayIdx];
+                    if (day) {
+                        var arrow = '<svg viewBox="0 0 20 20" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 10h12M10 4l6 6-6 6"/></svg>';
+                        html += '<div class="tm-day-route">' +
+                            '<span>' + esc(day.start_location) + '</span>' +
+                            (day.is_round_trip ? '<span style="opacity:0.4"> ↻ round trip</span>' : ' ' + arrow + ' <span>' + esc(day.end_location) + '</span>') +
                         '</div>';
-                    }).join('');
-                } catch(e) {
-                    container.innerHTML = '<div style="color:var(--text-tertiary);font-size:12px">Failed to load dealers</div>';
-                }
-            }
 
-            async function viewOnMap(planId) {
-                var trip = _tmTrips.find(function(t) { return t.id === planId; });
-                if (!trip) return;
-                DealerMap.open();
-                await new Promise(function(r) { setTimeout(r, 300); });
-                var rep = _reps.find(function(r) { return r.id === _selectedRepId; });
-                if (rep) await RouteOverlay.selectRep(_selectedRepId, rep.name);
-                await RouteOverlay.selectTrip(planId);
-            }
-
-            /* Inline chat */
-            async function tmChatSend() {
-                var input = document.getElementById('tmChatInput');
-                var sendBtn = document.getElementById('tmChatSendBtn');
-                if (!input) return;
-                var text = input.value.trim();
-                if (!text || _tmChatBusy) return;
-                var msgsEl = document.getElementById('tmChatMsgs');
-                if (!msgsEl) return;
-                msgsEl.classList.add('has-msgs');
-
-                // User message
-                var userDiv = document.createElement('div');
-                userDiv.className = 'tm-chat-msg user';
-                userDiv.innerHTML = '<span>' + esc(text) + '</span>';
-                msgsEl.appendChild(userDiv);
-                input.value = '';
-                msgsEl.scrollTop = msgsEl.scrollHeight;
-
-                _tmChatBusy = true;
-                if (sendBtn) sendBtn.disabled = true;
-                _tmChatHistory.push({ role: 'user', content: text });
-
-                // Thinking
-                var thinkDiv = document.createElement('div');
-                thinkDiv.className = 'tm-chat-msg bot';
-                thinkDiv.innerHTML = '<div class="tm-chat-bubble" style="opacity:0.5">Thinking...</div>';
-                msgsEl.appendChild(thinkDiv);
-                msgsEl.scrollTop = msgsEl.scrollHeight;
-
-                var accumulated = '', bubbleEl = null;
-                try {
-                    await streamChat(
-                        API_BASE + '/api/chat/stream?session_id=' + _tmChatSid,
-                        { message: text, history: _tmChatHistory },
-                        {
-                            onStatus: function() {},
-                            onDelta: function(data) {
-                                if (!bubbleEl) {
-                                    thinkDiv.innerHTML = '<div class="tm-chat-bubble"></div>';
-                                    bubbleEl = thinkDiv.querySelector('.tm-chat-bubble');
-                                }
-                                accumulated += data.text;
-                                if (!bubbleEl._fmtTimer) {
-                                    bubbleEl._fmtTimer = setTimeout(function() {
-                                        bubbleEl.innerHTML = fmt(accumulated);
-                                        bubbleEl._fmtTimer = null;
-                                        msgsEl.scrollTop = msgsEl.scrollHeight;
-                                    }, 100);
-                                }
-                            },
-                            onDone: function(data) {
-                                if (bubbleEl && bubbleEl._fmtTimer) {
-                                    clearTimeout(bubbleEl._fmtTimer);
-                                    bubbleEl._fmtTimer = null;
-                                }
-                                if (data.full_text) accumulated = data.full_text;
-                                if (bubbleEl) bubbleEl.innerHTML = fmt(accumulated);
-                                else thinkDiv.innerHTML = '<div class="tm-chat-bubble">' + fmt(accumulated) + '</div>';
-                                _tmChatHistory.push({ role: 'assistant', content: accumulated });
-                                msgsEl.scrollTop = msgsEl.scrollHeight;
-                            },
-                            onError: function(msg) {
-                                thinkDiv.innerHTML = '<div class="tm-chat-bubble" style="color:#f87171">Error: ' + esc(msg) + '</div>';
-                                _tmChatHistory.pop();
-                            }
+                        var stops = (day.stops || []).sort(function(a, b) { return a.stop_order - b.stop_order; });
+                        if (stops.length === 0) {
+                            html += '<div class="tm-empty" style="padding:30px"><div class="tm-empty-title">No dealers added yet</div>' +
+                                '<button class="tm-empty-btn" onclick="tmLoadSuggestions()">Find Dealers Along Route</button></div>';
+                        } else {
+                            html += '<div class="tm-stops-list" id="tmStopsList">';
+                            stops.forEach(function(s, i) {
+                                var tier = (s.lead_tier || 'cold').toLowerCase();
+                                var tierClr = tierColor(tier);
+                                var checked = s.visited ? ' checked' : '';
+                                var included = s.is_included;
+                                var dimClass = !included ? ' excluded' : '';
+                                html += '<div class="tm-stop-card' + dimClass + (s.visited ? ' visited' : '') + '" id="tmStop_' + s.id + '">' +
+                                    '<div class="tm-stop-check">' +
+                                        '<input type="checkbox" ' + checked + ' onchange="tmToggleVisit(\'' + s.id + '\', this.checked)" class="tm-check">' +
+                                    '</div>' +
+                                    '<div class="tm-stop-order">' + (i + 1) + '</div>' +
+                                    '<div class="tm-stop-info">' +
+                                        '<div class="tm-stop-name">' + esc(s.dealer_name) + '</div>' +
+                                        '<div class="tm-stop-loc">' + esc(s.city) + ', ' + esc(s.state) + '</div>' +
+                                    '</div>' +
+                                    '<div class="tm-stop-stats">' +
+                                        '<span class="tm-stop-score" style="background:' + tierClr + '20;color:' + tierClr + '">' + (s.lead_score || '—') + '</span>' +
+                                        '<span class="tm-stop-veh">' + (s.total_vehicles || 0) + ' veh</span>' +
+                                        (s.smyrna_units > 0 ? '<span class="tm-stop-smyrna">' + s.smyrna_units + ' Smyrna</span>' : '') +
+                                    '</div>' +
+                                    '<button class="tm-stop-toggle" onclick="tmToggleInclude(\'' + s.id + '\', ' + (included ? 'false' : 'true') + ')" title="' + (included ? 'Exclude' : 'Include') + '">' +
+                                        (included ? '✕' : '✓') +
+                                    '</button>' +
+                                '</div>';
+                            });
+                            html += '</div>';
+                            html += '<button class="tm-add-dealers-btn" onclick="tmLoadSuggestions()">+ Add More Dealers</button>';
                         }
-                    );
-                } catch(e) {
-                    if (!accumulated) {
-                        thinkDiv.innerHTML = '<div class="tm-chat-bubble" style="color:#f87171">Connection error</div>';
-                        _tmChatHistory.pop();
                     }
-                } finally {
-                    _tmChatBusy = false;
-                    if (sendBtn) sendBtn.disabled = false;
-                    if (input) input.focus();
+                } else {
+                    html += '<div class="tm-empty" style="padding:30px"><div class="tm-empty-title">No days planned</div><div class="tm-empty-sub">This trip has no days. Add routes to start planning.</div></div>';
                 }
+
+                html += '</div></div>';
+                scroll.innerHTML = html;
             }
 
-            function tmChatAsk(query) {
-                var input = document.getElementById('tmChatInput');
-                if (input) input.value = query;
-                tmChatSend();
+            function selectDay(idx) {
+                _selectedDayIdx = idx;
+                renderDetail();
             }
 
-            /* Add Rep modal */
-            function showAddRep() {
+            async function toggleVisit(stopId, visited) {
+                try {
+                    await fetchT(API_BASE + '/api/travel/trip-stops/' + stopId, {
+                        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ visited: visited })
+                    });
+                    // Update local state
+                    if (_currentTrip) {
+                        _currentTrip.days.forEach(function(d) {
+                            (d.stops || []).forEach(function(s) {
+                                if (s.id === stopId) { s.visited = visited; if (visited) s.visited_at = new Date().toISOString(); }
+                            });
+                        });
+                        renderDetail();
+                    }
+                } catch(e) { console.error('Toggle visit failed:', e); }
+            }
+
+            async function toggleInclude(stopId, include) {
+                try {
+                    await fetchT(API_BASE + '/api/travel/trip-stops/' + stopId, {
+                        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ is_included: include })
+                    });
+                    if (_currentTrip) {
+                        _currentTrip.days.forEach(function(d) {
+                            (d.stops || []).forEach(function(s) { if (s.id === stopId) s.is_included = include; });
+                        });
+                        renderDetail();
+                    }
+                } catch(e) { console.error('Toggle include failed:', e); }
+            }
+
+            async function loadSuggestions() {
+                if (!_currentTrip || !_currentTrip.days[_selectedDayIdx]) return;
+                var day = _currentTrip.days[_selectedDayIdx];
                 var overlay = document.createElement('div');
                 overlay.className = 'tm-overlay';
                 overlay.id = 'tmOverlay';
                 overlay.onclick = function(e) { if (e.target === overlay) closeForm(); };
-                overlay.innerHTML = '<div class="tm-modal">' +
-                    '<div class="tm-modal-title">Add Sales Rep</div>' +
-                    '<div class="tm-add-rep-fields">' +
-                        '<div class="tm-add-rep-row">' +
-                            '<div class="tm-field"><label>First Name *</label><input type="text" id="tmRepFirst" placeholder="Wesley"></div>' +
-                            '<div class="tm-field"><label>Last Name *</label><input type="text" id="tmRepLast" placeholder="White"></div>' +
-                        '</div>' +
-                        '<div class="tm-field"><label>Email *</label><input type="email" id="tmRepEmail" placeholder="wwhite@comvoy.com"></div>' +
-                        '<div class="tm-field"><label>Territory States (optional)</label>' +
-                            '<div class="tm-tags-input" id="tmRepStatesWrap" onclick="document.getElementById(\'tmRepStatesInput\').focus()">' +
-                                '<input type="text" id="tmRepStatesInput" placeholder="Type state (e.g. GA) + Enter" onkeydown="tmTagKey(event,\'states\')">' +
-                            '</div>' +
-                        '</div>' +
-                        '<div class="tm-field"><label>Focus Body Types (optional)</label>' +
-                            '<div class="tm-tags-input" id="tmRepBodyWrap" onclick="document.getElementById(\'tmRepBodyInput\').focus()">' +
-                                '<input type="text" id="tmRepBodyInput" placeholder="Type body type + Enter" onkeydown="tmTagKey(event,\'body\')">' +
-                            '</div>' +
-                        '</div>' +
-                    '</div>' +
+                overlay.innerHTML = '<div class="tm-modal" style="max-width:560px;max-height:80vh;display:flex;flex-direction:column;">' +
+                    '<div class="tm-modal-title">Dealers Along Route — Day ' + day.day_number + '</div>' +
+                    '<div style="flex:1;overflow-y:auto;padding:0 4px" id="tmSugList"><div style="color:var(--text-tertiary);font-size:13px;text-align:center;padding:20px">Searching for dealers...</div></div>' +
                     '<div class="tm-modal-actions">' +
                         '<button class="tm-modal-btn secondary" onclick="closeTripForm()">Cancel</button>' +
-                        '<button class="tm-modal-btn primary" id="tmSaveRepBtn" onclick="tmSaveRep()">Add Rep</button>' +
+                        '<button class="tm-modal-btn primary" id="tmAddSelectedBtn" onclick="tmAddSelected()">Add Selected</button>' +
                     '</div></div>';
                 document.body.appendChild(overlay);
-                setTimeout(function() { var f = document.getElementById('tmRepFirst'); if (f) f.focus(); }, 100);
+
+                try {
+                    var res = await fetchT(API_BASE + '/api/travel/trips/' + _currentTrip.id + '/days/' + day.id + '/suggestions?buffer_miles=25&limit=40');
+                    if (!res.ok) throw new Error('Failed');
+                    var data = await res.json();
+                    _suggestions = data.dealers || [];
+                    var listEl = document.getElementById('tmSugList');
+                    if (!listEl) return;
+                    if (_suggestions.length === 0) {
+                        listEl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-tertiary)">No dealers found along this route</div>';
+                        return;
+                    }
+                    listEl.innerHTML = _suggestions.map(function(d, i) {
+                        var tier = (d.lead_tier || 'cold').toLowerCase();
+                        var clr = tierColor(tier);
+                        var already = d.already_added;
+                        return '<label class="tm-sug-row' + (already ? ' already' : '') + '">' +
+                            '<input type="checkbox" class="tm-check" value="' + d.dealer_id + '"' + (already ? ' checked disabled' : '') + '>' +
+                            '<span class="tm-sug-score" style="background:' + clr + '20;color:' + clr + '">' + (d.lead_score || '—') + '</span>' +
+                            '<span class="tm-sug-name">' + esc(d.name) + '</span>' +
+                            '<span class="tm-sug-loc">' + esc(d.city) + ', ' + esc(d.state) + '</span>' +
+                            '<span class="tm-sug-dist">' + (d.dist_from_route_mi || 0) + ' mi</span>' +
+                        '</label>';
+                    }).join('');
+                } catch(e) {
+                    var el = document.getElementById('tmSugList');
+                    if (el) el.innerHTML = '<div style="text-align:center;padding:20px;color:#f87171">Failed to load suggestions</div>';
+                }
             }
 
-            var _repTags = { states: [], body: [] };
-
-            function tagKey(e, type) {
-                if (e.key !== 'Enter' && e.key !== ',') return;
-                e.preventDefault();
-                var input = e.target;
-                var val = input.value.trim().replace(/,/g, '');
-                if (!val) return;
-                if (type === 'states') val = val.toUpperCase().slice(0, 2);
-                if (_repTags[type].includes(val)) { input.value = ''; return; }
-                _repTags[type].push(val);
-                input.value = '';
-                var wrap = type === 'states' ? document.getElementById('tmRepStatesWrap') : document.getElementById('tmRepBodyWrap');
-                _renderTags(wrap, type);
+            async function addSelected() {
+                var day = _currentTrip && _currentTrip.days[_selectedDayIdx];
+                if (!day) return;
+                var checks = document.querySelectorAll('#tmSugList input[type=checkbox]:checked:not(:disabled)');
+                var stops = [];
+                checks.forEach(function(cb, i) { stops.push({ dealer_id: cb.value, stop_order: (day.stops || []).length + i }); });
+                if (stops.length === 0) { closeForm(); return; }
+                var btn = document.getElementById('tmAddSelectedBtn');
+                if (btn) { btn.disabled = true; btn.textContent = 'Adding...'; }
+                try {
+                    await fetchT(API_BASE + '/api/travel/trips/' + _currentTrip.id + '/days/' + day.id + '/stops', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ stops: stops })
+                    });
+                    closeForm();
+                    openTrip(_currentTrip.id);
+                } catch(e) {
+                    alert('Failed to add dealers');
+                    if (btn) { btn.disabled = false; btn.textContent = 'Add Selected'; }
+                }
             }
 
-            function removeTag(type, idx) {
-                _repTags[type].splice(idx, 1);
-                var wrap = type === 'states' ? document.getElementById('tmRepStatesWrap') : document.getElementById('tmRepBodyWrap');
-                _renderTags(wrap, type);
+            async function updateTripStatus(status) {
+                if (!_currentTrip) return;
+                try {
+                    await fetchT(API_BASE + '/api/travel/trips/' + _currentTrip.id, {
+                        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: status })
+                    });
+                    _currentTrip.status = status;
+                    renderDetail();
+                } catch(e) { console.error('Status update failed:', e); }
             }
 
-            function _renderTags(wrap, type) {
-                if (!wrap) return;
-                var tags = _repTags[type].map(function(t, i) {
-                    return '<span class="tm-tag">' + esc(t) + '<span class="tm-tag-x" onclick="tmRemoveTag(\'' + type + '\',' + i + ')">×</span></span>';
-                }).join('');
-                var inputEl = wrap.querySelector('input');
-                var inputHTML = inputEl ? inputEl.outerHTML : '';
-                wrap.innerHTML = tags + inputHTML;
+            function backToList() {
+                _viewMode = 'list';
+                _currentTrip = null;
+                Chat.getScroll().innerHTML = buildListHTML();
+                loadReps();
+            }
+
+            /* ---- CREATE TRIP WIZARD ---- */
+            function showForm() {
+                var overlay = document.createElement('div');
+                overlay.className = 'tm-overlay';
+                overlay.id = 'tmOverlay';
+                overlay.onclick = function(e) { if (e.target === overlay) closeForm(); };
+
+                var repOptions = '<option value="">Select rep...</option>' +
+                    _reps.map(function(r) { return '<option value="' + r.id + '">' + esc(r.name) + '</option>'; }).join('');
+
+                overlay.innerHTML = '<div class="tm-modal" style="max-width:520px">' +
+                    '<div class="tm-modal-title">Plan a New Trip</div>' +
+                    '<div class="tm-field"><label>Trip Name</label><input type="text" id="tmTripName" placeholder="e.g. March NC Service Run"></div>' +
+                    '<div class="tm-field"><label>Assign To</label><select id="tmTripRep" class="tm-rep-select" style="width:100%;height:42px">' + repOptions + '</select></div>' +
+                    '<div style="display:flex;gap:10px">' +
+                        '<div class="tm-field" style="flex:1"><label>Start Date</label><input type="date" id="tmTripStart"></div>' +
+                        '<div class="tm-field" style="flex:1"><label>End Date</label><input type="date" id="tmTripEnd"></div>' +
+                    '</div>' +
+                    '<div class="tm-field"><label>Start Location</label><input type="text" id="tmRouteStart" placeholder="e.g. Smyrna, GA"></div>' +
+                    '<div class="tm-field"><label>End Location</label><input type="text" id="tmRouteEnd" placeholder="e.g. Nashville, TN"></div>' +
+                    '<div class="tm-field"><label>Notes (optional)</label><textarea id="tmTripNotes" rows="2" placeholder="Hotel, goals, special instructions..."></textarea></div>' +
+                    '<div id="tmDaySplitPreview"></div>' +
+                    '<div class="tm-modal-actions">' +
+                        '<button class="tm-modal-btn secondary" onclick="closeTripForm()">Cancel</button>' +
+                        '<button class="tm-modal-btn primary" id="tmEstimateBtn" onclick="tmEstimateDays()" style="flex:0.6">Preview Route</button>' +
+                        '<button class="tm-modal-btn primary" id="tmCreateBtn" onclick="tmCreateTrip()">Create Trip</button>' +
+                    '</div></div>';
+                document.body.appendChild(overlay);
+                setTimeout(function() { var n = document.getElementById('tmTripName'); if (n) n.focus(); }, 100);
+            }
+
+            async function estimateDays() {
+                var startLoc = (document.getElementById('tmRouteStart') || {}).value || '';
+                var endLoc = (document.getElementById('tmRouteEnd') || {}).value || '';
+                if (!startLoc.trim() || !endLoc.trim()) { alert('Enter start and end locations first'); return; }
+                var btn = document.getElementById('tmEstimateBtn');
+                if (btn) { btn.disabled = true; btn.textContent = 'Analyzing...'; }
+                var preview = document.getElementById('tmDaySplitPreview');
+                try {
+                    var res = await fetchT(API_BASE + '/api/travel/trips/estimate-days?start=' + encodeURIComponent(startLoc) + '&end=' + encodeURIComponent(endLoc));
+                    if (!res.ok) throw new Error('Failed');
+                    _daySplits = await res.json();
+                    if (preview) {
+                        var splits = _daySplits.day_splits || [];
+                        preview.innerHTML = '<div class="tm-estimate-result">' +
+                            '<div class="tm-estimate-header">Route Analysis: ' + (_daySplits.total_dealers || 0) + ' dealers, ~' + (_daySplits.total_drive_hours || 0) + 'h drive</div>' +
+                            splits.map(function(s) {
+                                return '<div class="tm-estimate-day">' +
+                                    '<div class="tm-estimate-day-title">Day ' + s.day + ' <span style="opacity:0.5">(' + s.start_area + ' → ' + s.end_area + ')</span></div>' +
+                                    '<div class="tm-estimate-day-meta">' + s.dealer_count + ' dealers · ~' + s.estimated_hours + 'h</div>' +
+                                '</div>';
+                            }).join('') +
+                        '</div>';
+                    }
+                } catch(e) {
+                    if (preview) preview.innerHTML = '<div style="color:#f87171;font-size:13px;padding:10px 0">Could not analyze route</div>';
+                }
+                if (btn) { btn.disabled = false; btn.textContent = 'Preview Route'; }
+            }
+
+            async function createTrip() {
+                var name = (document.getElementById('tmTripName') || {}).value || '';
+                var repId = (document.getElementById('tmTripRep') || {}).value || '';
+                var startDate = (document.getElementById('tmTripStart') || {}).value || '';
+                var endDate = (document.getElementById('tmTripEnd') || {}).value || '';
+                var startLoc = (document.getElementById('tmRouteStart') || {}).value || '';
+                var endLoc = (document.getElementById('tmRouteEnd') || {}).value || '';
+                var notes = (document.getElementById('tmTripNotes') || {}).value || '';
+
+                if (!name.trim()) { alert('Enter a trip name'); return; }
+                if (!repId) { alert('Select a rep'); return; }
+                if (!startDate || !endDate) { alert('Enter start and end dates'); return; }
+                if (!startLoc.trim()) { alert('Enter a start location'); return; }
+
+                var btn = document.getElementById('tmCreateBtn');
+                if (btn) { btn.disabled = true; btn.textContent = 'Creating...'; }
+
+                // Build days from date range + day splits
+                var days = [];
+                if (_daySplits && _daySplits.day_splits) {
+                    var dStart = new Date(startDate + 'T12:00:00');
+                    _daySplits.day_splits.forEach(function(split, i) {
+                        var dayDate = new Date(dStart.getTime() + i * 86400000);
+                        days.push({
+                            travel_date: dayDate.toISOString().slice(0, 10),
+                            start_location: split.start_area || startLoc,
+                            end_location: split.end_area || endLoc,
+                        });
+                    });
+                } else if (startLoc.trim() && endLoc.trim()) {
+                    // Single day trip
+                    days.push({
+                        travel_date: startDate,
+                        start_location: startLoc.trim(),
+                        end_location: endLoc.trim() || startLoc.trim(),
+                    });
+                } else if (startLoc.trim()) {
+                    days.push({
+                        travel_date: startDate,
+                        start_location: startLoc.trim(),
+                        end_location: startLoc.trim(),
+                        is_round_trip: true,
+                    });
+                }
+
+                try {
+                    var userName = (typeof Auth !== 'undefined' && Auth.getUserName) ? Auth.getUserName() : null;
+                    var res = await fetchT(API_BASE + '/api/travel/trips', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: name.trim(),
+                            rep_id: repId,
+                            created_by: userName,
+                            start_date: startDate,
+                            end_date: endDate,
+                            notes: notes.trim() || null,
+                            days: days,
+                        })
+                    });
+                    if (!res.ok) {
+                        var err = await res.json().catch(function() { return {}; });
+                        alert(err.detail || 'Failed to create trip');
+                        if (btn) { btn.disabled = false; btn.textContent = 'Create Trip'; }
+                        return;
+                    }
+                    var data = await res.json();
+                    closeForm();
+                    _daySplits = null;
+                    if (data.trip && data.trip.id) openTrip(data.trip.id);
+                    else loadTrips();
+                } catch(e) {
+                    alert('Error: ' + e.message);
+                    if (btn) { btn.disabled = false; btn.textContent = 'Create Trip'; }
+                }
+            }
+
+            async function deleteTrip(tripId) {
+                if (!confirm('Delete this trip and all its data?')) return;
+                try {
+                    await fetchT(API_BASE + '/api/travel/trips/' + tripId, { method: 'DELETE' });
+                    backToList();
+                } catch(e) { alert('Delete failed: ' + e.message); }
+            }
+
+            function closeForm() {
+                var overlay = document.getElementById('tmOverlay');
+                if (overlay) overlay.remove();
+            }
+
+            function setTab(tab) {
+                _tmTab = tab;
+                ['tmTabUpcoming','tmTabPast','tmTabAll'].forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (el) el.classList.toggle('active', id === 'tmTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+                });
+                renderTrips();
+            }
+
+            /* Add Rep modal (kept from old) */
+            function showAddRep() {
+                var overlay = document.createElement('div');
+                overlay.className = 'tm-overlay'; overlay.id = 'tmOverlay';
+                overlay.onclick = function(e) { if (e.target === overlay) closeForm(); };
+                overlay.innerHTML = '<div class="tm-modal"><div class="tm-modal-title">Add Sales Rep</div>' +
+                    '<div class="tm-add-rep-fields">' +
+                        '<div class="tm-add-rep-row"><div class="tm-field"><label>First Name *</label><input type="text" id="tmRepFirst" placeholder="Wesley"></div><div class="tm-field"><label>Last Name *</label><input type="text" id="tmRepLast" placeholder="White"></div></div>' +
+                        '<div class="tm-field"><label>Email *</label><input type="email" id="tmRepEmail" placeholder="wwhite@comvoy.com"></div>' +
+                    '</div>' +
+                    '<div class="tm-modal-actions"><button class="tm-modal-btn secondary" onclick="closeTripForm()">Cancel</button><button class="tm-modal-btn primary" id="tmSaveRepBtn" onclick="tmSaveRep()">Add Rep</button></div></div>';
+                document.body.appendChild(overlay);
             }
 
             async function saveRep() {
                 var first = (document.getElementById('tmRepFirst') || {}).value || '';
                 var last = (document.getElementById('tmRepLast') || {}).value || '';
                 var email = (document.getElementById('tmRepEmail') || {}).value || '';
-                first = first.trim(); last = last.trim(); email = email.trim();
-                if (!first || !last || !email) { alert('First name, last name, and email are required'); return; }
+                if (!first.trim() || !last.trim() || !email.trim()) { alert('All fields required'); return; }
                 var btn = document.getElementById('tmSaveRepBtn');
                 if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
                 try {
                     var res = await fetchT(API_BASE + '/api/travel/reps', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            name: first + ' ' + last,
-                            email: email,
-                            territory_states: _repTags.states.length ? _repTags.states : null,
-                            focus_body_types: _repTags.body.length ? _repTags.body : null
-                        })
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: first.trim() + ' ' + last.trim(), email: email.trim() })
                     });
-                    if (!res.ok) {
-                        var err = await res.json().catch(function() { return {}; });
-                        alert(err.detail || 'Failed to add rep');
-                        if (btn) { btn.disabled = false; btn.textContent = 'Add Rep'; }
-                        return;
-                    }
-                    _repTags = { states: [], body: [] };
-                    closeForm();
-                    loadReps();
-                } catch(e) {
-                    alert('Error: ' + e.message);
-                    if (btn) { btn.disabled = false; btn.textContent = 'Add Rep'; }
-                }
-            }
-
-            function showForm(editId) {
-                _tmEditId = editId || null;
-                var existing = _tmEditId ? _tmTrips.find(function(t) { return t.id === _tmEditId; }) : null;
-                var overlay = document.createElement('div');
-                overlay.className = 'tm-overlay';
-                overlay.id = 'tmOverlay';
-                overlay.onclick = function(e) { if (e.target === overlay) closeForm(); };
-                overlay.innerHTML = '<div class="tm-modal">' +
-                    '<div class="tm-modal-title">' + (existing ? 'Edit Trip Day' : 'Plan a Trip') + '</div>' +
-                    '<div class="tm-field"><label>Travel Date</label><input type="date" id="tmDate" value="' + (existing ? existing.travel_date : '') + '"></div>' +
-                    '<div class="tm-field"><label>Start Location</label><input type="text" id="tmStart" placeholder="e.g. Atlanta, GA" value="' + (existing ? esc(existing.start_location) : '') + '"></div>' +
-                    '<div class="tm-field" style="flex-direction:row;align-items:center;gap:8px;padding:2px 0;"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;letter-spacing:0.04em;opacity:0.7;margin:0;"><input type="checkbox" id="tmRoundTrip" style="accent-color:#4f8fff;width:14px;height:14px;cursor:pointer;"' + (existing && existing.is_round_trip ? ' checked' : '') + ' onchange="document.getElementById(\'tmEndField\').style.display=this.checked?\'none\':\'\'"> Round trip (return to start)</label></div>' +
-                    '<div class="tm-field" id="tmEndField"' + (existing && existing.is_round_trip ? ' style="display:none"' : '') + '><label>End Location</label><input type="text" id="tmEnd" placeholder="e.g. Savannah, GA" value="' + (existing ? esc(existing.end_location) : '') + '"></div>' +
-                    '<div class="tm-field"><label>Notes (optional)</label><textarea id="tmNotes" placeholder="Hotel info, dealer meeting times...">' + (existing ? esc(existing.notes || '') : '') + '</textarea></div>' +
-                    '<div class="tm-modal-actions">' +
-                        '<button class="tm-modal-btn secondary" onclick="closeTripForm()">Cancel</button>' +
-                        '<button class="tm-modal-btn primary" id="tmSaveBtn" onclick="saveTripPlan()">' + (existing ? 'Update' : 'Save Trip') + '</button>' +
-                    '</div></div>';
-                document.body.appendChild(overlay);
-                setTimeout(function() { var d = document.getElementById('tmDate'); if (d) d.focus(); }, 100);
-            }
-
-            function closeForm() {
-                var overlay = document.getElementById('tmOverlay');
-                if (overlay) overlay.remove();
-                _tmEditId = null;
-            }
-
-            async function save() {
-                var dateVal = document.getElementById('tmDate') ? document.getElementById('tmDate').value : '';
-                var startVal = document.getElementById('tmStart') ? document.getElementById('tmStart').value.trim() : '';
-                var endVal = document.getElementById('tmEnd') ? document.getElementById('tmEnd').value.trim() : '';
-                var notesVal = document.getElementById('tmNotes') ? document.getElementById('tmNotes').value.trim() : '';
-                var isRoundTrip = document.getElementById('tmRoundTrip') ? document.getElementById('tmRoundTrip').checked : false;
-                if (!dateVal) { var d = document.getElementById('tmDate'); if (d) d.focus(); return; }
-                if (!startVal) { var s = document.getElementById('tmStart'); if (s) s.focus(); return; }
-                if (!isRoundTrip && !endVal) { var e2 = document.getElementById('tmEnd'); if (e2) e2.focus(); return; }
-                var btn = document.getElementById('tmSaveBtn');
-                if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
-                try {
-                    var res;
-                    if (_tmEditId) {
-                        var ex = _tmTrips.find(function(t) { return t.id === _tmEditId; });
-                        var body = {};
-                        if (dateVal !== (ex ? ex.travel_date : '')) body.travel_date = dateVal;
-                        if (startVal !== (ex ? ex.start_location : '')) body.start_location = startVal;
-                        var effectiveEnd = isRoundTrip ? startVal : endVal;
-                        if (effectiveEnd !== (ex ? ex.end_location : '')) body.end_location = effectiveEnd;
-                        if (notesVal !== (ex ? (ex.notes || '') : '')) body.notes = notesVal;
-                        body.is_round_trip = isRoundTrip;
-                        res = await fetchT(API_BASE + '/api/travel/plans/' + _tmEditId, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(body)
-                        });
-                    } else {
-                        res = await fetchT(API_BASE + '/api/travel/plans', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                rep_id: _selectedRepId,
-                                travel_date: dateVal,
-                                start_location: startVal,
-                                end_location: isRoundTrip ? startVal : endVal,
-                                is_round_trip: isRoundTrip,
-                                notes: notesVal || null
-                            })
-                        });
-                    }
-                    if (!res.ok) {
-                        var err = await res.json().catch(function() { return {}; });
-                        alert(err.detail || 'Save failed');
-                        if (btn) { btn.disabled = false; btn.textContent = _tmEditId ? 'Update' : 'Save Trip'; }
-                        return;
-                    }
-                    closeForm();
-                    loadTrips();
-                } catch(e) {
-                    alert('Error saving trip: ' + e.message);
-                    if (btn) { btn.disabled = false; btn.textContent = _tmEditId ? 'Update' : 'Save Trip'; }
-                }
-            }
-
-            async function deletePlan(planId) {
-                if (!confirm('Delete this trip day?')) return;
-                try {
-                    var res = await fetchT(API_BASE + '/api/travel/plans/' + planId, { method: 'DELETE' });
-                    if (!res.ok) throw new Error('Delete failed');
-                    loadTrips();
-                } catch(e) {
-                    alert('Error deleting trip: ' + e.message);
-                }
+                    if (!res.ok) { alert('Failed'); if (btn) { btn.disabled = false; btn.textContent = 'Add Rep'; } return; }
+                    closeForm(); loadReps();
+                } catch(e) { alert(e.message); if (btn) { btn.disabled = false; btn.textContent = 'Add Rep'; } }
             }
 
             return {
-                open: open, showForm: showForm, closeForm: closeForm, save: save,
-                deletePlan: deletePlan, tmChatSend: tmChatSend, tmChatAsk: tmChatAsk,
-                onRepChange: onRepChange, setTab: setTab, expandDealers: expandDealers,
-                viewOnMap: viewOnMap, showAddRep: showAddRep, saveRep: saveRep,
-                tagKey: tagKey, removeTag: removeTag
+                open: open, openTrip: openTrip, backToList: backToList, showForm: showForm,
+                closeForm: closeForm, createTrip: createTrip, estimateDays: estimateDays,
+                deleteTrip: deleteTrip, onRepChange: onRepChange, setTab: setTab,
+                selectDay: selectDay, toggleVisit: toggleVisit, toggleInclude: toggleInclude,
+                loadSuggestions: loadSuggestions, addSelected: addSelected,
+                updateTripStatus: updateTripStatus,
+                showAddRep: showAddRep, saveRep: saveRep,
             };
         })();
 
@@ -8878,14 +9020,21 @@
         window.openTripCreatePanel = () => TripCreate.open();
         window.closeTripCreatePanel = () => TripCreate.close();
         window.saveMapTrip = () => TripCreate.save();
-        window.showTripForm = (id) => TripManager.showForm(id);
+        window.showTripForm = () => TripManager.showForm();
         window.closeTripForm = () => TripManager.closeForm();
-        window.saveTripPlan = () => TripManager.save();
-        window.deleteTripPlan = (id) => TripManager.deletePlan(id);
+        window.tmCreateTrip = () => TripManager.createTrip();
+        window.tmEstimateDays = () => TripManager.estimateDays();
+        window.tmDeleteTrip = (id) => TripManager.deleteTrip(id);
         window.tmRepChange = (id) => TripManager.onRepChange(id);
         window.tmSetTab = (tab) => TripManager.setTab(tab);
-        window.tmExpandDealers = (id) => TripManager.expandDealers(id);
-        window.tmViewOnMap = (id) => TripManager.viewOnMap(id);
+        window.tmOpenTrip = (id) => TripManager.openTrip(id);
+        window.tmBackToList = () => TripManager.backToList();
+        window.tmSelectDay = (i) => TripManager.selectDay(i);
+        window.tmToggleVisit = (id, v) => TripManager.toggleVisit(id, v);
+        window.tmToggleInclude = (id, v) => TripManager.toggleInclude(id, v);
+        window.tmLoadSuggestions = () => TripManager.loadSuggestions();
+        window.tmAddSelected = () => TripManager.addSelected();
+        window.tmUpdateTripStatus = (s) => TripManager.updateTripStatus(s);
         window.tmChatSend = () => TripManager.tmChatSend();
         window.tmChatAsk = (q) => TripManager.tmChatAsk(q);
         window.tmShowAddRep = () => TripManager.showAddRep();

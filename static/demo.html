@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Otto</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  @page { margin: 0.5in 0.65in; size: letter; }
+  @media print {
+    *, *::before, *::after {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+    body {
+      background: #0a0e18 !important;
+    }
+    .ambient { display: none !important; }
+    .page-break { page-break-before: always; }
+    .cap, .next-item, .prompt, .prompt-text {
+      background: rgba(255,255,255,0.04) !important;
+      border-color: rgba(255,255,255,0.08) !important;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #e0e4ec;
+    background: #0a0e18;
+    line-height: 1.6;
+    font-size: 14px;
+    max-width: 740px;
+    margin: 0 auto;
+    padding: 40px 48px 48px;
+  }
+
+  /* — HEADER — */
+  .header {
+    margin-bottom: 28px;
+    position: relative;
+  }
+  .header h1 {
+    font-size: 38px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  .header p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.55;
+    max-width: 560px;
+  }
+
+  /* — GLASS CARDS — */
+  .glass {
+    background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 24px 28px;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .glass::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1) 30%, rgba(255,255,255,0.1) 70%, transparent);
+  }
+
+  /* — SECTION LABELS — */
+  h2 {
+    font-size: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 3.5px;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 14px;
+    margin-top: 32px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.6), rgba(79,143,255,0.5));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  h2:first-of-type { margin-top: 0; }
+
+  /* — CAPABILITIES — */
+  .cap-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .cap {
+    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.005) 100%);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 10px;
+    padding: 14px 16px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .cap::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  }
+  .cap strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 3px;
+  }
+  .cap span {
+    font-size: 11.5px;
+    color: rgba(255,255,255,0.4);
+    line-height: 1.45;
+  }
+
+  /* — ACCENT GLOW DOTS — */
+  .glow-accent {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    pointer-events: none;
+    opacity: 0.35;
+  }
+
+  /* — PROMPT CARDS — */
+  .prompts-intro {
+    font-size: 13px;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+  .prompts-intro a {
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    padding-bottom: 1px;
+  }
+
+  .prompt {
+    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.005) 100%);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .prompt::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: linear-gradient(180deg, rgba(79,143,255,0.6), rgba(168,85,247,0.3), transparent);
+    border-radius: 3px 0 0 3px;
+  }
+  .prompt h3 {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 2px;
+  }
+  .prompt .desc {
+    font-size: 11.5px;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 8px;
+  }
+  .prompt-text {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.04);
+    font-size: 12px;
+    padding: 9px 14px;
+    border-radius: 7px;
+    color: rgba(255,255,255,0.75);
+    margin-bottom: 7px;
+    line-height: 1.45;
+    font-style: italic;
+  }
+  .followup {
+    font-size: 11px;
+    color: rgba(255,255,255,0.25);
+  }
+  .followup strong { color: rgba(255,255,255,0.4); }
+
+  /* — WHAT'S NEXT — */
+  .next-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .next-item {
+    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.005) 100%);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 10px;
+    padding: 14px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-item::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+  }
+  .next-item strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 3px;
+  }
+  .next-item span {
+    font-size: 11.5px;
+    color: rgba(255,255,255,0.35);
+    line-height: 1.45;
+  }
+
+  .closing {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    font-size: 13px;
+    color: rgba(255,255,255,0.35);
+    line-height: 1.5;
+  }
+
+  /* — AMBIENT GLOWS — */
+  .ambient {
+    position: fixed;
+    pointer-events: none;
+    z-index: -1;
+  }
+  .ambient-1 {
+    top: -120px; right: -80px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(79,143,255,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .ambient-2 {
+    top: 50%; left: -120px;
+    width: 350px; height: 350px;
+    background: radial-gradient(circle, rgba(168,85,247,0.05) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .ambient-3 {
+    bottom: -100px; right: 10%;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(0,212,255,0.04) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+</style>
+</head>
+<body>
+
+<div class="ambient ambient-1"></div>
+<div class="ambient ambient-2"></div>
+<div class="ambient ambient-3"></div>
+
+<div class="header">
+  <h1>Otto</h1>
+  <p>A sales intelligence tool for Comvoy. It sits on live market data across our 12-state territory and lets you ask questions in plain English. Instead of pulling reports or digging through spreadsheets, you talk to it and get answers.</p>
+</div>
+
+<h2>What Otto Does</h2>
+
+<div class="cap-grid">
+  <div class="cap">
+    <strong>Chat</strong>
+    <span>Ask anything about dealers, territories, or market data in plain English. Otto pulls live inventory, scores leads, builds briefings, and plans trips &mdash; all through conversation.</span>
+  </div>
+  <div class="cap">
+    <strong>Map</strong>
+    <span>Every dealer in the network plotted across 12 states. Color-coded by lead score. Click any pin for inventory, penetration, and a full briefing.</span>
+  </div>
+  <div class="cap">
+    <strong>Dashboard</strong>
+    <span>Market share, pricing curves, lead pipeline, and Smyrna positioning &mdash; all in one view. Filter by state to drill into any territory.</span>
+  </div>
+  <div class="cap">
+    <strong>Trips</strong>
+    <span>Build and manage multi-day rep routes. Dealers are ranked by lead score so every stop is the highest-value target in the area.</span>
+  </div>
+</div>
+
+<h2>Try It</h2>
+
+<p class="prompts-intro">
+  Open <a href="https://gdmotley1.github.io/comvoy/" target="_blank">gdmotley1.github.io/comvoy</a> and click New Chat. Paste either of these to see Otto in action.
+</p>
+
+<div class="prompt">
+  <h3>Plan a rep's week</h3>
+  <p class="desc">Scores every dealer in range, builds a routed trip plan, and ranks stops by value.</p>
+  <div class="prompt-text">Kenneth is in Dallas this week. Build him a 3-day trip hitting the highest-value dealers in Texas.</div>
+  <div class="followup"><strong>Follow up:</strong> "Skip the Penske stops and only show hot leads."</div>
+</div>
+
+<div class="prompt">
+  <h3>Prep for a call</h3>
+  <p class="desc">Full dealer briefing in seconds &mdash; inventory, pricing, builder mix, Smyrna penetration, and Google reviews.</p>
+  <div class="prompt-text">I have a call with Randy Marion Chevrolet in Mooresville NC tomorrow. Give me everything I need to know.</div>
+  <div class="followup"><strong>Follow up:</strong> "They also have Randy Marion Ford nearby. Pull that briefing too so I can pitch both stores."</div>
+</div>
+
+<div class="page-break"></div>
+
+<h2>What the Data Unlocks Over Time</h2>
+
+<p style="font-size:13px; color:rgba(255,255,255,0.5); margin-bottom:12px; line-height:1.5;">
+  Otto scrapes the entire Comvoy network weekly and tracks every VIN and price point. As the dataset grows, it opens up analysis that doesn't exist anywhere else in this industry:
+</p>
+
+<div class="next-grid">
+  <div class="next-item">
+    <strong>Sales Velocity</strong>
+    <span>Which body types move fastest, by state and dealer. How long units sit. Where demand outpaces supply.</span>
+  </div>
+  <div class="next-item">
+    <strong>Pricing Trends</strong>
+    <span>Price movement by segment. Which dealers are raising prices vs cutting them. Market rate shifts by quarter.</span>
+  </div>
+  <div class="next-item">
+    <strong>Inventory Cycles</strong>
+    <span>Seasonal buying patterns by state and body type. When dealers restock, draw down, and how to time outreach.</span>
+  </div>
+  <div class="next-item">
+    <strong>Competitive Movement</strong>
+    <span>Which builders are gaining or losing share. Dealer-level brand switching. Early warning signals.</span>
+  </div>
+</div>
+
+<h2>Your Input Needed</h2>
+
+<div class="next-grid">
+  <div class="next-item">
+    <strong>Metrics</strong>
+    <span>What KPIs matter most? What should we be measuring that we aren't today?</span>
+  </div>
+  <div class="next-item">
+    <strong>Territory Structure</strong>
+    <span>How should we assign and prioritize territories? Fixed states, dynamic zones, account-based.</span>
+  </div>
+  <div class="next-item">
+    <strong>Automation</strong>
+    <span>What should trigger without being asked? At-risk alerts, weekly digests, CRM sync.</span>
+  </div>
+  <div class="next-item">
+    <strong>Competitive Depth</strong>
+    <span>How granular do we want to go? Builder tracking, pricing forecasts, displacement alerts.</span>
+  </div>
+</div>
+
+<div class="closing">
+  The tool gets sharper the more we define what we're optimizing for. Looking forward to your direction on it.
+</div>
+
+</body>
+</html>

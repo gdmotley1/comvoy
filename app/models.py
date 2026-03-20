@@ -159,3 +159,46 @@ class TravelPlanUpdate(BaseModel):
     end_location: str | None = Field(None, max_length=200)
     notes: str | None = Field(None, max_length=500)
     is_round_trip: bool | None = None
+
+
+# --- Phase 4: Multi-day named trips ---
+
+class TripDayInput(BaseModel):
+    """One day within a trip."""
+    travel_date: date
+    start_location: str = Field(..., max_length=200)
+    end_location: str = Field("", max_length=200)
+    is_round_trip: bool = False
+    notes: str | None = Field(None, max_length=500)
+
+
+class TripCreate(BaseModel):
+    """Create a named multi-day trip."""
+    name: str = Field(..., min_length=1, max_length=200)
+    rep_id: str
+    created_by: str | None = None
+    start_date: date
+    end_date: date
+    notes: str | None = Field(None, max_length=1000)
+    days: list[TripDayInput] = Field(default_factory=list)
+
+
+class TripUpdate(BaseModel):
+    """Update trip metadata. All fields optional."""
+    name: str | None = Field(None, max_length=200)
+    status: str | None = Field(None, pattern=r'^(draft|planned|active|completed)$')
+    notes: str | None = Field(None, max_length=1000)
+    start_date: date | None = None
+    end_date: date | None = None
+
+
+class TripStopUpdate(BaseModel):
+    """Toggle a stop's inclusion or visited state."""
+    is_included: bool | None = None
+    visited: bool | None = None
+    visit_notes: str | None = Field(None, max_length=500)
+
+
+class TripStopBulkSet(BaseModel):
+    """Bulk-set stops for a trip day."""
+    stops: list[dict]  # [{dealer_id, stop_order}]
