@@ -774,6 +774,71 @@ async def estimate_trip_days(
         except Exception:
             pass
 
+    # Get per-dealer brand and body type inventory
+    brand_map = {}   # dealer_id -> [brand_name, ...]
+    btype_map = {}   # dealer_id -> [body_type_name, ...]
+    sold_brand_map = {}  # dealer_id -> [brand_name, ...]
+    sold_btype_map = {}  # dealer_id -> [body_type_name, ...]
+    all_brand_names = set()
+    all_btype_names = set()
+
+    if dealer_ids and snap_id:
+        # Current stock brands
+        try:
+            brand_inv = db.table("dealer_brand_inventory").select(
+                "dealer_id, brand_id"
+            ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).execute()
+            brand_ids_needed = list(set(r["brand_id"] for r in (brand_inv.data or [])))
+            brand_lookup = {}
+            if brand_ids_needed:
+                bl = db.table("brands").select("id, name").in_("id", brand_ids_needed).execute()
+                brand_lookup = {r["id"]: r["name"] for r in (bl.data or [])}
+            for r in (brand_inv.data or []):
+                bname = brand_lookup.get(r["brand_id"], "")
+                if bname:
+                    brand_map.setdefault(r["dealer_id"], []).append(bname)
+                    all_brand_names.add(bname)
+        except Exception:
+            pass
+
+        # Current stock body types
+        try:
+            btype_inv = db.table("dealer_body_type_inventory").select(
+                "dealer_id, body_type_id"
+            ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).execute()
+            btype_ids_needed = list(set(r["body_type_id"] for r in (btype_inv.data or [])))
+            btype_lookup = {}
+            if btype_ids_needed:
+                btl = db.table("body_types").select("id, name").in_("id", btype_ids_needed).execute()
+                btype_lookup = {r["id"]: r["name"] for r in (btl.data or [])}
+            for r in (btype_inv.data or []):
+                btname = btype_lookup.get(r["body_type_id"], "")
+                if btname:
+                    btype_map.setdefault(r["dealer_id"], []).append(btname)
+                    all_btype_names.add(btname)
+        except Exception:
+            pass
+
+        # Recently sold (from vehicle_diffs where diff_type='sold')
+        try:
+            sold = db.table("vehicle_diffs").select(
+                "dealer_id, brand, body_type"
+            ).eq("snapshot_id", snap_id).eq("diff_type", "sold").in_(
+                "dealer_id", dealer_ids
+            ).execute()
+            for r in (sold.data or []):
+                if r.get("brand"):
+                    sold_brand_map.setdefault(r["dealer_id"], set()).add(r["brand"])
+                    all_brand_names.add(r["brand"])
+                if r.get("body_type"):
+                    sold_btype_map.setdefault(r["dealer_id"], set()).add(r["body_type"])
+                    all_btype_names.add(r["body_type"])
+            # Convert sets to lists
+            sold_brand_map = {k: list(v) for k, v in sold_brand_map.items()}
+            sold_btype_map = {k: list(v) for k, v in sold_btype_map.items()}
+        except Exception:
+            pass
+
     for d in all_dealers:
         sc = score_map.get(d["dealer_id"], {})
         inv = inv_map.get(d["dealer_id"], {})
@@ -784,6 +849,10 @@ async def estimate_trip_days(
         d["smyrna_pct"] = inv.get("smyrna_percentage", 0)
         d["top_brand"] = inv.get("top_brand")
         d["avg_days_on_lot"] = aging_map.get(d["dealer_id"], 0)
+        d["brands"] = brand_map.get(d["dealer_id"], [])
+        d["body_types"] = btype_map.get(d["dealer_id"], [])
+        d["sold_brands"] = sold_brand_map.get(d["dealer_id"], [])
+        d["sold_body_types"] = sold_btype_map.get(d["dealer_id"], [])
 
     total_drive_km = _haversine(
         start_coords[0], start_coords[1], end_coords[0], end_coords[1]
@@ -847,6 +916,10 @@ async def estimate_trip_days(
                 "smyrna_pct": d.get("smyrna_pct", 0),
                 "top_brand": d.get("top_brand"),
                 "avg_days_on_lot": d.get("avg_days_on_lot", 0),
+                "brands": d.get("brands", []),
+                "body_types": d.get("body_types", []),
+                "sold_brands": d.get("sold_brands", []),
+                "sold_body_types": d.get("sold_body_types", []),
             } for d in dealers_in_day],
         })
 
@@ -857,6 +930,10 @@ async def estimate_trip_days(
         "visit_minutes": visit_min,
         "max_day_hours": max_hours,
         "day_splits": suggestions,
+        "filter_options": {
+            "brands": sorted(all_brand_names),
+            "body_types": sorted(all_btype_names),
+        },
     }
 
 

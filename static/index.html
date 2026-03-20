@@ -3172,12 +3172,18 @@
         .tm-wiz-filter { font-size: 11px; font-weight: 600; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
         .tm-wiz-filter:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
         .tm-wiz-filter.active { background: rgba(79,143,255,0.15); border-color: rgba(79,143,255,0.3); color: var(--accent-blue); }
+        .tm-wiz-filter.active.sold { background: rgba(249,115,22,0.15); border-color: rgba(249,115,22,0.3); color: #f97316; }
+        .tm-wiz-filters-row { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+        .tm-wiz-select { background: #1a1d27; border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-primary); font-family: inherit; font-size: 12px; padding: 7px 12px; outline: none; cursor: pointer; min-width: 140px; transition: border-color 0.2s; color-scheme: dark; }
+        .tm-wiz-select:focus { border-color: var(--accent-blue); }
+        .tm-wiz-stock-toggle { display: flex; gap: 4px; margin-left: 4px; }
         .tm-wiz-dealer.excluded { opacity: 0.35; }
         .tm-wiz-dealer.excluded .tm-wiz-dealer-name { text-decoration: line-through; }
         .tm-wiz-dealer-kpis { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
         .tm-wiz-kpi { font-size: 11px; font-weight: 500; padding: 4px 8px; border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text-tertiary); white-space: nowrap; }
         .tm-wiz-kpi.smyrna { background: rgba(34,197,94,0.12); color: #22c55e; font-weight: 600; }
         .tm-wiz-kpi.aging { background: rgba(249,115,22,0.1); color: #fb923c; }
+        .tm-wiz-kpi.sold-badge { background: rgba(239,68,68,0.12); color: #ef4444; font-weight: 700; letter-spacing: 0.3px; }
 
         /* Inline chat at bottom */
         .tm-chat-wrap {
@@ -6424,6 +6430,10 @@
             var _wizardExpanded = {}; // which day cards are expanded
             var _wizardExcluded = {}; // dealer_id -> true (toggled off)
             var _wizardFilter = 'all'; // 'all' | 'no_cold' | 'hot_warm' | 'hot_only'
+            var _wizardBrand = '';     // '' = any, else filter to specific brand
+            var _wizardBodyType = '';  // '' = any, else filter to specific body type
+            var _wizardStockMode = 'in_stock'; // 'in_stock' | 'just_sold'
+            var _filterOptions = { brands: [], body_types: [] };
 
             function showForm() {
                 _wizardData = {};
@@ -6431,6 +6441,10 @@
                 _wizardExpanded = {};
                 _wizardExcluded = {};
                 _wizardFilter = 'all';
+                _wizardBrand = '';
+                _wizardBodyType = '';
+                _wizardStockMode = 'in_stock';
+                _filterOptions = { brands: [], body_types: [] };
                 _showStep1();
             }
 
@@ -6516,6 +6530,7 @@
                     var res = await fetchT(API_BASE + '/api/travel/trips/estimate-days?start=' + encodeURIComponent(startLoc) + '&end=' + encodeURIComponent(endLoc));
                     if (!res.ok) throw new Error('Route analysis failed');
                     _daySplits = await res.json();
+                    _filterOptions = _daySplits.filter_options || { brands: [], body_types: [] };
                     _renderStep2();
                 } catch(e) {
                     overlay.innerHTML = '<div class="tm-modal tm-wiz-preview">' +
@@ -6533,6 +6548,22 @@
                 if (_wizardFilter === 'no_cold' && tier === 'cold') return false;
                 if (_wizardFilter === 'hot_warm' && tier !== 'hot' && tier !== 'warm') return false;
                 if (_wizardFilter === 'hot_only' && tier !== 'hot') return false;
+                // Brand filter
+                if (_wizardBrand) {
+                    if (_wizardStockMode === 'just_sold') {
+                        if (!(d.sold_brands || []).includes(_wizardBrand)) return false;
+                    } else {
+                        if (!(d.brands || []).includes(_wizardBrand)) return false;
+                    }
+                }
+                // Body type filter
+                if (_wizardBodyType) {
+                    if (_wizardStockMode === 'just_sold') {
+                        if (!(d.sold_body_types || []).includes(_wizardBodyType)) return false;
+                    } else {
+                        if (!(d.body_types || []).includes(_wizardBodyType)) return false;
+                    }
+                }
                 return true;
             }
 
@@ -6589,6 +6620,25 @@
                         fBtn('hot_warm', 'Hot + Warm') +
                         fBtn('hot_only', 'Hot Only') +
                     '</div>' +
+                    '<div class="tm-wiz-filters-row">' +
+                        '<select class="tm-wiz-select" onchange="tmWizSetBrand(this.value)">' +
+                            '<option value="">Any Brand</option>' +
+                            (_filterOptions.brands || []).map(function(b) {
+                                return '<option value="' + esc(b) + '"' + (b === _wizardBrand ? ' selected' : '') + '>' + esc(b) + '</option>';
+                            }).join('') +
+                        '</select>' +
+                        '<select class="tm-wiz-select" onchange="tmWizSetBodyType(this.value)">' +
+                            '<option value="">Any Body Type</option>' +
+                            (_filterOptions.body_types || []).map(function(bt) {
+                                return '<option value="' + esc(bt) + '"' + (bt === _wizardBodyType ? ' selected' : '') + '>' + esc(bt) + '</option>';
+                            }).join('') +
+                        '</select>' +
+                        ((_wizardBrand || _wizardBodyType) ?
+                            '<div class="tm-wiz-stock-toggle">' +
+                                '<button class="tm-wiz-filter' + (_wizardStockMode === 'in_stock' ? ' active' : '') + '" onclick="tmWizSetStockMode(\'in_stock\')">In Stock</button>' +
+                                '<button class="tm-wiz-filter' + (_wizardStockMode === 'just_sold' ? ' active sold' : '') + '" onclick="tmWizSetStockMode(\'just_sold\')">Just Sold</button>' +
+                            '</div>' : '') +
+                    '</div>' +
                     '<div class="tm-wiz-days" id="tmWizDays">';
 
                 splits.forEach(function(split, i) {
@@ -6638,6 +6688,8 @@
                                     '<span class="tm-wiz-kpi">' + (d.total_vehicles || 0) + ' veh</span>' +
                                     (d.smyrna_units > 0 ? '<span class="tm-wiz-kpi smyrna">' + d.smyrna_units + ' Smyrna</span>' : '') +
                                     (d.avg_days_on_lot > 0 ? '<span class="tm-wiz-kpi aging">' + d.avg_days_on_lot + 'd avg</span>' : '') +
+                                    ((_wizardBrand && (d.sold_brands || []).includes(_wizardBrand)) || (_wizardBodyType && (d.sold_body_types || []).includes(_wizardBodyType))
+                                        ? '<span class="tm-wiz-kpi sold-badge">SOLD</span>' : '') +
                                 '</div>' +
                                 '<span class="tm-wiz-dealer-tier ' + tier + '">' + tier + '</span>' +
                             '</div>';
@@ -6680,6 +6732,24 @@
                 } else {
                     _wizardExcluded[dealerId] = true;
                 }
+                _renderStep2();
+            }
+
+            function wizSetBrand(val) {
+                _wizardBrand = val;
+                _wizardExcluded = {};
+                _renderStep2();
+            }
+
+            function wizSetBodyType(val) {
+                _wizardBodyType = val;
+                _wizardExcluded = {};
+                _renderStep2();
+            }
+
+            function wizSetStockMode(val) {
+                _wizardStockMode = val;
+                _wizardExcluded = {};
                 _renderStep2();
             }
 
@@ -6810,7 +6880,7 @@
             return {
                 open: open, openTrip: openTrip, backToList: backToList, showForm: showForm,
                 closeForm: closeForm, createTrip: createTrip,
-                wizardNext: wizardNext, wizardBack: wizardBack, wizToggleDay: wizToggleDay, wizFilter: wizFilter, wizToggleDealer: wizToggleDealer,
+                wizardNext: wizardNext, wizardBack: wizardBack, wizToggleDay: wizToggleDay, wizFilter: wizFilter, wizToggleDealer: wizToggleDealer, wizSetBrand: wizSetBrand, wizSetBodyType: wizSetBodyType, wizSetStockMode: wizSetStockMode,
                 deleteTrip: deleteTrip, onRepChange: onRepChange, setTab: setTab,
                 selectDay: selectDay, toggleVisit: toggleVisit, toggleInclude: toggleInclude,
                 loadSuggestions: loadSuggestions, addSelected: addSelected,
@@ -9285,6 +9355,9 @@
         window.tmWizToggleDay = (i) => TripManager.wizToggleDay(i);
         window.tmWizFilter = (v) => TripManager.wizFilter(v);
         window.tmWizToggleDealer = (id, c) => TripManager.wizToggleDealer(id, c);
+        window.tmWizSetBrand = (v) => TripManager.wizSetBrand(v);
+        window.tmWizSetBodyType = (v) => TripManager.wizSetBodyType(v);
+        window.tmWizSetStockMode = (v) => TripManager.wizSetStockMode(v);
         window.tmDeleteTrip = (id) => TripManager.deleteTrip(id);
         window.tmRepChange = (id) => TripManager.onRepChange(id);
         window.tmSetTab = (tab) => TripManager.setTab(tab);
