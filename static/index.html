@@ -2983,6 +2983,10 @@
         .tm-wiz-dealer-tier.warm { color: #eab308; }
         .tm-wiz-dealer-tier.cold { color: var(--text-tertiary); }
         .tm-wiz-sold-tag { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(239,68,68,0.15); color: #ef4444; letter-spacing: 0.3px; vertical-align: middle; margin-left: 6px; }
+        .tm-wiz-map-badge { display: flex; align-items: center; gap: 8px; padding: 8px 12px; margin-bottom: 10px; background: rgba(79,143,255,0.08); border: 1px solid rgba(79,143,255,0.2); border-radius: 10px; font-size: 12px; color: var(--accent-blue); }
+        .tm-wiz-map-badge b { color: var(--text-primary); font-weight: 500; }
+        .tm-wiz-map-badge-clear { background: none; border: none; color: rgba(255,255,255,0.4); font-size: 16px; cursor: pointer; padding: 0 2px; margin-left: auto; line-height: 1; transition: color 0.15s; }
+        .tm-wiz-map-badge-clear:hover { color: #f87171; }
         .tm-wiz-filterbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; padding: 12px 14px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; }
         .tm-wiz-filterbar-left { display: flex; gap: 4px; flex-wrap: wrap; }
         .tm-wiz-filterbar-right { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
@@ -6266,6 +6270,8 @@
             var _wizardBrand = '';     // '' = any, else filter to specific brand
             var _wizardBodyType = '';  // '' = any, else filter to specific body type
             var _wizardStockMode = 'in_stock'; // 'in_stock' | 'just_sold'
+            var _wizardStates = new Set();  // empty = all states, populated = only these
+            var _wizardMapContext = null;   // { states, brands, bodyTypes, tier } — what was inherited from map
             var _filterOptions = { brands: [], body_types: [] };
             var _mapModeActive = false;
             var _wizRouteLayer = null;   // L.featureGroup for polyline
@@ -6281,6 +6287,8 @@
                 _wizardBrand = '';
                 _wizardBodyType = '';
                 _wizardStockMode = 'in_stock';
+                _wizardStates = new Set();
+                _wizardMapContext = null;
                 _filterOptions = { brands: [], body_types: [] };
                 _showStep1();
             }
@@ -6293,7 +6301,71 @@
                         if (res.ok) _reps = await res.json();
                     } catch(e) { console.error('Failed to load reps:', e); }
                 }
-                showForm();
+
+                // Reset wizard state first
+                _wizardData = {};
+                _daySplits = null;
+                _wizardExpanded = {};
+                _wizardExcluded = {};
+                _wizardStockMode = 'in_stock';
+                _filterOptions = { brands: [], body_types: [] };
+
+                // Inherit active map filters
+                var mapStates = MapFilters.getActiveStates();
+                var allStates = MapFilters.getAllStates();
+                var mapBrands = MapFilters.getActiveBrands();
+                var allBrands = MapFilters.getAllBrands();
+                var mapBodyTypes = MapFilters.getActiveBodyTypes();
+                var allBodyTypes = MapFilters.getAllBodyTypes();
+                var mapTiers = MapFilters.getActiveTiers();
+
+                var statesFiltered = mapStates.size > 0 && mapStates.size < allStates.length;
+                var brandsFiltered = mapBrands.size > 0 && mapBrands.size < allBrands.length;
+                var bodyTypesFiltered = mapBodyTypes.size > 0 && mapBodyTypes.size < allBodyTypes.length;
+
+                // Map tier set to wizard preset
+                var tierKeys = Array.from(mapTiers).sort().join(',');
+                var allTierKeys = 'cold,hot,unscored,warm';
+                var tiersFiltered = tierKeys !== allTierKeys && mapTiers.size > 0;
+                if (mapTiers.size === 1 && mapTiers.has('hot')) {
+                    _wizardFilter = 'hot_only';
+                } else if (mapTiers.size === 2 && mapTiers.has('hot') && mapTiers.has('warm')) {
+                    _wizardFilter = 'hot_warm';
+                } else if (mapTiers.size === 3 && !mapTiers.has('cold')) {
+                    _wizardFilter = 'no_cold';
+                } else {
+                    _wizardFilter = 'all';
+                    tiersFiltered = false;
+                }
+
+                // State filter — carry over as-is
+                _wizardStates = statesFiltered ? new Set(mapStates) : new Set();
+
+                // Brand — if exactly 1 active, pre-fill dropdown; otherwise leave "Any"
+                _wizardBrand = (brandsFiltered && mapBrands.size === 1) ? Array.from(mapBrands)[0] : '';
+
+                // Body type — if exactly 1 active, pre-fill dropdown; otherwise leave "Any"
+                _wizardBodyType = (bodyTypesFiltered && mapBodyTypes.size === 1) ? Array.from(mapBodyTypes)[0] : '';
+
+                // Track what we inherited so we can show a badge
+                if (statesFiltered || brandsFiltered || bodyTypesFiltered || tiersFiltered) {
+                    var parts = [];
+                    if (statesFiltered) parts.push(Array.from(mapStates).join(', '));
+                    if (bodyTypesFiltered) parts.push(Array.from(mapBodyTypes).join(', '));
+                    if (brandsFiltered) parts.push(Array.from(mapBrands).join(', '));
+                    if (tiersFiltered) parts.push(_wizardFilter.replace(/_/g, ' '));
+                    _wizardMapContext = {
+                        label: parts.join(' · '),
+                        states: statesFiltered ? new Set(mapStates) : null,
+                        brands: brandsFiltered ? new Set(mapBrands) : null,
+                        bodyTypes: bodyTypesFiltered ? new Set(mapBodyTypes) : null,
+                        tier: tiersFiltered ? _wizardFilter : null,
+                    };
+                } else {
+                    _wizardMapContext = null;
+                }
+
+                _showStep1();
             }
 
             function _showStep1() {
@@ -6399,6 +6471,8 @@
 
             function _isDealerIncluded(d) {
                 if (_wizardExcluded[d.dealer_id]) return false;
+                // State filter (inherited from map)
+                if (_wizardStates.size > 0 && !_wizardStates.has(d.state)) return false;
                 var tier = (d.lead_tier || 'cold').toLowerCase();
                 if (_wizardFilter === 'no_cold' && tier === 'cold') return false;
                 if (_wizardFilter === 'hot_warm' && tier !== 'hot' && tier !== 'warm') return false;
@@ -6478,6 +6552,13 @@
                             '</span><span class="tm-wiz-stat-lbl">Hot / Warm</span>' +
                         '</div>' +
                     '</div>' +
+
+                    // --- Map filter inheritance badge ---
+                    (_wizardMapContext ? '<div class="tm-wiz-map-badge">' +
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" style="opacity:0.6;flex-shrink:0"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>' +
+                        '<span>From map: <b>' + esc(_wizardMapContext.label) + '</b></span>' +
+                        '<button class="tm-wiz-map-badge-clear" onclick="tmWizClearMapFilters()" title="Clear map filters">&times;</button>' +
+                    '</div>' : '') +
 
                     // --- Single unified filter bar ---
                     '<div class="tm-wiz-filterbar">' +
@@ -6754,6 +6835,17 @@
                 if (_mapModeActive) _updateWizardMarkers();
             }
 
+            function wizClearMapFilters() {
+                _wizardStates = new Set();
+                _wizardMapContext = null;
+                _wizardFilter = 'all';
+                _wizardBrand = '';
+                _wizardBodyType = '';
+                _wizardExcluded = {};
+                _renderStep2();
+                if (_mapModeActive) _updateWizardMarkers();
+            }
+
             async function createTrip() {
                 if (!_daySplits || !_wizardData.repId) { alert('Please complete route analysis first'); return; }
 
@@ -7018,7 +7110,7 @@
             return {
                 open: open, openTrip: openTrip, backToList: backToList, showForm: showForm, showFormFromMap: showFormFromMap,
                 closeForm: closeForm, createTrip: createTrip,
-                wizardNext: wizardNext, wizardBack: wizardBack, wizToggleDay: wizToggleDay, wizFilter: wizFilter, wizToggleDealer: wizToggleDealer, wizSetBrand: wizSetBrand, wizSetBodyType: wizSetBodyType, wizSetStockMode: wizSetStockMode,
+                wizardNext: wizardNext, wizardBack: wizardBack, wizToggleDay: wizToggleDay, wizFilter: wizFilter, wizToggleDealer: wizToggleDealer, wizSetBrand: wizSetBrand, wizSetBodyType: wizSetBodyType, wizSetStockMode: wizSetStockMode, wizClearMapFilters: wizClearMapFilters,
                 deleteTrip: deleteTrip, onRepChange: onRepChange, setTab: setTab,
                 selectDay: selectDay, toggleVisit: toggleVisit, toggleInclude: toggleInclude,
                 loadSuggestions: loadSuggestions, addSelected: addSelected,
@@ -7633,6 +7725,9 @@
                 toggleRow: toggleFilterRow, setAll: setAllFilter,
                 apply: applyFilters, reset: resetFilters,
                 getActiveTiers: () => _activeTiers, getActiveStates: () => _activeStates,
+                getActiveBrands: () => _activeBrands, getActiveBodyTypes: () => _activeBodyTypes,
+                getAllBrands: () => _allBrandVals, getAllBodyTypes: () => _allBodyTypeVals,
+                getAllStates: () => _allStateVals,
             };
         })();
 
@@ -9080,6 +9175,7 @@
         window.tmWizSetBrand = (v) => TripManager.wizSetBrand(v);
         window.tmWizSetBodyType = (v) => TripManager.wizSetBodyType(v);
         window.tmWizSetStockMode = (v) => TripManager.wizSetStockMode(v);
+        window.tmWizClearMapFilters = () => TripManager.wizClearMapFilters();
         window.tmDeleteTrip = (id) => TripManager.deleteTrip(id);
         window.tmRepChange = (id) => TripManager.onRepChange(id);
         window.tmSetTab = (tab) => TripManager.setTab(tab);
