@@ -106,9 +106,12 @@ Four factors: how much runway we have with them (penetration), whether they sell
 Time savings: reps no longer spend hours researching dealers manually. Better targeting: the scoring system surfaces high-potential dealers they might never have found. Price intelligence: know exactly where the market is before quoting.
 
 **"What's next?"**
-- Sales velocity tracking (which body types sell fastest, by state)
-- Automated email alerts (at-risk accounts, hot lead notifications, weekly digests)
-- Salesforce integration
+- **VIN-level sales tracking** — passive sale detection via VIN disappearance between scrapes (no manual entry)
+- **Sell-through velocity** — days on lot, sell-through rate, revenue estimates per dealer
+- **Rep annotation layer** — lightweight notes (last visited, contact name, context) on dealer records for smarter briefings
+- **At-risk account alerts** — auto-detect when Smyrna penetration drops at a dealer
+- **Competitive displacement tracking** — surface when dealers are switching builders
+- ~~Salesforce integration~~ — **deferred** (March 2026 decision: SF Account data too messy, risk outweighs value, Otto can derive same insights from scrape data)
 
 ---
 

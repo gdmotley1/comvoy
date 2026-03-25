@@ -209,6 +209,89 @@ Otto is the AI sales intelligence agent for **Comvoy** (Smyrna Truck / Fouts Bro
 
 ---
 
+## Salesforce Integration — Decision Log (March 24, 2026)
+
+### Decision: Do NOT connect SF to Otto (for now)
+
+**Context**: Leadership wants dealer/sales history from Salesforce integrated into Otto. SF admin confirmed:
+- Dealers have Accounts in SF, but the Account table is "a total mess"
+- No Quotes object — just Opportunities (orders = closed-won Opportunities)
+- Custom `Trucks__c` object exists (sales orders)
+- `Listing__c` table exists — it's literally scraped WorkTruckSolutions data (same source as Otto)
+- `Listing__c.Dealer__r` is a lookup to Account
+- Cases and Opportunities link to Accounts
+- URI structure: `/lightning/r/Account/{AccountId}/view`
+- Query pattern: `SELECT ... FROM Opportunity WHERE AccountId = Listing__c.Dealer__r`
+
+**Why not integrate**:
+1. SF Account data is admittedly messy — dirty source = dirty downstream
+2. No clean dealer ID linkage (would need manual SF Account ID → Otto dealer ID matching)
+3. Risk of corrupting Otto's clean scraped data pipeline
+4. The `Listing__c` table is the SAME scraped data Otto already has, just messier
+5. Double-entry problem — reps would log in SF AND use Otto
+6. Value doesn't outweigh risk of data quality contamination
+
+**What to do instead**: Otto can derive the same insights from its existing scrape data without SF dependency.
+
+---
+
+## Next Build: VIN-Level Sales Tracking (Passive)
+
+### Concept
+When a VIN disappears from a scrape, that's a probable sale. No manual entry needed — the scraper detects it automatically.
+
+### Implementation Plan
+
+**New table: `vehicle_sightings`**
+- VIN (text, indexed)
+- dealer_id (FK to dealers)
+- first_seen (date — first scrape this VIN appeared)
+- last_seen (date — most recent scrape this VIN appeared)
+- status (enum: `active`, `sold`, `transferred`)
+- listed_price (last known price)
+- body_type, chassis_brand, manufacturer (denormalized for fast queries)
+
+**Scraper logic change**: On each run, diff current VINs vs previous scrape. VINs missing from current scrape → mark as `sold` with last_seen = previous scrape date.
+
+**New Otto tools needed**:
+- `get_dealer_sales_history` — units sold per dealer per month, what sold, body type breakdown
+- `get_sell_through_velocity` — days on lot (last_seen - first_seen), sell-through rate, revenue estimates
+
+### Metrics this enables (no SF needed)
+- Units sold per dealer per month (VIN disappearance count)
+- What sold (body type, chassis, manufacturer breakdown)
+- Days on lot / sell velocity (last_seen minus first_seen)
+- Sell-through rate (units sold / avg inventory)
+- Revenue estimate (last listed price × units sold)
+- Smyrna penetration trends (% of dealer inventory that's Smyrna, over time)
+- Competitive displacement signals (Builder X units dropping, Builder Y rising)
+- At-risk account detection (Smyrna units declining at a dealer)
+- Competitive sales tracking (tracks ALL builder sales, not just Smyrna)
+
+### Open Question
+**What % of Smyrna units get listed on WorkTruckSolutions/Comvoy before selling?** If most do, this covers nearly all sales passively. If many are factory-direct/pre-sold, there's a gap. Need answer from internal team.
+
+---
+
+## Planned: Lightweight Rep Annotation Layer
+
+NOT a CRM — just sticky notes on dealer records so Otto briefings include rep context.
+
+**Fields per dealer** (simple key-value, stored in Otto DB):
+- `last_visited` (timestamp)
+- `primary_contact` (name + role, e.g. "Jim, fleet manager")
+- `rep_notes` (free text, e.g. "switching from Knapheide, unhappy with lead times")
+
+**How it improves Otto**: Dealer briefings would include rep context alongside scraped data:
+> **Crestview Ford — Cedartown, GA**
+> 34 units, 8 Smyrna bodies (24% penetration, up from 18% in Jan)
+> Lead score: 72 (Hot) — high body match, growing inventory
+> *Rep note (Mar 10): Jim switching from Knapheide, lead time complaints*
+
+This avoids becoming a second CRM — no deal stages, no pipeline, no forecasting. Just field context that makes the next briefing smarter.
+
+---
+
 ## Lead Scoring Model (0–100)
 
 | Factor | Max Points | What It Measures |
