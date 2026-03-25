@@ -6973,10 +6973,7 @@
                         if (!d.lat || !d.lng) return;
                         var included = _isDealerIncluded(d);
                         var tier = (d.lead_tier || 'cold').toLowerCase();
-
-                        var icon = included
-                            ? DealerMap.createTacticalIcon(tier, tierColor(tier))
-                            : DealerMap.createTacticalIcon('unscored', '#555');
+                        var icon = DealerMap.createTacticalIcon(tier, tierColor(tier));
 
                         var marker = L.marker([d.lat, d.lng], { icon: icon, zIndexOffset: 600 });
                         marker.bindTooltip('<b>' + esc(d.name) + '</b><br>' + esc(d.city) + ', ' + esc(d.state) + '<br>' + (d.lead_score || 0) + ' pts · ' + tier + '<br>Day ' + split.day, {
@@ -7009,7 +7006,8 @@
                                 }
                             }
                         });
-                        marker.addTo(_wizDealerLayer);
+                        // Only add included dealers to the map
+                        if (included) marker.addTo(_wizDealerLayer);
                         _wizMarkerMap[d.dealer_id] = marker;
                     });
                 });
@@ -7033,11 +7031,14 @@
                         var marker = _wizMarkerMap[d.dealer_id];
                         if (!marker) return;
                         var included = _isDealerIncluded(d);
-                        var tier = (d.lead_tier || 'cold').toLowerCase();
-                        var icon = included
-                            ? DealerMap.createTacticalIcon(tier, tierColor(tier))
-                            : DealerMap.createTacticalIcon('unscored', '#555');
-                        marker.setIcon(icon);
+                        var onMap = _wizDealerLayer.hasLayer(marker);
+                        if (included && !onMap) {
+                            var tier = (d.lead_tier || 'cold').toLowerCase();
+                            marker.setIcon(DealerMap.createTacticalIcon(tier, tierColor(tier)));
+                            marker.addTo(_wizDealerLayer);
+                        } else if (!included && onMap) {
+                            _wizDealerLayer.removeLayer(marker);
+                        }
                     });
                 });
             }
