@@ -5512,7 +5512,7 @@
 
             function _initGreetingEye() { /* disabled for perf */ }
 
-            function _showGreetingChat() {
+            function _showGreetingChat(skipResume) {
                 document.body.classList.remove('map-view', 'dashboard', 'trip-manager');
                 document.body.classList.add('chatting', 'greeting-mode');
                 messagesDiv = null;
@@ -5522,8 +5522,9 @@
                 const bar = document.querySelector('.input-bar');
                 if (slot && bar) slot.appendChild(bar);
                 setTimeout(() => { input?.focus(); _initGreetingEye(); }, 50);
-                // Check for resumable session
-                if (Auth.getUserName() && !_sessionRecovered) {
+                // Check for resumable session (skip after explicit New Chat)
+                if (!skipResume && Auth.getUserName()) {
+                    _sessionRecovered = false;
                     setTimeout(() => _recoverSession(), 300);
                 }
             }
@@ -5542,7 +5543,7 @@
                 sessionTokens = 0; sessionCost = 0;
                 const ub = $('usageBadge'); if (ub) { ub.textContent = ''; ub.classList.remove('warn'); }
                 _repsLoaded = false;
-                _showGreetingChat();
+                _showGreetingChat(true);  // skip resume — user explicitly wants new chat
                 checkApiStatus();
             }
 
