@@ -4639,7 +4639,6 @@
                     <div class="eye-glow"></div>
                     <svg class="otto-eye" viewBox="0 0 60 60"><defs><radialGradient id="irisGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00d4ff"/><stop offset="50%" stop-color="#4f8fff"><animate attributeName="stop-color" values="#4f8fff;#00d4ff;#a855f7;#4f8fff" dur="6s" repeatCount="indefinite"/></stop><stop offset="100%" stop-color="#1a1a3e"/></radialGradient><radialGradient id="pupilGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="#4f8fff" stop-opacity="0"/></radialGradient></defs><circle cx="30" cy="30" r="29" fill="none" stroke="url(#irisGrad)" stroke-width="0.5" opacity="0.3"/><circle cx="30" cy="30" r="28" fill="#0a0e1a" stroke="url(#irisGrad)" stroke-width="2" opacity="0.9"/><circle cx="30" cy="30" r="27" fill="url(#irisGrad)" opacity="0.06"/><circle cx="30" cy="30" r="22" fill="url(#irisGrad)" opacity="0.18" style="animation:irisRotate 12s linear infinite"/><circle cx="30" cy="30" r="16" fill="none" stroke="url(#irisGrad)" stroke-width="2.5" opacity="0.45" style="animation:irisRotate 8s linear infinite reverse"/><circle cx="30" cy="30" r="11" fill="url(#irisGrad)" opacity="0.7"/><circle class="otto-pupil" cx="30" cy="30" r="6" fill="#060810"/><circle class="pupil-glow" cx="30" cy="30" r="4.5" fill="url(#pupilGlow)" opacity="0.6"/><circle class="specular-1" cx="23" cy="23" r="3" fill="white" opacity="0.25"/><circle class="specular-2" cx="25" cy="25" r="1.5" fill="white" opacity="0.45"/></svg>
                 </div>
-                <div id="resumeBar" style="display:none;justify-content:center;align-items:center;padding:8px 16px;margin:0 auto 12px;max-width:500px;border-radius:12px;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.15);font-size:13px;color:var(--text-secondary)"></div>
                 <div class="chat-greeting-text welcome-greet-text" id="welcomeGreet"></div>
                 <div class="hero-cards">
                     <div class="hero-card" onclick="openDealerMap()">
@@ -5402,7 +5401,6 @@
                 return `<div class="welcome" id="welcome">
 <div class="orb-hero"><div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
 <div class="eye-glow"></div>${eye}</div>
-<div id="resumeBar" style="display:none;justify-content:center;align-items:center;padding:8px 16px;margin:0 auto 12px;max-width:500px;border-radius:12px;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.15);font-size:13px;color:var(--text-secondary)"></div>
 <div class="chat-greeting-text welcome-greet-text">${greet}</div>
 <div class="hero-cards">
 <div class="hero-card" onclick="openDealerMap()">
@@ -5506,6 +5504,7 @@
                         <div class="greet-reflection"></div>
                     </div>
                     <div class="chat-greeting-text">${greet}</div>
+                    <div id="resumeBar" style="display:none;justify-content:center;align-items:center;padding:8px 16px;margin:0 auto 12px;max-width:500px;border-radius:12px;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.15);font-size:13px;color:var(--text-secondary)"></div>
                     <div class="chat-greeting-input" id="greetingInput"></div>
                     <div class="chat-suggestions">${chips}</div>
                 </div>`;
@@ -5523,6 +5522,10 @@
                 const bar = document.querySelector('.input-bar');
                 if (slot && bar) slot.appendChild(bar);
                 setTimeout(() => { input?.focus(); _initGreetingEye(); }, 50);
+                // Check for resumable session
+                if (Auth.getUserName() && !_sessionRecovered) {
+                    setTimeout(() => _recoverSession(), 300);
+                }
             }
 
             function openChat() {
@@ -5626,8 +5629,7 @@
             loadSnapshots();
             loadReps();
             checkApiStatus();
-            // Try session recovery after auth resolves
-            setTimeout(() => { if (Auth.getUserName()) _recoverSession(); }, 500);
+            // Session recovery now triggers when opening New Chat screen
 
             return {
                 ask, send, addBot, ensureMessages, clearChat, openChat, goHome, scrollDown,
