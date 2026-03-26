@@ -2643,9 +2643,9 @@
         .tm-controls {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             margin-bottom: 24px;
-            height: 46px;
+            flex-wrap: wrap;
         }
 
         .tm-rep-select {
@@ -2676,15 +2676,15 @@
         .tm-tab-bar {
             display: flex;
             background: var(--glass);
-            border-radius: 12px;
+            border-radius: 10px;
             border: 1px solid var(--glass-border);
             overflow: hidden;
-            height: 46px;
+            height: 40px;
         }
 
         .tm-tab {
-            padding: 0 26px;
-            height: 46px;
+            padding: 0 20px;
+            height: 40px;
             display: flex;
             align-items: center;
             font-size: 13px;
@@ -2702,19 +2702,46 @@
             background: rgba(79,143,255,0.12);
         }
 
-        .tm-new-trip-btn {
+        .tm-controls-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             margin-left: auto;
+        }
+
+        .tm-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0 14px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            color: var(--text-tertiary);
+            font-size: 12px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .tm-action-btn:hover { background: rgba(255,255,255,0.06); color: var(--text-primary); border-color: rgba(255,255,255,0.12); }
+        .tm-action-btn svg { flex-shrink: 0; opacity: 0.6; }
+        .tm-action-btn:hover svg { opacity: 1; }
+
+        .tm-new-trip-btn {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            padding: 0 24px;
-            height: 46px;
-            border-radius: 12px;
+            padding: 0 20px;
+            height: 36px;
+            border-radius: 10px;
             border: 1px solid rgba(79,143,255,0.2);
             background: rgba(79,143,255,0.08);
             color: var(--accent-blue);
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             font-family: inherit;
             cursor: pointer;
@@ -2723,6 +2750,38 @@
         }
         .tm-new-trip-btn:hover { background: rgba(79,143,255,0.18); border-color: rgba(79,143,255,0.35); }
         .tm-new-trip-btn svg { flex-shrink: 0; }
+
+        .tm-nearby-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .tm-nearby-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .tm-nearby-close {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.3);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .tm-nearby-close:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); }
+
+        #nearbyPanel {
+            margin-bottom: 20px;
+            padding: 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            animation: tmFadeIn 0.3s ease;
+        }
 
         .tm-trips-list {
             display: flex;
@@ -4670,29 +4729,7 @@
                     </div>
                 </div>
 
-                <!-- Schedule Import Row -->
-                <div class="hero-cards" style="grid-template-columns: repeat(2, 1fr); max-width: 520px; margin-bottom: 16px;">
-                    <div class="hero-card" onclick="document.getElementById('scheduleFileInput').click()">
-                        <div class="hero-card-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg></div>
-                        <div class="hero-card-title">Import Schedule</div>
-                        <div class="hero-card-desc">Upload a rep visit schedule CSV to find nearby opportunities</div>
-                    </div>
-                    <div class="hero-card" onclick="Schedules.showNearby()">
-                        <div class="hero-card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
-                        <div class="hero-card-title">Nearby Opportunities</div>
-                        <div class="hero-card-desc">See high-value dealers near your scheduled stops</div>
-                    </div>
-                </div>
                 <input type="file" id="scheduleFileInput" accept=".csv" style="display:none" onchange="Schedules.importCSV(this)">
-
-                <!-- Nearby Opportunities Panel (hidden by default) -->
-                <div id="nearbyPanel" style="display:none; max-width:820px; width:100%; margin-bottom:24px;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-                        <div style="font-size:18px; font-weight:700; color:var(--text-primary);">Nearby Opportunities</div>
-                        <button onclick="document.getElementById('nearbyPanel').style.display='none'" style="background:none; border:none; color:rgba(255,255,255,0.4); cursor:pointer; font-size:20px;">&times;</button>
-                    </div>
-                    <div id="nearbyResults" style="display:flex; flex-direction:column; gap:10px;"></div>
-                </div>
 
                 <div class="action-cards" id="actionCards" style="display:none"></div>
                 <div class="api-notice" id="apiNotice"><div class="api-notice-icon"><svg viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg></div><div class="api-notice-text"><strong>API key required.</strong> Add <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">ANTHROPIC_API_KEY</code> to your <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">.env</code> file and restart the server.</div></div>
@@ -5943,7 +5980,18 @@
                             '<button class="tm-tab" id="tmTabPast" onclick="tmSetTab(\'past\')">Past</button>' +
                             '<button class="tm-tab" id="tmTabAll" onclick="tmSetTab(\'all\')">All</button>' +
                         '</div>' +
-                        '<button class="tm-new-trip-btn" onclick="showTripForm()">' + plusIcon + ' New Trip</button>' +
+                        '<div class="tm-controls-right">' +
+                            '<button class="tm-action-btn" onclick="document.getElementById(\'scheduleFileInput\').click()" title="Import rep visit schedule CSV"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg> Import</button>' +
+                            '<button class="tm-action-btn" onclick="Schedules.showNearby()" title="See high-value dealers near your scheduled stops"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Nearby</button>' +
+                            '<button class="tm-new-trip-btn" onclick="showTripForm()">' + plusIcon + ' New Trip</button>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div id="nearbyPanel" style="display:none;">' +
+                        '<div class="tm-nearby-header">' +
+                            '<div class="tm-nearby-title">Nearby Opportunities</div>' +
+                            '<button class="tm-nearby-close" onclick="document.getElementById(\'nearbyPanel\').style.display=\'none\'">&times;</button>' +
+                        '</div>' +
+                        '<div id="nearbyResults"></div>' +
                     '</div>' +
                     '<div class="tm-trips-list" id="tmTripsList"></div>' +
                 '</div></div>';
@@ -9296,6 +9344,8 @@
             }
 
             async function showNearby() {
+                // Ensure trips tab is open so the nearby panel is visible
+                if (typeof window.openTripManager === 'function') window.openTripManager();
                 const panel = document.getElementById('nearbyPanel');
                 const results = document.getElementById('nearbyResults');
 
