@@ -203,3 +203,43 @@ class TripStopUpdate(BaseModel):
 class TripStopBulkSet(BaseModel):
     """Bulk-set stops for a trip day."""
     stops: list[dict]  # [{dealer_id, stop_order}]
+
+
+# --- Phase 7: Rep Schedule Import + Nearby Opportunities ---
+
+class ScheduleImportResult(BaseModel):
+    """Result of importing a rep visit schedule CSV."""
+    schedule_id: str
+    schedule_name: str
+    total_entries: int
+    active_entries: int
+    matched: int
+    unmatched: int
+    match_pct: float
+    unmatched_dealers: list[str] = []  # names of dealers that didn't match
+
+
+class NearbyOpportunity(BaseModel):
+    """A high-value dealer near a scheduled visit stop."""
+    dealer_id: str
+    name: str
+    city: str
+    state: str
+    distance_miles: float
+    total_vehicles: int = 0
+    smyrna_units: int = 0
+    smyrna_pct: float = 0
+    score: int | None = None
+    tier: str | None = None
+    why: dict | None = None  # scoring factors
+
+
+class AnchorWithNearby(BaseModel):
+    """A scheduled dealer (anchor) with nearby opportunities."""
+    anchor_name: str
+    anchor_city: str
+    anchor_state: str
+    anchor_dealer_id: str | None = None
+    relationship: str | None = None
+    visit_date: str | None = None
+    nearby: list[NearbyOpportunity] = []

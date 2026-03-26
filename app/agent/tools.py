@@ -1,12 +1,13 @@
 """
 Agent tool definitions for Claude API tool-use.
 
-Phase 6 tools: 17 total
+Phase 7 tools: 18 total
   Original 7: search, nearby, briefing, territory, dealer_trend, territory_trend, alerts
   Phase 3: get_lead_scores, get_route_dealers, get_dealer_intel, get_upload_report
   Phase 4: get_dealer_places (Google Places business data)
   Phase 5: search_vehicles, get_dealer_inventory, get_inventory_changes (VIN-level data)
   Phase 6: get_price_analytics, get_market_intel (pricing & competitive intelligence)
+  Phase 7: get_nearby_opportunities (schedule-based nearby dealer discovery)
 
 Token-efficiency notes:
 - Default search limit is 10 (not 200) to keep results small
@@ -624,6 +625,50 @@ TOOL_DEFINITIONS = [
                 },
             },
             "required": [],
+        },
+    },
+    {
+        "name": "get_nearby_opportunities",
+        "description": (
+            "Find high-value dealers near a rep's scheduled visit stops that aren't on "
+            "their current schedule. Surfaces missed opportunities within driving distance "
+            "of existing stops — only shows dealers with 30+ vehicles worth a detour. "
+            "Use for 'what dealers are near Kenneth's stops?', 'fill gaps in my trip', "
+            "'who am I missing near my scheduled visits?', 'nearby opportunities for Kenneth'."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "rep_name": {
+                    "type": "string",
+                    "description": "Rep name (e.g. 'Kenneth Greene' or 'Kenneth'). Required.",
+                },
+                "radius_miles": {
+                    "type": "number",
+                    "description": "Search radius around each scheduled stop (default 50 miles).",
+                    "default": 50,
+                },
+                "min_vehicles": {
+                    "type": "integer",
+                    "description": "Minimum vehicle count to be considered a worthwhile detour (default 30).",
+                    "default": 30,
+                },
+                "min_score": {
+                    "type": "integer",
+                    "description": "Minimum lead score (0-100) filter. Optional.",
+                },
+                "tier": {
+                    "type": "string",
+                    "description": "Lead score tier filter: 'hot', 'warm', or 'cold'. Optional.",
+                    "enum": ["hot", "warm", "cold"],
+                },
+                "limit_per_stop": {
+                    "type": "integer",
+                    "description": "Max nearby dealers to show per scheduled stop (default 5).",
+                    "default": 5,
+                },
+            },
+            "required": ["rep_name"],
         },
     },
 ]
@@ -2102,6 +2147,197 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
             if key and key in metrics:
                 return json.dumps({category: metrics[key]}, default=str)
             return json.dumps({"error": f"Unknown category: {category}"})
+
+        elif tool_name == "get_nearby_opportunities":
+            db = get_service_client()
+
+            # Resolve rep
+            rep_name = tool_input["rep_name"].lower()
+            all_reps = db.table("reps").select("id, name").eq("is_active", True).execute()
+            reps_data = [r for r in all_reps.data if rep_name in r["name"].lower()]
+            if not reps_data:
+                return json.dumps({"error": f"No rep found matching '{rep_name}'"})
+            rep_id = reps_data[0]["id"]
+
+            radius = tool_input.get("radius_miles", 50)
+            min_vehicles = tool_input.get("min_vehicles", 30)
+            min_score = tool_input.get("min_score", 0)
+            tier_filter = tool_input.get("tier")
+            limit_per = tool_input.get("limit_per_stop", 5)
+
+            # Try imported schedule first, fall back to active trip
+            schedule = db.table("rep_schedules").select("id").eq(
+                "rep_id", rep_id
+            ).order("created_at", desc=True).limit(1).execute()
+
+            anchor_dealers = []
+            schedule_dealer_ids = set()
+
+            if schedule.data:
+                sched_id = schedule.data[0]["id"]
+                sd = db.table("rep_schedule_dealers").select(
+                    "dealer_id, raw_name, raw_city, raw_state, relationship, visit_date, "
+                    "dealers(id, name, city, state, latitude, longitude)"
+                ).eq("schedule_id", sched_id).eq("is_active", True).execute()
+
+                for row in sd.data:
+                    d = row.get("dealers")
+                    if d and d.get("latitude"):
+                        anchor_dealers.append({
+                            "dealer_id": row["dealer_id"],
+                            "name": row["raw_name"],
+                            "city": row.get("raw_city") or d.get("city", ""),
+                            "state": row.get("raw_state") or d.get("state", ""),
+                            "lat": d["latitude"],
+                            "lng": d["longitude"],
+                            "relationship": row.get("relationship"),
+                        })
+                        schedule_dealer_ids.add(row["dealer_id"])
+            else:
+                # Fall back to active/planned trip
+                trip = db.table("trips").select("id").eq(
+                    "rep_id", rep_id
+                ).in_("status", ["active", "planned"]).order(
+                    "start_date", desc=True
+                ).limit(1).execute()
+
+                if trip.data:
+                    stops = db.table("trip_stops").select(
+                        "dealer_id, dealers(id, name, city, state, latitude, longitude)"
+                    ).eq("trip_day_id", trip.data[0]["id"]).eq("is_included", True).execute()
+                    # Actually need trip_days first
+                    days = db.table("trip_days").select("id").eq(
+                        "trip_id", trip.data[0]["id"]
+                    ).execute()
+                    day_ids = [d["id"] for d in days.data]
+                    if day_ids:
+                        stops = db.table("trip_stops").select(
+                            "dealer_id, dealers(id, name, city, state, latitude, longitude)"
+                        ).in_("trip_day_id", day_ids).eq("is_included", True).execute()
+                        for s in stops.data:
+                            d = s.get("dealers")
+                            if d and d.get("latitude"):
+                                anchor_dealers.append({
+                                    "dealer_id": s["dealer_id"],
+                                    "name": d["name"],
+                                    "city": d.get("city", ""),
+                                    "state": d.get("state", ""),
+                                    "lat": d["latitude"],
+                                    "lng": d["longitude"],
+                                })
+                                schedule_dealer_ids.add(s["dealer_id"])
+
+            if not anchor_dealers:
+                return json.dumps({"error": f"No schedule or active trip found for {reps_data[0]['name']}"})
+
+            # Get latest snapshot
+            snap = db.table("report_snapshots").select("id").order(
+                "report_date", desc=True
+            ).limit(1).execute()
+            snap_id = snap.data[0]["id"] if snap.data else None
+
+            # Find nearby opportunities for each anchor
+            results = []
+            seen_nearby = set()  # avoid duplicates across anchors
+
+            for anchor in anchor_dealers:
+                nearby_raw = db.rpc("find_nearby_dealers", {
+                    "p_lat": anchor["lat"],
+                    "p_lng": anchor["lng"],
+                    "p_radius_miles": radius,
+                }).execute()
+
+                candidates = [
+                    n for n in nearby_raw.data
+                    if n["dealer_id"] not in schedule_dealer_ids
+                    and n["dealer_id"] != anchor["dealer_id"]
+                ]
+                if not candidates:
+                    continue
+
+                cand_ids = [c["dealer_id"] for c in candidates]
+
+                # Get inventory + scores in batch
+                inv_map = {}
+                score_map = {}
+                if snap_id:
+                    inv = db.table("dealer_snapshots").select(
+                        "dealer_id, total_vehicles, smyrna_units, smyrna_percentage"
+                    ).eq("snapshot_id", snap_id).in_("dealer_id", cand_ids).execute()
+                    inv_map = {r["dealer_id"]: r for r in inv.data}
+
+                    scores = db.table("lead_scores").select(
+                        "dealer_id, score, tier, factors"
+                    ).eq("snapshot_id", snap_id).in_("dealer_id", cand_ids).execute()
+                    score_map = {r["dealer_id"]: r for r in scores.data}
+
+                nearby_list = []
+                for c in candidates:
+                    inv_data = inv_map.get(c["dealer_id"], {})
+                    vehicles = inv_data.get("total_vehicles", 0)
+                    if vehicles < min_vehicles:
+                        continue
+
+                    sc = score_map.get(c["dealer_id"], {})
+                    s_score = sc.get("score")
+                    s_tier = sc.get("tier")
+                    if min_score and (s_score or 0) < min_score:
+                        continue
+                    if tier_filter and s_tier != tier_filter:
+                        continue
+
+                    # Compact scoring factors
+                    f = sc.get("factors", {})
+                    why = {}
+                    if f:
+                        if f.get("fleet_scale") is not None:
+                            why["fleet"] = f"{f['fleet_scale']}/20"
+                        if f.get("match_pct") is not None:
+                            why["fit"] = f"{f['match_pct']}%"
+                        if f.get("penetration_pct") is not None:
+                            why["pen"] = f"{f['penetration_pct']}%"
+
+                    entry = {
+                        "id": c["dealer_id"],
+                        "name": c["dealer_name"],
+                        "city": c["city"],
+                        "state": c["state"],
+                        "dist_mi": c["distance_miles"],
+                        "vehicles": vehicles,
+                        "smyrna": inv_data.get("smyrna_units", 0),
+                        "smyrna_pct": inv_data.get("smyrna_percentage", 0),
+                        "score": s_score,
+                        "tier": s_tier,
+                    }
+                    if why:
+                        entry["why"] = why
+                    nearby_list.append(entry)
+
+                nearby_list.sort(key=lambda x: x.get("score") or 0, reverse=True)
+                nearby_list = nearby_list[:limit_per]
+
+                # Track seen to avoid duplicates
+                new_nearby = [n for n in nearby_list if n["id"] not in seen_nearby]
+                for n in new_nearby:
+                    seen_nearby.add(n["id"])
+
+                if new_nearby:
+                    results.append({
+                        "anchor": f"{anchor['name']} — {anchor['city']}, {anchor['state']}",
+                        "relationship": anchor.get("relationship"),
+                        "nearby": new_nearby,
+                    })
+
+            total = sum(len(r["nearby"]) for r in results)
+            return json.dumps({
+                "rep": reps_data[0]["name"],
+                "anchors_checked": len(anchor_dealers),
+                "anchors_with_nearby": len(results),
+                "total_opportunities": total,
+                "radius_miles": radius,
+                "min_vehicles": min_vehicles,
+                "results": results,
+            }, default=str)
 
         else:
             return json.dumps({"error": f"Unknown tool: {tool_name}"})

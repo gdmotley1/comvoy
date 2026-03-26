@@ -257,8 +257,8 @@ def get_map_data(response: Response):
     except Exception as e:
         logger.debug(f"dealer_places fetch skipped: {e}")
 
-    # Fetch body type inventory for all dealers (for map filtering)
-    body_type_map: dict[int, list[str]] = {}
+    # Fetch body type inventory for all dealers (for map filtering + tooltip)
+    body_type_map: dict[str, list[dict]] = {}
     if dealer_ids:
         try:
             bt_data = db.table("dealer_body_type_inventory").select(
@@ -269,7 +269,10 @@ def get_map_data(response: Response):
                 bt_name = r["body_types"]["name"]
                 if did not in body_type_map:
                     body_type_map[did] = []
-                body_type_map[did].append(bt_name)
+                body_type_map[did].append({"name": bt_name, "count": r["vehicle_count"]})
+            # Sort each dealer's body types by count descending
+            for did in body_type_map:
+                body_type_map[did].sort(key=lambda x: -x["count"])
         except Exception as e:
             logger.warning(f"Body type inventory fetch failed: {e}")
 

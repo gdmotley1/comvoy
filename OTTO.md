@@ -47,8 +47,8 @@ Otto is the AI sales intelligence agent for **Comvoy** (Smyrna Truck / Fouts Bro
 | Monthly Scrape | Active (March 2026 baseline) |
 
 ### Sales Territories
-- **Wesley White**: GA, TN, NC, SC, AL
-- **Kenneth Greene**: TX, LA, OK, AR, MS
+- **Wesley White**: TX, LA, OK, AR, MS
+- **Kenneth Greene**: GA, TN, NC, SC, AL (confirmed via 2026 visit schedule CSV)
 
 ---
 
@@ -64,12 +64,13 @@ Otto is the AI sales intelligence agent for **Comvoy** (Smyrna Truck / Fouts Bro
 | Parallel tool execution | Yes (asyncio.gather) |
 | Streaming | 24-char chunks @ 8ms delay |
 
-### Tools (17)
+### Tools (18)
 **Core**: search_dealers, find_nearby_dealers, get_dealer_briefing, get_territory_summary, get_dealer_trend, get_territory_trend, get_alerts
 **Scoring & Travel**: get_lead_scores, get_route_dealers, get_dealer_intel, get_upload_report, suggest_travel_plan
 **Google**: get_dealer_places
 **VIN-level**: search_vehicles, get_dealer_inventory, get_inventory_changes
 **Analytics**: get_price_analytics, get_market_intel
+**Schedule**: get_nearby_opportunities (finds high-volume dealers near rep's scheduled stops)
 
 ---
 
@@ -235,45 +236,37 @@ Otto is the AI sales intelligence agent for **Comvoy** (Smyrna Truck / Fouts Bro
 
 ---
 
-## Next Build: VIN-Level Sales Tracking (Passive)
+## DONE: VIN-Level Sales Tracking (Passive)
 
-### Concept
-When a VIN disappears from a scrape, that's a probable sale. No manual entry needed — the scraper detects it automatically.
+**Status: Implemented** (Phase 5)
 
-### Implementation Plan
+Uses diff-based detection — VINs disappearing between scrapes are marked as sold. Implementation:
+- `vehicles` table + `vehicle_diffs` table (migration 007)
+- Monthly scraper generates new/sold/price-change CSVs
+- Agent tools: `search_vehicles`, `get_dealer_inventory`, `get_inventory_changes`
+- Velocity metrics in `app/api/velocity.py`: days on lot, turnover, markdown velocity
 
-**New table: `vehicle_sightings`**
-- VIN (text, indexed)
-- dealer_id (FK to dealers)
-- first_seen (date — first scrape this VIN appeared)
-- last_seen (date — most recent scrape this VIN appeared)
-- status (enum: `active`, `sold`, `transferred`)
-- listed_price (last known price)
-- body_type, chassis_brand, manufacturer (denormalized for fast queries)
-
-**Scraper logic change**: On each run, diff current VINs vs previous scrape. VINs missing from current scrape → mark as `sold` with last_seen = previous scrape date.
-
-**New Otto tools needed**:
-- `get_dealer_sales_history` — units sold per dealer per month, what sold, body type breakdown
-- `get_sell_through_velocity` — days on lot (last_seen - first_seen), sell-through rate, revenue estimates
-
-### Metrics this enables (no SF needed)
-- Units sold per dealer per month (VIN disappearance count)
-- What sold (body type, chassis, manufacturer breakdown)
-- Days on lot / sell velocity (last_seen minus first_seen)
-- Sell-through rate (units sold / avg inventory)
-- Revenue estimate (last listed price × units sold)
-- Smyrna penetration trends (% of dealer inventory that's Smyrna, over time)
-- Competitive displacement signals (Builder X units dropping, Builder Y rising)
-- At-risk account detection (Smyrna units declining at a dealer)
-- Competitive sales tracking (tracks ALL builder sales, not just Smyrna)
-
-### Open Question
-**What % of Smyrna units get listed on WorkTruckSolutions/Comvoy before selling?** If most do, this covers nearly all sales passively. If many are factory-direct/pre-sold, there's a gap. Need answer from internal team.
+**Open Question (still unanswered)**: What % of Smyrna units get listed on WorkTruckSolutions/Comvoy before selling?
 
 ---
 
-## Planned: Lightweight Rep Annotation Layer
+## DONE: Nearby Opportunities (Schedule-Based)
+
+**Status: Implemented** (Phase 7, March 2026)
+
+Surfaces high-volume Otto DB dealers (30+ vehicles) within 50 miles of a rep's scheduled visit stops that aren't on their current schedule.
+
+**Components:**
+- `rep_schedules` + `rep_schedule_dealers` tables (migration 014)
+- CSV schedule parser with fuzzy dealer matching (`app/etl/schedule_parser.py`)
+- API endpoints: `POST /api/travel/schedules/import`, `GET /api/travel/schedules/{id}/nearby`
+- Agent tool: `get_nearby_opportunities` (tool #18)
+- Frontend: Import Schedule card + Nearby Opportunities panel on welcome screen
+- Falls back to active trips if no imported schedule exists
+
+---
+
+## Still TODO: Lightweight Rep Annotation Layer
 
 NOT a CRM — just sticky notes on dealer records so Otto briefings include rep context.
 
@@ -296,10 +289,10 @@ This avoids becoming a second CRM — no deal stages, no pipeline, no forecastin
 
 | Factor | Max Points | What It Measures |
 |--------|-----------|-----------------|
-| Inventory Size | 30 | Bigger fleet = bigger opportunity |
-| Body Type Match | 30 | % of inventory in types Smyrna builds |
-| Smyrna Opportunity | 25 | Whitespace (25), low penetration (15), existing (8) |
-| Growth Momentum | 15 | Inventory trending up = active buyer |
+| Smyrna Penetration | 30 | Whitespace (18pts), low pen <5% (28pts), 5-15% (22pts), 15-30% (15pts), 30%+ (10pts) |
+| Product Fit | 25 | % of inventory in body types Smyrna builds (service, flatbed, box, dump, etc.) |
+| Growth Signal | 25 | MoM inventory trend: 20%+ growth (25pts) down to declining (0pts) |
+| Fleet Scale | 20 | Bigger fleet = bigger order potential |
 
 **Tiers**: Hot (70+) · Warm (40–69) · Cold (<40)
 
@@ -317,3 +310,32 @@ Otto always explains WHY a dealer scored the way they did in executive language 
 6. Never guess at numbers — use tools.
 7. Give executive summary bullets and talking points — NOT scripts. Reps handle conversations themselves.
 8. Data density > word count. 200 words with 10 data points beats 400 words with 5.
+
+---
+
+## Deployment Notes — Nearby Opportunities (March 25, 2026)
+
+**Migration needed**: Run `migrations/014_rep_schedules.sql` in Supabase SQL Editor before deploying.
+
+**New files created this session**:
+- `migrations/014_rep_schedules.sql` — rep_schedules + rep_schedule_dealers tables
+- `app/etl/schedule_parser.py` — CSV parser with fuzzy dealer matching
+
+**Modified files**:
+- `app/api/travel.py` — added schedule import, nearby query, schedule list endpoints
+- `app/agent/tools.py` — added `get_nearby_opportunities` tool (#18)
+- `app/agent/prompts.py` — added tool #21 guidance for nearby opportunities
+- `app/models.py` — added ScheduleImportResult, NearbyOpportunity, AnchorWithNearby models
+- `static/index.html` — Import Schedule card, Nearby Opportunities panel, Schedules JS module
+
+**Test with**: Kenneth's actual CSV (`DEALER SITE VISIT SCHEDULE - 2026 DEALER SITE VISIT SCHEDULE-Kenneth.csv`)
+
+---
+
+## Remaining Work
+
+1. **Rep Annotation Layer** — sticky notes on dealer records (last_visited, primary_contact, rep_notes)
+2. **At-risk account alerts** — auto-detect declining Smyrna penetration
+3. **Competitive displacement tracking** — surface builder-switching signals
+4. **Expose velocity as agent tools** — `get_dealer_sales_history`, `get_sell_through_velocity` (data exists in `app/api/velocity.py` but not yet wired as named Otto tools)
+5. **Open question**: What % of Smyrna units get listed on WTS before selling? (determines passive tracking coverage gap)

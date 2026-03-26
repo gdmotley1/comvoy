@@ -28,6 +28,7 @@ from app.etl.routing import get_driving_route
 from app.models import (
     TravelPlanCreate, TravelPlanUpdate,
     TripCreate, TripUpdate, TripDayInput, TripStopUpdate, TripStopBulkSet,
+    ScheduleImportResult, AnchorWithNearby, NearbyOpportunity,
 )
 
 router = APIRouter(prefix="/api/travel", tags=["travel"])
@@ -1567,4 +1568,252 @@ async def _geocode_and_build_day(day: TripDayInput, trip_id: str, day_number: in
         "is_round_trip": day.is_round_trip,
         "route_polyline": route_wkt,
         "notes": day.notes,
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════
+# SCHEDULE IMPORT & NEARBY OPPORTUNITIES
+# ═══════════════════════════════════════════════════════════════════
+
+from fastapi import UploadFile, File
+
+
+@router.post("/schedules/import", response_model=ScheduleImportResult)
+async def import_schedule(
+    rep_id: str = Query(..., description="Rep UUID"),
+    schedule_name: str = Query("Visit Schedule", description="Name for this schedule"),
+    file: UploadFile = File(...),
+):
+    """Import a rep visit schedule from CSV and fuzzy-match dealers to Otto DB."""
+    from app.etl.schedule_parser import parse_schedule_csv, match_dealers_to_db
+
+    if not file.filename.endswith(".csv"):
+        raise HTTPException(400, "File must be a .csv")
+
+    content = await file.read()
+    entries = parse_schedule_csv(content)
+    if not entries:
+        raise HTTPException(422, "No dealer entries found in CSV")
+
+    entries = match_dealers_to_db(entries)
+
+    db = get_service_client()
+
+    # Verify rep exists
+    rep = db.table("reps").select("id").eq("id", rep_id).execute()
+    if not rep.data:
+        raise HTTPException(404, f"Rep not found: {rep_id}")
+
+    # Create schedule
+    sched = db.table("rep_schedules").insert({
+        "rep_id": rep_id,
+        "name": schedule_name,
+        "source_filename": file.filename,
+    }).execute()
+    schedule_id = sched.data[0]["id"]
+
+    # Insert dealer entries
+    rows = []
+    for e in entries:
+        rows.append({
+            "schedule_id": schedule_id,
+            "dealer_id": e.get("dealer_id"),
+            "raw_name": e["raw_name"],
+            "raw_city": e.get("raw_city") or None,
+            "raw_state": e.get("raw_state") or None,
+            "relationship": e.get("relationship"),
+            "dealership_type": e.get("dealership_type"),
+            "lead_contacts": e.get("lead_contacts"),
+            "visit_date": e.get("visit_date"),
+            "zone_label": e.get("zone_label"),
+            "notes": e.get("notes"),
+            "match_confidence": e.get("match_confidence"),
+            "is_active": e.get("is_active", True),
+        })
+
+    if rows:
+        db.table("rep_schedule_dealers").insert(rows).execute()
+
+    active = [e for e in entries if e.get("is_active", True)]
+    matched = [e for e in active if e.get("dealer_id")]
+    unmatched = [e for e in active if not e.get("dealer_id")]
+
+    return ScheduleImportResult(
+        schedule_id=schedule_id,
+        schedule_name=schedule_name,
+        total_entries=len(entries),
+        active_entries=len(active),
+        matched=len(matched),
+        unmatched=len(unmatched),
+        match_pct=round(len(matched) / max(len(active), 1) * 100, 1),
+        unmatched_dealers=[e["raw_name"] for e in unmatched],
+    )
+
+
+@router.get("/schedules")
+def list_schedules(rep_id: str = Query(None)):
+    """List imported rep schedules."""
+    db = get_service_client()
+    query = db.table("rep_schedules").select(
+        "id, name, rep_id, source_filename, created_at, "
+        "reps!inner(name)"
+    ).order("created_at", desc=True)
+    if rep_id:
+        query = query.eq("rep_id", rep_id)
+    result = query.execute()
+    return {"schedules": result.data}
+
+
+@router.get("/schedules/{schedule_id}/nearby")
+def get_schedule_nearby(
+    schedule_id: str,
+    radius_miles: float = Query(50, gt=0, le=200),
+    min_vehicles: int = Query(30, ge=0),
+    min_score: int = Query(0, ge=0, le=100),
+    tier: str = Query(None, description="Filter: hot, warm, cold"),
+):
+    """Find high-volume Otto DB dealers near each scheduled stop.
+
+    For each matched dealer on the schedule, finds nearby dealers (within
+    radius_miles) that are NOT already on the schedule, have 30+ vehicles,
+    and enriches them with lead scores.
+    """
+    db = get_service_client()
+
+    # Get schedule dealers with their Otto DB match
+    sched_dealers = db.table("rep_schedule_dealers").select(
+        "dealer_id, raw_name, raw_city, raw_state, relationship, visit_date, "
+        "dealers(id, name, city, state, latitude, longitude)"
+    ).eq("schedule_id", schedule_id).eq("is_active", True).execute()
+
+    if not sched_dealers.data:
+        raise HTTPException(404, "No active dealers in this schedule")
+
+    # Set of dealer IDs already on the schedule (to exclude from results)
+    schedule_ids = {
+        d["dealer_id"] for d in sched_dealers.data if d.get("dealer_id")
+    }
+
+    # Get latest snapshot for lead scores
+    snap = db.table("report_snapshots").select("id").order(
+        "report_date", desc=True
+    ).limit(1).execute()
+    snap_id = snap.data[0]["id"] if snap.data else None
+
+    results = []
+
+    for sd in sched_dealers.data:
+        dealer = sd.get("dealers")
+        if not dealer or not dealer.get("latitude"):
+            continue
+
+        # Find nearby dealers via PostGIS
+        nearby_raw = db.rpc("find_nearby_dealers", {
+            "p_lat": dealer["latitude"],
+            "p_lng": dealer["longitude"],
+            "p_radius_miles": radius_miles,
+        }).execute()
+
+        # Filter out schedule dealers and self
+        candidates = [
+            n for n in nearby_raw.data
+            if n["dealer_id"] not in schedule_ids
+            and n["dealer_id"] != dealer["id"]
+        ]
+
+        if not candidates:
+            continue
+
+        # Get inventory data for vehicle count filtering
+        cand_ids = [c["dealer_id"] for c in candidates]
+        if snap_id:
+            inv = db.table("dealer_snapshots").select(
+                "dealer_id, total_vehicles, smyrna_units, smyrna_percentage"
+            ).eq("snapshot_id", snap_id).in_("dealer_id", cand_ids).execute()
+            inv_map = {r["dealer_id"]: r for r in inv.data}
+        else:
+            inv_map = {}
+
+        # Get lead scores
+        if snap_id:
+            scores = db.table("lead_scores").select(
+                "dealer_id, score, tier, factors"
+            ).eq("snapshot_id", snap_id).in_("dealer_id", cand_ids).execute()
+            score_map = {r["dealer_id"]: r for r in scores.data}
+        else:
+            score_map = {}
+
+        nearby_opps = []
+        for c in candidates:
+            inv_data = inv_map.get(c["dealer_id"], {})
+            vehicles = inv_data.get("total_vehicles", 0)
+
+            # Filter: min vehicles
+            if vehicles < min_vehicles:
+                continue
+
+            sc = score_map.get(c["dealer_id"], {})
+            dealer_score = sc.get("score")
+            dealer_tier = sc.get("tier")
+
+            # Filter: min score
+            if min_score and (dealer_score or 0) < min_score:
+                continue
+            # Filter: tier
+            if tier and dealer_tier != tier:
+                continue
+
+            # Build scoring "why" summary
+            why = None
+            f = sc.get("factors", {})
+            if f:
+                why = {}
+                if f.get("fleet_scale") is not None:
+                    why["fleet"] = f"{f['fleet_scale']}/20"
+                if f.get("match_pct") is not None:
+                    why["fit"] = f"{f['match_pct']}%"
+                if f.get("penetration_pct") is not None:
+                    why["pen_pct"] = f"{f['penetration_pct']}%"
+                if f.get("growth_pct") is not None:
+                    why["growth"] = f"{f['growth_pct']}%"
+
+            nearby_opps.append(NearbyOpportunity(
+                dealer_id=c["dealer_id"],
+                name=c["dealer_name"],
+                city=c["city"],
+                state=c["state"],
+                distance_miles=c["distance_miles"],
+                total_vehicles=vehicles,
+                smyrna_units=inv_data.get("smyrna_units", 0),
+                smyrna_pct=inv_data.get("smyrna_percentage", 0),
+                score=dealer_score,
+                tier=dealer_tier,
+                why=why,
+            ))
+
+        # Sort by score descending
+        nearby_opps.sort(key=lambda x: x.score or 0, reverse=True)
+
+        if nearby_opps:
+            results.append(AnchorWithNearby(
+                anchor_name=sd["raw_name"],
+                anchor_city=sd.get("raw_city") or dealer.get("city", ""),
+                anchor_state=sd.get("raw_state") or dealer.get("state", ""),
+                anchor_dealer_id=sd.get("dealer_id"),
+                relationship=sd.get("relationship"),
+                visit_date=sd.get("visit_date"),
+                nearby=nearby_opps,
+            ))
+
+    # Sort anchors by total nearby opportunity count
+    results.sort(key=lambda x: len(x.nearby), reverse=True)
+
+    total_opportunities = sum(len(r.nearby) for r in results)
+    return {
+        "schedule_id": schedule_id,
+        "radius_miles": radius_miles,
+        "min_vehicles": min_vehicles,
+        "anchors_with_nearby": len(results),
+        "total_opportunities": total_opportunities,
+        "results": [r.model_dump() for r in results],
     }
