@@ -9290,7 +9290,7 @@
             async function _getReps() {
                 if (_reps) return _reps;
                 const res = await fetchT(API_BASE + '/api/travel/reps');
-                _reps = res.reps || [];
+                _reps = await res.json();
                 return _reps;
             }
 
@@ -9315,9 +9315,10 @@
                 formData.append('file', file);
 
                 try {
-                    const res = await fetch(
+                    const res = await fetchT(
                         `${API_BASE}/api/travel/schedules/import?rep_id=${repId}&schedule_name=${encodeURIComponent(file.name.replace('.csv',''))}`,
-                        { method: 'POST', body: formData }
+                        { method: 'POST', body: formData },
+                        60000
                     );
                     const data = await res.json();
                     if (!res.ok) { alert('Import failed: ' + (data.detail || JSON.stringify(data))); return; }
@@ -9352,7 +9353,7 @@
                 if (!_lastScheduleId) {
                     // Try to fetch latest schedule
                     try {
-                        const res = await fetchT(API_BASE + '/api/travel/schedules');
+                        const res = await (await fetchT(API_BASE + '/api/travel/schedules')).json();
                         const scheds = res.schedules || [];
                         if (scheds.length > 0) {
                             _lastScheduleId = scheds[0].id;
@@ -9370,9 +9371,9 @@
                 results.innerHTML = '<div style="color:rgba(255,255,255,0.4); text-align:center; padding:20px;">Loading nearby opportunities...</div>';
 
                 try {
-                    const res = await fetchT(
+                    const res = await (await fetchT(
                         `${API_BASE}/api/travel/schedules/${_lastScheduleId}/nearby?radius_miles=50&min_vehicles=30`
-                    );
+                    )).json();
 
                     if (!res.results || res.results.length === 0) {
                         results.innerHTML = '<div style="color:rgba(255,255,255,0.4); text-align:center; padding:20px;">No nearby opportunities found within 50 miles with 30+ vehicles.</div>';
