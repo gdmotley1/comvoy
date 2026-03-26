@@ -4410,6 +4410,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
+    <input type="file" id="scheduleFileInput" accept=".csv" style="display:none" onchange="Schedules.importCSV(this)">
 
     <!-- Auth Overlay — shown when not logged in -->
     <div class="auth-overlay" id="authOverlay">
@@ -4728,8 +4729,6 @@
                         <div class="hero-card-desc">Pricing intel, brand share, lead pipeline — visual analytics</div>
                     </div>
                 </div>
-
-                <input type="file" id="scheduleFileInput" accept=".csv" style="display:none" onchange="Schedules.importCSV(this)">
 
                 <div class="action-cards" id="actionCards" style="display:none"></div>
                 <div class="api-notice" id="apiNotice"><div class="api-notice-icon"><svg viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg></div><div class="api-notice-text"><strong>API key required.</strong> Add <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">ANTHROPIC_API_KEY</code> to your <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px">.env</code> file and restart the server.</div></div>
