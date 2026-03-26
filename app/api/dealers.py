@@ -263,7 +263,7 @@ def get_map_data(response: Response):
         try:
             bt_data = db.table("dealer_body_type_inventory").select(
                 "dealer_id, vehicle_count, body_types(name)"
-            ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).execute()
+            ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).limit(5000).execute()
             for r in (bt_data.data or []):
                 did = r["dealer_id"]
                 bt_name = r["body_types"]["name"]
