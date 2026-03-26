@@ -2709,27 +2709,6 @@
             margin-left: auto;
         }
 
-        .tm-action-btn {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 0 14px;
-            height: 36px;
-            border-radius: 10px;
-            border: 1px solid var(--glass-border);
-            background: var(--glass);
-            color: var(--text-tertiary);
-            font-size: 12px;
-            font-weight: 500;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-        .tm-action-btn:hover { background: rgba(255,255,255,0.06); color: var(--text-primary); border-color: rgba(255,255,255,0.12); }
-        .tm-action-btn svg { flex-shrink: 0; opacity: 0.6; }
-        .tm-action-btn:hover svg { opacity: 1; }
-
         .tm-new-trip-btn {
             display: flex;
             align-items: center;
@@ -2750,38 +2729,6 @@
         }
         .tm-new-trip-btn:hover { background: rgba(79,143,255,0.18); border-color: rgba(79,143,255,0.35); }
         .tm-new-trip-btn svg { flex-shrink: 0; }
-
-        .tm-nearby-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-        }
-        .tm-nearby-title {
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-        .tm-nearby-close {
-            background: none;
-            border: none;
-            color: rgba(255,255,255,0.3);
-            cursor: pointer;
-            font-size: 18px;
-            padding: 4px 8px;
-            border-radius: 6px;
-            transition: all 0.2s;
-        }
-        .tm-nearby-close:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); }
-
-        #nearbyPanel {
-            margin-bottom: 20px;
-            padding: 16px;
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 14px;
-            animation: tmFadeIn 0.3s ease;
-        }
 
         .tm-trips-list {
             display: flex;
@@ -4410,7 +4357,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
-    <input type="file" id="scheduleFileInput" accept=".csv" style="display:none" onchange="Schedules.importCSV(this)">
 
     <!-- Auth Overlay — shown when not logged in -->
     <div class="auth-overlay" id="authOverlay">
@@ -5980,17 +5926,8 @@
                             '<button class="tm-tab" id="tmTabAll" onclick="tmSetTab(\'all\')">All</button>' +
                         '</div>' +
                         '<div class="tm-controls-right">' +
-                            '<button class="tm-action-btn" onclick="document.getElementById(\'scheduleFileInput\').click()" title="Import rep visit schedule CSV"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg> Import</button>' +
-                            '<button class="tm-action-btn" onclick="Schedules.showNearby()" title="See high-value dealers near your scheduled stops"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Nearby</button>' +
                             '<button class="tm-new-trip-btn" onclick="showTripForm()">' + plusIcon + ' New Trip</button>' +
                         '</div>' +
-                    '</div>' +
-                    '<div id="nearbyPanel" style="display:none;">' +
-                        '<div class="tm-nearby-header">' +
-                            '<div class="tm-nearby-title">Nearby Opportunities</div>' +
-                            '<button class="tm-nearby-close" onclick="document.getElementById(\'nearbyPanel\').style.display=\'none\'">&times;</button>' +
-                        '</div>' +
-                        '<div id="nearbyResults"></div>' +
                     '</div>' +
                     '<div class="tm-trips-list" id="tmTripsList"></div>' +
                 '</div></div>';
@@ -9278,154 +9215,6 @@
         window.tmTagKey = (e, t) => TripManager.tagKey(e, t);
         window.tmRemoveTag = (t, i) => TripManager.removeTag(t, i);
 
-        /* ================================================================
-           SCHEDULES — Import CSV + Nearby Opportunities
-           ================================================================ */
-        const Schedules = (function() {
-            const { API_BASE, fetchT } = Core;
-            let _lastScheduleId = null;
-            let _reps = null;
-
-            async function _getReps() {
-                if (_reps) return _reps;
-                const res = await fetchT(API_BASE + '/api/travel/reps');
-                _reps = await res.json();
-                return _reps;
-            }
-
-            async function importCSV(input) {
-                if (!input.files || !input.files[0]) return;
-                const file = input.files[0];
-
-                // Prompt for rep selection
-                const reps = await _getReps();
-                if (!reps.length) { alert('No reps found.'); return; }
-
-                let repId = reps[0].id;
-                if (reps.length > 1) {
-                    const names = reps.map((r,i) => `${i+1}. ${r.name}`).join('\n');
-                    const pick = prompt('Select rep:\n' + names + '\n\nEnter number:', '1');
-                    if (!pick) return;
-                    const idx = parseInt(pick) - 1;
-                    if (idx >= 0 && idx < reps.length) repId = reps[idx].id;
-                }
-
-                const formData = new FormData();
-                formData.append('file', file);
-
-                try {
-                    const res = await fetchT(
-                        `${API_BASE}/api/travel/schedules/import?rep_id=${repId}&schedule_name=${encodeURIComponent(file.name.replace('.csv',''))}`,
-                        { method: 'POST', body: formData },
-                        60000
-                    );
-                    const data = await res.json();
-                    if (!res.ok) { alert('Import failed: ' + (data.detail || JSON.stringify(data))); return; }
-
-                    _lastScheduleId = data.schedule_id;
-
-                    let msg = `Imported "${data.schedule_name}"\n`;
-                    msg += `${data.active_entries} active dealers\n`;
-                    msg += `${data.matched} matched to Otto DB (${data.match_pct}%)\n`;
-                    msg += `${data.unmatched} unmatched`;
-                    if (data.unmatched_dealers && data.unmatched_dealers.length > 0) {
-                        msg += ':\n' + data.unmatched_dealers.slice(0, 10).join('\n');
-                        if (data.unmatched_dealers.length > 10) msg += `\n... +${data.unmatched_dealers.length - 10} more`;
-                    }
-                    alert(msg);
-
-                    // Auto-show nearby opportunities
-                    if (_lastScheduleId) showNearby();
-                } catch(e) {
-                    alert('Import error: ' + e.message);
-                } finally {
-                    input.value = '';
-                }
-            }
-
-            async function showNearby() {
-                // Fetch schedule ID before any DOM changes
-                if (!_lastScheduleId) {
-                    try {
-                        const res = await (await fetchT(API_BASE + '/api/travel/schedules', {}, 30000)).json();
-                        const scheds = res.schedules || [];
-                        if (scheds.length > 0) {
-                            _lastScheduleId = scheds[0].id;
-                        } else {
-                            alert('No imported schedules found. Import a CSV first.');
-                            return;
-                        }
-                    } catch(e) {
-                        alert('No imported schedules found. Import a CSV first.');
-                        return;
-                    }
-                }
-
-                // Open trips tab only if not already there (avoids re-render destroying DOM)
-                if (!document.body.classList.contains('trip-manager')) {
-                    if (typeof window.openTripManager === 'function') await window.openTripManager();
-                }
-
-                const panel = document.getElementById('nearbyPanel');
-                const results = document.getElementById('nearbyResults');
-                if (!panel || !results) return;
-
-                panel.style.display = 'block';
-                results.innerHTML = '<div style="color:rgba(255,255,255,0.4); text-align:center; padding:20px;">Loading nearby opportunities...</div>';
-
-                try {
-                    const res = await (await fetchT(
-                        `${API_BASE}/api/travel/schedules/${_lastScheduleId}/nearby?radius_miles=50&min_vehicles=30`,
-                        {},
-                        60000
-                    )).json();
-
-                    if (!res.results || res.results.length === 0) {
-                        results.innerHTML = '<div style="color:rgba(255,255,255,0.4); text-align:center; padding:20px;">No nearby opportunities found within 50 miles with 30+ vehicles.</div>';
-                        return;
-                    }
-
-                    let html = `<div style="color:rgba(255,255,255,0.35); font-size:13px; margin-bottom:8px;">${res.total_opportunities} opportunities near ${res.anchors_with_nearby} of your scheduled stops (${res.radius_miles}mi radius, ${res.min_vehicles}+ vehicles)</div>`;
-
-                    for (const anchor of res.results) {
-                        html += `<div style="border:1px solid var(--glass-border); border-radius:14px; background:var(--glass); backdrop-filter:blur(12px); overflow:hidden;">`;
-                        html += `<div style="padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="this.parentElement.querySelector('.nearby-list').classList.toggle('collapsed')">`;
-                        html += `<div><strong style="color:var(--text-primary);">${Core.esc(anchor.anchor_name)}</strong>`;
-                        html += ` <span style="color:rgba(255,255,255,0.3); font-size:13px;">${Core.esc(anchor.anchor_city)}, ${Core.esc(anchor.anchor_state)}</span>`;
-                        if (anchor.relationship) {
-                            const relColor = anchor.relationship === 'HOT' ? '#f59e0b' : anchor.relationship === 'WARM' ? '#3b82f6' : 'rgba(255,255,255,0.3)';
-                            html += ` <span style="color:${relColor}; font-size:11px; font-weight:600; margin-left:8px;">${anchor.relationship}</span>`;
-                        }
-                        html += `</div>`;
-                        html += `<span style="color:var(--accent-blue); font-size:13px; font-weight:600;">${anchor.nearby.length} nearby</span>`;
-                        html += `</div>`;
-
-                        html += `<div class="nearby-list" style="padding:0 16px 12px;">`;
-                        for (const n of anchor.nearby) {
-                            const tierColor = n.tier === 'hot' ? '#f59e0b' : n.tier === 'warm' ? '#3b82f6' : 'rgba(255,255,255,0.3)';
-                            const tierLabel = n.tier ? n.tier.toUpperCase() : '';
-                            html += `<div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.03);">`;
-                            html += `<div>`;
-                            html += `<div style="font-weight:600; color:var(--text-primary); font-size:14px;">${Core.esc(n.name)}</div>`;
-                            html += `<div style="color:rgba(255,255,255,0.35); font-size:12px;">${Core.esc(n.city)}, ${Core.esc(n.state)} &middot; ${n.distance_miles}mi &middot; ${n.total_vehicles} vehicles`;
-                            if (n.smyrna_units > 0) html += ` &middot; ${n.smyrna_units} Smyrna (${n.smyrna_pct}%)`;
-                            html += `</div></div>`;
-                            html += `<div style="text-align:right;">`;
-                            if (n.score != null) html += `<div style="font-weight:700; color:${tierColor}; font-size:15px;">${n.score}</div>`;
-                            if (tierLabel) html += `<div style="font-size:10px; font-weight:600; color:${tierColor}; text-transform:uppercase;">${tierLabel}</div>`;
-                            html += `</div></div>`;
-                        }
-                        html += `</div></div>`;
-                    }
-
-                    results.innerHTML = html;
-                } catch(e) {
-                    results.innerHTML = `<div style="color:#f87171; text-align:center; padding:20px;">Error: ${e.message}</div>`;
-                }
-            }
-
-            return { importCSV, showNearby };
-        })();
 
     </script>
 </body>
