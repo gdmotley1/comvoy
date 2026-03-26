@@ -7498,7 +7498,7 @@
                         <span class="map-popup-kv">Score <b>${d.score ?? '—'}</b> <span style="color:${tierColor(d.tier)};font-size:10px;font-weight:600;opacity:0.8">${d.score != null ? tierLabel : ''}</span></span>
                     </div>
                     ${d.top_brand ? `<div class="map-popup-meta">#1 brand: ${esc(d.top_brand)}</div>` : ''}
-                    ${(d.body_types || []).length ? `<div class="map-popup-bt"><div class="map-popup-bt-label">Body Types</div>${(d.body_types || []).map(bt => `<div class="map-popup-bt-row"><span class="map-popup-bt-name">${esc(bt.name)}</span><span class="map-popup-bt-count">${bt.count}</span></div>`).join('')}</div>` : ''}
+                    ${(d.body_types || []).length ? `<div class="map-popup-bt"><div class="map-popup-bt-label">Body Types</div>${(d.body_types || []).map(bt => { const n = typeof bt === 'string' ? bt : bt.name; const c = typeof bt === 'string' ? '' : bt.count; return `<div class="map-popup-bt-row"><span class="map-popup-bt-name">${esc(n)}</span><span class="map-popup-bt-count">${c}</span></div>`; }).join('')}</div>` : ''}
                 `, { maxWidth: 280 });
 
                 marker.bindTooltip(`${esc(d.name)} — ${d.vehicles || 0} vehicles`, {
