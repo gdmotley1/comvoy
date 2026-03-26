@@ -115,7 +115,7 @@ def compute_days_on_lot(db, snap_id: str, snap_date: str, dealer_id: str = None,
         n = len(ages)
         return {
             "avg_days": round(sum(ages) / n, 1),
-            "median_days": ages[n // 2],
+            "median_days": (ages[(n - 1) // 2] + ages[n // 2]) / 2 if n > 1 else ages[0],
             "max_days": ages[-1],
             "min_days": ages[0],
             "count": n,

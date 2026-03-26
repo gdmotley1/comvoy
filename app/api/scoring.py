@@ -89,16 +89,21 @@ def compute_lead_scores(snapshot_id: str, prev_snapshot_id: str | None = None) -
         return {"error": "No dealer data for this snapshot"}
 
     # Fetch body type inventory for body-type-match scoring
-    body_types = db.table("dealer_body_type_inventory").select(
-        "dealer_id, vehicle_count, body_types(name)"
-    ).eq("snapshot_id", snapshot_id).execute()
-
-    # Build body type map: dealer_id → {body_type: count}
+    # PostgREST caps at 1000 rows; paginate to get all ~1400+
     bt_map: dict[str, dict[str, int]] = {}
-    for row in body_types.data:
-        did = row["dealer_id"]
-        bt_name = row["body_types"]["name"]
-        bt_map.setdefault(did, {})[bt_name] = row["vehicle_count"]
+    offset = 0
+    while True:
+        body_types = db.table("dealer_body_type_inventory").select(
+            "dealer_id, vehicle_count, body_types(name)"
+        ).eq("snapshot_id", snapshot_id).range(offset, offset + 999).execute()
+        rows = body_types.data or []
+        for row in rows:
+            did = row["dealer_id"]
+            bt_name = row["body_types"]["name"]
+            bt_map.setdefault(did, {})[bt_name] = row["vehicle_count"]
+        if len(rows) < 1000:
+            break
+        offset += 1000
 
     # Fetch previous snapshot data for trend scoring
     prev_map: dict[str, dict] = {}

@@ -58,16 +58,19 @@ def search_dealers(
     if has_smyrna:
         query = query.gt("smyrna_units", 0)
 
-    query = query.order("total_vehicles", desc=True).limit(limit)
+    # Apply name filter at DB level when possible, fetch extra to account for exclusions
+    if q:
+        query = query.ilike("dealers.name", f"%{q}%")
+    query = query.order("total_vehicles", desc=True).limit(limit + 20)
     result = query.execute()
 
     dealers = []
     for row in result.data:
         d = row["dealers"]
-        if q and q.lower() not in d["name"].lower():
-            continue
         if is_excluded_dealer(d["name"]):
             continue
+        if len(dealers) >= limit:
+            break
         dealers.append(DealerSummary(
             id=d["id"],
             name=d["name"],
@@ -286,18 +289,27 @@ def get_map_data(response: Response):
             logger.warning(f"Body type inventory fetch failed: {e}")
 
     # Fetch brand inventory for all dealers (for map filtering)
+    # PostgREST caps at 1000 rows; paginate to get all
     brand_map: dict[int, list[str]] = {}
     if dealer_ids:
         try:
-            br_data = db.table("dealer_brand_inventory").select(
-                "dealer_id, vehicle_count, brands(name)"
-            ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).execute()
-            for r in (br_data.data or []):
-                did = r["dealer_id"]
-                br_name = r["brands"]["name"]
-                if did not in brand_map:
-                    brand_map[did] = []
-                brand_map[did].append(br_name)
+            offset = 0
+            while True:
+                br_data = db.table("dealer_brand_inventory").select(
+                    "dealer_id, vehicle_count, brands(name)"
+                ).eq("snapshot_id", snap_id).in_(
+                    "dealer_id", dealer_ids
+                ).range(offset, offset + 999).execute()
+                rows = br_data.data or []
+                for r in rows:
+                    did = r["dealer_id"]
+                    br_name = r["brands"]["name"]
+                    if did not in brand_map:
+                        brand_map[did] = []
+                    brand_map[did].append(br_name)
+                if len(rows) < 1000:
+                    break
+                offset += 1000
         except Exception as e:
             logger.warning(f"Brand inventory fetch failed: {e}")
 

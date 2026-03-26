@@ -1569,7 +1569,7 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                         "state": d["state"],
                         "score": d["score"],
                         "tier": d["tier"],
-                        "type": d["type"],
+                        "type": "whitespace" if d.get("factors", {}).get("penetration", 0) >= 25 else "upsell",
                     }
                     # Include compact scoring factors so Otto can explain ratings
                     f = d.get("factors", {})

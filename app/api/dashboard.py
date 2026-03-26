@@ -122,7 +122,7 @@ def get_dashboard(
     prices.sort()
     n = len(prices)
     avg_price = round(sum(prices) / n) if n else 0
-    median_price = prices[n // 2] if n else 0
+    median_price = (prices[(n - 1) // 2] + prices[n // 2]) // 2 if n else 0
 
     # Price brackets (overall + per body type)
     def _bracket(p):
