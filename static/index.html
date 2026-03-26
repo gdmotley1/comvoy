@@ -9344,15 +9344,10 @@
             }
 
             async function showNearby() {
-                // Ensure trips tab is open so the nearby panel is visible
-                if (typeof window.openTripManager === 'function') window.openTripManager();
-                const panel = document.getElementById('nearbyPanel');
-                const results = document.getElementById('nearbyResults');
-
+                // Fetch schedule ID before any DOM changes
                 if (!_lastScheduleId) {
-                    // Try to fetch latest schedule
                     try {
-                        const res = await (await fetchT(API_BASE + '/api/travel/schedules')).json();
+                        const res = await (await fetchT(API_BASE + '/api/travel/schedules', {}, 30000)).json();
                         const scheds = res.schedules || [];
                         if (scheds.length > 0) {
                             _lastScheduleId = scheds[0].id;
@@ -9366,12 +9361,23 @@
                     }
                 }
 
+                // Open trips tab only if not already there (avoids re-render destroying DOM)
+                if (!document.body.classList.contains('trip-manager')) {
+                    if (typeof window.openTripManager === 'function') await window.openTripManager();
+                }
+
+                const panel = document.getElementById('nearbyPanel');
+                const results = document.getElementById('nearbyResults');
+                if (!panel || !results) return;
+
                 panel.style.display = 'block';
                 results.innerHTML = '<div style="color:rgba(255,255,255,0.4); text-align:center; padding:20px;">Loading nearby opportunities...</div>';
 
                 try {
                     const res = await (await fetchT(
-                        `${API_BASE}/api/travel/schedules/${_lastScheduleId}/nearby?radius_miles=50&min_vehicles=30`
+                        `${API_BASE}/api/travel/schedules/${_lastScheduleId}/nearby?radius_miles=50&min_vehicles=30`,
+                        {},
+                        60000
                     )).json();
 
                     if (!res.results || res.results.length === 0) {
