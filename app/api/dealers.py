@@ -258,18 +258,27 @@ def get_map_data(response: Response):
         logger.debug(f"dealer_places fetch skipped: {e}")
 
     # Fetch body type inventory for all dealers (for map filtering + tooltip)
+    # PostgREST caps at 1000 rows; paginate to get all ~1400+
     body_type_map: dict[str, list[dict]] = {}
     if dealer_ids:
         try:
-            bt_data = db.table("dealer_body_type_inventory").select(
-                "dealer_id, vehicle_count, body_types(name)"
-            ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).limit(5000).execute()
-            for r in (bt_data.data or []):
-                did = r["dealer_id"]
-                bt_name = r["body_types"]["name"]
-                if did not in body_type_map:
-                    body_type_map[did] = []
-                body_type_map[did].append({"name": bt_name, "count": r["vehicle_count"]})
+            offset = 0
+            while True:
+                bt_data = db.table("dealer_body_type_inventory").select(
+                    "dealer_id, vehicle_count, body_types(name)"
+                ).eq("snapshot_id", snap_id).in_(
+                    "dealer_id", dealer_ids
+                ).range(offset, offset + 999).execute()
+                rows = bt_data.data or []
+                for r in rows:
+                    did = r["dealer_id"]
+                    bt_name = r["body_types"]["name"]
+                    if did not in body_type_map:
+                        body_type_map[did] = []
+                    body_type_map[did].append({"name": bt_name, "count": r["vehicle_count"]})
+                if len(rows) < 1000:
+                    break
+                offset += 1000
             # Sort each dealer's body types by count descending
             for did in body_type_map:
                 body_type_map[did].sort(key=lambda x: -x["count"])
