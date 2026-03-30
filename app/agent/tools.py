@@ -1665,6 +1665,8 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                     entry["price"] = v["price"]
                 if v.get("is_smyrna"):
                     entry["smyrna"] = True
+                if v.get("is_fouts"):
+                    entry["fouts"] = True
                 if v.get("listing_url"):
                     entry["url"] = v["listing_url"]
                 vehicles.append(entry)
@@ -1687,7 +1689,7 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
 
             query = db.table("vehicles").select(
                 "vin, brand, model, body_type, body_builder, price, "
-                "transmission, fuel_type, color, is_smyrna, listing_url"
+                "transmission, fuel_type, color, is_smyrna, is_fouts, listing_url"
             ).eq("snapshot_id", snap_id).eq("dealer_id", dealer_id).order("price", desc=False, nulls_last=True)
 
             if tool_input.get("brand"):
@@ -1718,6 +1720,8 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                     entry["color"] = v["color"]
                 if v.get("is_smyrna"):
                     entry["smyrna"] = True
+                if v.get("is_fouts"):
+                    entry["fouts"] = True
                 if v.get("listing_url"):
                     entry["url"] = v["listing_url"]
                 vehicles.append(entry)
@@ -1941,11 +1945,11 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
             while True:
                 if tool_input.get("state"):
                     q = db.table("vehicles").select(
-                        "brand, body_type, body_builder, price, is_smyrna, dealers!inner(state)"
+                        "brand, body_type, body_builder, price, is_smyrna, is_fouts, dealers!inner(state)"
                     ).eq("snapshot_id", snap_id).eq("dealers.state", tool_input["state"].upper())
                 else:
                     q = db.table("vehicles").select(
-                        "brand, body_type, body_builder, price, is_smyrna"
+                        "brand, body_type, body_builder, price, is_smyrna, is_fouts"
                     ).eq("snapshot_id", snap_id)
                 if tool_input.get("body_type"):
                     q = q.ilike("body_type", f"%{tool_input['body_type']}%")

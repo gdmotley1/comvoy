@@ -11,6 +11,16 @@ def is_excluded_dealer(name: str) -> bool:
     return any(pat in n for pat in EXCLUDED_DEALER_PATTERNS)
 
 
+# Fouts Commercial Vehicles is Smyrna Truck / Fouts Bros' own plant/lot.
+# Vehicles here are "ours" — tracked separately from Smyrna-bodied trucks at third-party dealers.
+FOUTS_DEALER_NAME = 'Fouts Commercial Vehicles'
+
+
+def is_fouts_dealer(name: str) -> bool:
+    """Return True if dealer is Fouts Commercial Vehicles (our own plant)."""
+    return name.strip() == FOUTS_DEALER_NAME
+
+
 class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_key: str = ""  # anon key (for RLS-gated access)

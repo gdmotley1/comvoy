@@ -22,7 +22,7 @@ from datetime import datetime
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from app.database import get_service_client
-from app.config import is_excluded_dealer
+from app.config import is_excluded_dealer, is_fouts_dealer
 from app.etl.geocoder import geocode_single
 from app.etl.places import search_place
 from dotenv import load_dotenv
@@ -250,6 +250,7 @@ def load_vehicles(db, csv_path, snapshot_id, dealer_map, smyrna_vins):
             "listing_url": row.get("listing_url", "") or None,
             "image_url": row.get("image_url", "") or None,
             "is_smyrna": vin in smyrna_vins,
+            "is_fouts": is_fouts_dealer(row.get("dealer_name", "")),
             "first_seen_date": first_seen,
         })
 
@@ -572,6 +573,20 @@ def main():
         compute_snapshot_metrics(snapshot_id, prev_id)
     except Exception as e:
         logger.warning(f"Snapshot metrics failed (non-fatal): {e}")
+
+    # Purge old vehicle rows — keep only current snapshot to stay within 500MB free tier.
+    # Historical data is preserved via vehicle_diffs + first_seen_date; dealer_snapshots
+    # aggregates and report_snapshots metadata are kept intact.
+    all_snaps = db.table("report_snapshots").select("id, report_date").order("report_date", desc=True).execute()
+    old_snap_ids = [s["id"] for s in all_snaps.data if s["id"] != snapshot_id]
+    if old_snap_ids:
+        deleted_total = 0
+        for old_id in old_snap_ids:
+            r = db.table("vehicles").delete().eq("snapshot_id", old_id).execute()
+            deleted_total += len(r.data)
+        logger.info(f"Purged vehicle rows from {len(old_snap_ids)} old snapshots ({deleted_total} rows freed)")
+    else:
+        logger.info("No old snapshots to purge")
 
     logger.info("=" * 60)
     logger.info("LOAD COMPLETE")

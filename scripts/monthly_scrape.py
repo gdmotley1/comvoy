@@ -466,7 +466,7 @@ def write_inventory_csv(path, vehicles_dict):
 
 
 def load_inventory_csv(path):
-    """Load an inventory CSV into an OrderedDict keyed by VIN."""
+    """Load an inventory CSV into an OrderedDict keyed by VIN. New vehicles only."""
     inventory = OrderedDict()
     if not os.path.exists(path):
         return inventory
@@ -474,7 +474,10 @@ def load_inventory_csv(path):
         reader = csv.DictReader(f)
         for row in reader:
             vin = row.get('vin', '').strip()
-            if vin:
+            # Skip used vehicles — new only, always
+            if row.get('condition', '').strip().lower() != 'new':
+                continue
+            if vin and len(vin) == 17:
                 inventory[vin] = row
     return inventory
 
@@ -628,7 +631,11 @@ def run_smyrna_scrape(date_str, smyrna_path):
                     if not isinstance(v, dict):
                         continue
                     vin = v.get('vehicleIdentificationNumber', '')
-                    if vin and vin not in all_vins:
+                    name = v.get('name', '')
+                    # Skip used vehicles — new only
+                    if not name.lower().startswith('new'):
+                        continue
+                    if vin and vin not in all_vins and len(vin) == 17:
                         all_vins.add(vin)
                         brand = v.get('brand', {})
                         model = v.get('model', {})
@@ -1810,14 +1817,14 @@ def run_validation(inventory_path, smyrna_vins, diff_stats, report_stats):
     # Check vehicle count
     if total_vehicles < 5000:
         anomalies.append(f"LOW VEHICLE COUNT: {total_vehicles:,} (expected 10,000+)")
-    elif total_vehicles < 10000:
-        anomalies.append(f"BELOW AVERAGE VEHICLE COUNT: {total_vehicles:,} (typical ~13,000)")
+    elif total_vehicles < 7500:
+        anomalies.append(f"BELOW AVERAGE VEHICLE COUNT: {total_vehicles:,} (typical ~9,000)")
 
     # Check dealer count
     if total_dealers < 200:
         anomalies.append(f"LOW DEALER COUNT: {total_dealers} (expected 500+)")
-    elif total_dealers < 400:
-        anomalies.append(f"BELOW AVERAGE DEALER COUNT: {total_dealers} (typical ~588)")
+    elif total_dealers < 300:
+        anomalies.append(f"BELOW AVERAGE DEALER COUNT: {total_dealers} (typical ~360)")
 
     # Check brand count
     if total_brands < 10:

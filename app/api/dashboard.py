@@ -34,13 +34,13 @@ def _paginate_vehicles(db, snap_id, state=None, body_type=None):
         if state:
             q = db.table("vehicles").select(
                 "vin, brand, body_type, body_builder, price, condition, fuel_type, "
-                "transmission, is_smyrna, dealer_id, first_seen_date, dealers!inner(name, city, state)"
-            ).eq("snapshot_id", snap_id).eq("dealers.state", state.upper())
+                "transmission, is_smyrna, is_fouts, dealer_id, first_seen_date, dealers!inner(name, city, state)"
+            ).eq("snapshot_id", snap_id).eq("condition", "New").eq("dealers.state", state.upper())
         else:
             q = db.table("vehicles").select(
                 "vin, brand, body_type, body_builder, price, condition, fuel_type, "
-                "transmission, is_smyrna, dealer_id, first_seen_date, dealers!inner(name, city, state)"
-            ).eq("snapshot_id", snap_id)
+                "transmission, is_smyrna, is_fouts, dealer_id, first_seen_date, dealers!inner(name, city, state)"
+            ).eq("snapshot_id", snap_id).eq("condition", "New")
         if body_type:
             q = q.eq("body_type", body_type)
         page = q.range(offset, offset + page_size - 1).execute()
@@ -93,6 +93,7 @@ def get_dashboard(
     fuel_counter = Counter()
     trans_counter = Counter()
     smyrna_count = 0
+    fouts_count = 0
     smyrna_prices = []
     dealer_vehicles = defaultdict(int)
     dealer_info = {}
@@ -110,6 +111,8 @@ def get_dashboard(
             smyrna_count += 1
             if v["price"] and v["price"] >= PRICE_FLOOR:
                 smyrna_prices.append(v["price"])
+        if v.get("is_fouts"):
+            fouts_count += 1
         did = v["dealer_id"]
         dealer_vehicles[did] += 1
         if did not in dealer_info and v.get("dealers"):
@@ -350,7 +353,9 @@ def get_dashboard(
             "dealers": len(dealer_vehicles),
             "avg_price": avg_price,
             "median_price": median_price,
-            "smyrna_units": smyrna_count,
+            "smyrna_truck_units": smyrna_count,
+            "fouts_cv_units": fouts_count,
+            "our_combined_units": smyrna_count + fouts_count,
             "smyrna_avg_price": round(sum(smyrna_prices) / len(smyrna_prices)) if smyrna_prices else 0,
         },
         "leads": {
@@ -387,7 +392,10 @@ def get_dashboard(
         "velocity": velocity_summary,
         "dealer_velocity": dealer_velocity_list,
         "smyrna_intel": {
-            "total_units": smyrna_count,
+            "smyrna_truck_units": smyrna_count,
+            "smyrna_truck_penetration_pct": round(smyrna_count / total * 100, 2) if total else 0,
+            "fouts_cv_units": fouts_count,
+            "combined_units": smyrna_count + fouts_count,
             "dealer_count": len(smyrna_by_dealer),
             "penetration_pct": round(smyrna_count / total * 100, 2) if total else 0,
             "top_dealers": [

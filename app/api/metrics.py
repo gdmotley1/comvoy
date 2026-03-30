@@ -40,9 +40,9 @@ def compute_snapshot_metrics(snapshot_id: str, prev_snapshot_id: str = None):
 
     # ── Fetch vehicles ──────────────────────────────────────────────
     vehicles = _paginate(db, "vehicles",
-        "vin, brand, body_type, body_builder, price, dealer_id, first_seen_date, is_smyrna, "
+        "vin, brand, body_type, body_builder, price, dealer_id, first_seen_date, is_smyrna, is_fouts, "
         "dealers!inner(name, city, state)",
-        [("snapshot_id", snapshot_id)])
+        [("snapshot_id", snapshot_id), ("condition", "New")])
     vehicles = [v for v in vehicles if not is_excluded_dealer(v.get("dealers", {}).get("name", ""))]
 
     if not vehicles:
@@ -218,15 +218,20 @@ def compute_snapshot_metrics(snapshot_id: str, prev_snapshot_id: str = None):
         del pp["total_drop_pct"]
     metrics["price_pressure"] = price_pressure
 
-    # 6. Smyrna share trend
+    # 6. Smyrna share trend (Smyrna-bodied trucks at third-party dealers)
     smyrna_units = sum(1 for v in vehicles if v.get("is_smyrna"))
+    fouts_units = sum(1 for v in vehicles if v.get("is_fouts"))
+    our_units = smyrna_units + fouts_units
     smyrna_by_dealer = defaultdict(int)
     for v in vehicles:
         if v.get("is_smyrna"):
             smyrna_by_dealer[v["dealer_id"]] += 1
     smyrna_share = {
         "total_units": smyrna_units,
+        "fouts_plant_units": fouts_units,
+        "our_total_units": our_units,
         "market_pct": round(smyrna_units / total * 100, 2) if total else 0,
+        "our_market_pct": round(our_units / total * 100, 2) if total else 0,
         "dealer_count": len(smyrna_by_dealer),
         "top_dealers": [
             {"name": dealer_info.get(did, {}).get("name", ""), "units": cnt}
