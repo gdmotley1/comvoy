@@ -4,7 +4,7 @@
 **Otto** — Sales Intelligence Platform for **Comvoy** (Smyrna Truck / Fouts Bros), a commercial truck distributor. Conversational query layer over market data. **New vehicles only — used inventory permanently excluded at every layer.**
 
 ### Product Identity
-- **Name**: Otto | **Users**: Wesley White (GA, TN, NC, SC, AL) · Kenneth Greene (TX, LA, OK, AR, MS) + leadership
+- **Name**: Otto | **Users**: Wesley White (GA, TN, NC, SC, AL) · Kenneth Greene (TX, LA, OK, AR, MS) · AJ Delange (territory TBD, home: Manchester TN) + leadership
 - **Core Pillars**: Market Intelligence, Lead Scoring, Territory Analytics, Dealer Briefings, Velocity Tracking
 
 ## Project Root
