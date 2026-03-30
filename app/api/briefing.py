@@ -728,7 +728,7 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
             <tr>
                 <td width="25%" align="center" style="padding:12px 0;">
                     <span style="font-size:24px;font-weight:700;color:#f1f5f9;
-                        line-height:1;">{summary['total']}</span><br>
+                        line-height:1;">{total_on_route}</span><br>
                     <span style="font-size:10px;color:#8b95a5;text-transform:uppercase;
                         letter-spacing:0.5px;">Dealers</span>
                 </td>
