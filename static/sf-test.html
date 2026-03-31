@@ -17,23 +17,22 @@
 <body>
   <h2>Salesforce SOQL Test</h2>
   <p class="info">Queries: SELECT Id, Email, FirstName, LastName FROM Lead ORDER BY CreatedDate DESC LIMIT 1</p>
-  <button id="btn" onclick="runTest()">Run Query</button>
-  <div id="result" class="info">Click the button to test.</div>
+  <button id="btn" onclick="runTest('test-soql')">Run SOQL Test</button>
+  <button id="btn2" onclick="runTest('describe/Account')">Describe Account</button>
+  <div id="result" class="info">Click a button to test.</div>
 
 <script>
 const API = 'https://comvoy-api.vercel.app';
 const KEY = 'QQr9drTN1PsXsJa-0i_bZKCJWwzShAKsdQW1l2PG9iY';
 
-async function runTest() {
-  const btn = document.getElementById('btn');
+async function runTest(endpoint) {
   const out = document.getElementById('result');
-  btn.disabled = true;
-  btn.textContent = 'Running...';
+  document.querySelectorAll('button').forEach(b => b.disabled = true);
   out.className = 'info';
   out.textContent = 'Querying Salesforce...';
 
   try {
-    const res = await fetch(API + '/api/salesforce/test-soql', {
+    const res = await fetch(API + '/api/salesforce/' + endpoint, {
       headers: { 'X-API-Key': KEY }
     });
     const data = await res.json();
@@ -48,8 +47,7 @@ async function runTest() {
     out.className = 'error';
     out.textContent = 'Fetch error:\n' + e.message;
   }
-  btn.disabled = false;
-  btn.textContent = 'Run Query';
+  document.querySelectorAll('button').forEach(b => b.disabled = false);
 }
 </script>
 </body>
