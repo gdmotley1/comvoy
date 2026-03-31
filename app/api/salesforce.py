@@ -185,6 +185,18 @@ def get_sf_account(name: str) -> list[dict]:
 # REST endpoints
 # ---------------------------------------------------------------------------
 
+@router.get("/status")
+def api_sf_status():
+    """Check Salesforce connection status."""
+    if not settings.sf_username:
+        return {"status": "not_configured", "sf_username": ""}
+    try:
+        sf = _get_sf()
+        return {"status": "connected", "sf_instance": sf.sf_instance}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
 @router.get("/leads")
 def api_search_leads(
     q: str = Query(None, description="Search by name or company"),
@@ -192,7 +204,13 @@ def api_search_leads(
     limit: int = Query(20, le=50),
 ):
     """Search Salesforce leads."""
-    return search_sf_leads(query=q, state=state, limit=limit)
+    try:
+        return search_sf_leads(query=q, state=state, limit=limit)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Salesforce leads query failed")
+        raise HTTPException(500, f"Salesforce query failed: {e}")
 
 
 @router.get("/contacts")
