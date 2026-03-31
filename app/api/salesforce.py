@@ -219,6 +219,51 @@ def api_test_soql():
         return {"status": "error", "error_type": type(e).__name__, "error": str(e)}
 
 
+@router.get("/objects")
+def api_list_objects():
+    """List all Salesforce objects accessible to this API account."""
+    try:
+        sf = _get_sf()
+        desc = sf.describe()
+        objects = [
+            {
+                "name": o["name"],
+                "label": o["label"],
+                "keyPrefix": o.get("keyPrefix"),
+                "queryable": o["queryable"],
+                "custom": o["custom"],
+            }
+            for o in desc["sobjects"]
+        ]
+        return {
+            "status": "ok",
+            "total": len(objects),
+            "queryable": sum(1 for o in objects if o["queryable"]),
+            "custom": sum(1 for o in objects if o["custom"]),
+            "objects": objects,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Salesforce list objects failed")
+        return {"status": "error", "error": str(e)}
+
+
+@router.get("/describe/{sobject}")
+def api_describe_object(sobject: str):
+    """Return all field API names for a Salesforce object."""
+    try:
+        sf = _get_sf()
+        desc = getattr(sf, sobject).describe()
+        fields = [{"name": f["name"], "type": f["type"], "label": f["label"]} for f in desc["fields"]]
+        return {"status": "ok", "object": sobject, "field_count": len(fields), "fields": fields}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Salesforce describe {sobject} failed")
+        return {"status": "error", "error": str(e)}
+
+
 @router.get("/leads")
 def api_search_leads(
     q: str = Query(None, description="Search by name or company"),

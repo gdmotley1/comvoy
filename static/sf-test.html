@@ -4,50 +4,188 @@
 <meta charset="utf-8">
 <title>Salesforce SOQL Test</title>
 <style>
-  body { font-family: -apple-system, sans-serif; max-width: 600px; margin: 60px auto; background: #0c0c18; color: #e2e8f0; }
-  button { background: #2563eb; color: #fff; border: none; padding: 12px 24px; font-size: 16px; border-radius: 6px; cursor: pointer; }
+  body { font-family: -apple-system, sans-serif; max-width: 800px; margin: 60px auto; background: #0c0c18; color: #e2e8f0; padding: 0 20px; }
+  h2 { margin-bottom: 8px; }
+  button { background: #2563eb; color: #fff; border: none; padding: 10px 20px; font-size: 14px; border-radius: 6px; cursor: pointer; margin: 4px 4px 4px 0; }
   button:hover { background: #1d4ed8; }
   button:disabled { opacity: 0.5; cursor: not-allowed; }
-  #result { margin-top: 24px; padding: 16px; background: #111827; border-radius: 6px; white-space: pre-wrap; font-family: monospace; font-size: 14px; min-height: 60px; }
+  .section { margin: 24px 0; padding: 16px; background: #111827; border-radius: 8px; }
+  .section h3 { margin: 0 0 12px 0; font-size: 16px; color: #94a3b8; }
+  input[type="text"] { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; padding: 10px 14px; font-size: 14px; border-radius: 6px; width: 260px; }
+  input::placeholder { color: #64748b; }
+  #result { margin-top: 24px; padding: 16px; background: #111827; border-radius: 6px; white-space: pre-wrap; font-family: monospace; font-size: 13px; min-height: 60px; max-height: 600px; overflow-y: auto; }
   .error { color: #ff6b35; }
   .success { color: #22c55e; }
   .info { color: #94a3b8; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #1e293b; }
+  th { color: #94a3b8; font-weight: 600; position: sticky; top: 0; background: #111827; }
+  td { color: #e2e8f0; }
+  tr:hover td { background: #1e293b; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .badge-yes { background: #064e3b; color: #34d399; }
+  .badge-no { background: #451a03; color: #fb923c; }
+  .badge-custom { background: #312e81; color: #a5b4fc; }
+  .count { color: #94a3b8; font-size: 13px; margin-left: 8px; }
+  .filter-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+  .filter-row input { flex: 1; max-width: 300px; }
+  .filter-row label { color: #94a3b8; font-size: 13px; cursor: pointer; }
+  .filter-row input[type="checkbox"] { accent-color: #2563eb; }
 </style>
 </head>
 <body>
-  <h2>Salesforce SOQL Test</h2>
-  <p class="info">Queries: SELECT Id, Email, FirstName, LastName FROM Lead ORDER BY CreatedDate DESC LIMIT 1</p>
-  <button id="btn" onclick="runTest('test-soql')">Run SOQL Test</button>
-  <button id="btn2" onclick="runTest('describe/Account')">Describe Account</button>
-  <div id="result" class="info">Click a button to test.</div>
+  <h2>Salesforce Explorer</h2>
+
+  <div class="section">
+    <h3>1. Connection Test</h3>
+    <p class="info" style="margin:0 0 8px 0; font-size:13px;">SELECT Id, Email, FirstName, LastName FROM Lead ORDER BY CreatedDate DESC LIMIT 1</p>
+    <button onclick="runTest('test-soql')">Run SOQL Test</button>
+  </div>
+
+  <div class="section">
+    <h3>2. List All Objects</h3>
+    <p class="info" style="margin:0 0 8px 0; font-size:13px;">Shows every SObject this API account can see.</p>
+    <button onclick="listObjects()">List Objects</button>
+  </div>
+
+  <div class="section">
+    <h3>3. Describe Object Fields</h3>
+    <p class="info" style="margin:0 0 8px 0; font-size:13px;">Enter an API name (e.g. Account, Lead, Opportunity) or click one from the objects list.</p>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <input type="text" id="objInput" placeholder="Account" onkeydown="if(event.key==='Enter') describeObject()">
+      <button onclick="describeObject()">Describe Fields</button>
+    </div>
+  </div>
+
+  <div id="result" class="info">Click a button to start.</div>
 
 <script>
 const API = 'https://comvoy-api.vercel.app';
 const KEY = 'QQr9drTN1PsXsJa-0i_bZKCJWwzShAKsdQW1l2PG9iY';
+const out = document.getElementById('result');
 
-async function runTest(endpoint) {
-  const out = document.getElementById('result');
+function setLoading(msg) {
   document.querySelectorAll('button').forEach(b => b.disabled = true);
   out.className = 'info';
-  out.textContent = 'Querying Salesforce...';
+  out.innerHTML = msg || 'Querying Salesforce...';
+}
+function setDone() {
+  document.querySelectorAll('button').forEach(b => b.disabled = false);
+}
 
+async function sfFetch(endpoint) {
+  const res = await fetch(API + '/api/salesforce/' + endpoint, {
+    headers: { 'X-API-Key': KEY }
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + JSON.stringify(data));
+  return data;
+}
+
+// --- 1. SOQL Test ---
+async function runTest(endpoint) {
+  setLoading();
   try {
-    const res = await fetch(API + '/api/salesforce/' + endpoint, {
-      headers: { 'X-API-Key': KEY }
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      out.className = 'error';
-      out.textContent = 'HTTP ' + res.status + '\n\n' + JSON.stringify(data, null, 2);
-    } else {
-      out.className = 'success';
-      out.textContent = JSON.stringify(data, null, 2);
-    }
+    const data = await sfFetch(endpoint);
+    out.className = 'success';
+    out.textContent = JSON.stringify(data, null, 2);
   } catch (e) {
     out.className = 'error';
-    out.textContent = 'Fetch error:\n' + e.message;
+    out.textContent = e.message;
   }
-  document.querySelectorAll('button').forEach(b => b.disabled = false);
+  setDone();
+}
+
+// --- 2. List All Objects ---
+let _allObjects = null;
+
+async function listObjects() {
+  setLoading('Fetching all Salesforce objects...');
+  try {
+    const data = await sfFetch('objects');
+    _allObjects = data.objects;
+    renderObjectsTable(_allObjects);
+  } catch (e) {
+    out.className = 'error';
+    out.textContent = e.message;
+  }
+  setDone();
+}
+
+function renderObjectsTable(objects, filter, queryableOnly) {
+  if (filter) {
+    const f = filter.toLowerCase();
+    objects = objects.filter(o => o.name.toLowerCase().includes(f) || o.label.toLowerCase().includes(f));
+  }
+  if (queryableOnly) {
+    objects = objects.filter(o => o.queryable);
+  }
+
+  let html = `<div class="filter-row">
+    <input type="text" id="objFilter" placeholder="Filter objects..." oninput="filterObjects()" value="${filter || ''}">
+    <label><input type="checkbox" id="queryableOnly" onchange="filterObjects()" ${queryableOnly ? 'checked' : ''}> Queryable only</label>
+    <span class="count">${objects.length} objects</span>
+  </div>`;
+
+  html += '<table><thead><tr><th>API Name</th><th>Label</th><th>Prefix</th><th>Queryable</th><th>Custom</th></tr></thead><tbody>';
+  for (const o of objects) {
+    const click = o.queryable ? ` style="cursor:pointer;" onclick="pickObject('${o.name}')" title="Click to describe"` : '';
+    html += `<tr${click}>
+      <td><strong>${o.name}</strong></td>
+      <td>${o.label}</td>
+      <td>${o.keyPrefix || '—'}</td>
+      <td><span class="badge ${o.queryable ? 'badge-yes' : 'badge-no'}">${o.queryable ? 'Yes' : 'No'}</span></td>
+      <td>${o.custom ? '<span class="badge badge-custom">Custom</span>' : ''}</td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+
+  out.className = 'success';
+  out.innerHTML = html;
+}
+
+function filterObjects() {
+  if (!_allObjects) return;
+  const filter = document.getElementById('objFilter').value;
+  const queryableOnly = document.getElementById('queryableOnly').checked;
+  renderObjectsTable(_allObjects, filter, queryableOnly);
+}
+
+function pickObject(name) {
+  document.getElementById('objInput').value = name;
+  describeObject();
+}
+
+// --- 3. Describe Object ---
+async function describeObject() {
+  const name = document.getElementById('objInput').value.trim();
+  if (!name) { out.className = 'error'; out.textContent = 'Enter an object API name.'; return; }
+  setLoading('Describing ' + name + '...');
+  try {
+    const data = await sfFetch('describe/' + name);
+    renderFieldsTable(data);
+  } catch (e) {
+    out.className = 'error';
+    out.textContent = e.message;
+  }
+  setDone();
+}
+
+function renderFieldsTable(data) {
+  const fields = data.fields;
+  let html = `<div style="margin-bottom:12px;">
+    <strong>${data.object}</strong> <span class="count">${data.field_count} fields</span>
+    <button onclick="listObjects()" style="float:right; padding:6px 12px; font-size:12px;">← Back to Objects</button>
+  </div>`;
+
+  html += '<table><thead><tr><th>API Name</th><th>Label</th><th>Type</th></tr></thead><tbody>';
+  for (const f of fields) {
+    html += `<tr><td><strong>${f.name}</strong></td><td>${f.label}</td><td>${f.type}</td></tr>`;
+  }
+  html += '</tbody></table>';
+
+  out.className = 'success';
+  out.innerHTML = html;
 }
 </script>
 </body>
