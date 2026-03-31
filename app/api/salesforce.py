@@ -197,6 +197,28 @@ def api_sf_status():
         return {"status": "error", "error": str(e)}
 
 
+@router.get("/test-soql")
+def api_test_soql():
+    """Run a static SOQL query to verify Salesforce connectivity end-to-end."""
+    try:
+        sf = _get_sf()
+        soql = "SELECT Id, Email, FirstName, LastName, CreatedDate FROM Lead ORDER BY CreatedDate DESC LIMIT 1"
+        result = sf.query(soql)
+        records = result.get("records", [])
+        clean = [_clean_record(r) for r in records]
+        return {
+            "status": "ok",
+            "soql": soql,
+            "totalSize": result.get("totalSize", 0),
+            "records": clean,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Salesforce test-soql failed")
+        return {"status": "error", "error_type": type(e).__name__, "error": str(e)}
+
+
 @router.get("/leads")
 def api_search_leads(
     q: str = Query(None, description="Search by name or company"),

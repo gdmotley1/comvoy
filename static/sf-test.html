@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Salesforce SOQL Test</title>
+<style>
+  body { font-family: -apple-system, sans-serif; max-width: 600px; margin: 60px auto; background: #0c0c18; color: #e2e8f0; }
+  button { background: #2563eb; color: #fff; border: none; padding: 12px 24px; font-size: 16px; border-radius: 6px; cursor: pointer; }
+  button:hover { background: #1d4ed8; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  #result { margin-top: 24px; padding: 16px; background: #111827; border-radius: 6px; white-space: pre-wrap; font-family: monospace; font-size: 14px; min-height: 60px; }
+  .error { color: #ff6b35; }
+  .success { color: #22c55e; }
+  .info { color: #94a3b8; }
+</style>
+</head>
+<body>
+  <h2>Salesforce SOQL Test</h2>
+  <p class="info">Queries: SELECT Id, Email, FirstName, LastName FROM Lead ORDER BY CreatedDate DESC LIMIT 1</p>
+  <button id="btn" onclick="runTest()">Run Query</button>
+  <div id="result" class="info">Click the button to test.</div>
+
+<script>
+const API = 'https://comvoy-api.vercel.app';
+const KEY = 'QQr9drTN1PsXsJa-0i_bZKCJWwzShAKsdQW1l2PG9iY';
+
+async function runTest() {
+  const btn = document.getElementById('btn');
+  const out = document.getElementById('result');
+  btn.disabled = true;
+  btn.textContent = 'Running...';
+  out.className = 'info';
+  out.textContent = 'Querying Salesforce...';
+
+  try {
+    const res = await fetch(API + '/api/salesforce/test-soql', {
+      headers: { 'X-API-Key': KEY }
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      out.className = 'error';
+      out.textContent = 'HTTP ' + res.status + '\n\n' + JSON.stringify(data, null, 2);
+    } else {
+      out.className = 'success';
+      out.textContent = JSON.stringify(data, null, 2);
+    }
+  } catch (e) {
+    out.className = 'error';
+    out.textContent = 'Fetch error:\n' + e.message;
+  }
+  btn.disabled = false;
+  btn.textContent = 'Run Query';
+}
+</script>
+</body>
+</html>
