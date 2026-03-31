@@ -587,6 +587,17 @@ def _fire_auto_brief(plan_id: str | None, plan_data: dict):
         logger.error(f"Auto-brief failed for plan {plan_id}: {e}")
 
 
+def _fire_auto_brief_day(trip_day_id: str):
+    """Fire auto-brief for a trip_day. Fails gracefully."""
+    try:
+        from app.api.briefing import auto_brief_trip_day
+        auto_brief_trip_day(trip_day_id)
+    except ImportError:
+        logger.warning("briefing module not available — skipping auto-brief")
+    except Exception as e:
+        logger.error(f"Auto-brief failed for trip_day {trip_day_id}: {e}")
+
+
 # ===========================================================================
 # Named Multi-Day Trips — CRUD + dealer stops + visit tracking
 # ===========================================================================
@@ -935,7 +946,7 @@ async def estimate_trip_days(
             from datetime import date as _date
             vehicles = db.table("vehicles").select(
                 "dealer_id, first_seen_date"
-            ).in_("dealer_id", dealer_ids).execute()
+            ).eq("condition", "New").in_("dealer_id", dealer_ids).execute()
             today = _date.today()
             dealer_ages = {}
             for v in (vehicles.data or []):
@@ -1177,7 +1188,7 @@ def get_trip_detail(trip_id: str):
             from datetime import date as _date
             vehicles = db.table("vehicles").select(
                 "dealer_id, first_seen_date"
-            ).in_("dealer_id", dealer_ids).execute()
+            ).eq("condition", "New").in_("dealer_id", dealer_ids).execute()
             today = _date.today()
             dealer_ages = {}
             for v in (vehicles.data or []):
@@ -1279,7 +1290,10 @@ async def add_trip_day(trip_id: str, body: TripDayInput):
 
     day = await _geocode_and_build_day(body, trip_id, next_num)
     result = db.table("trip_days").insert(day).execute()
-    return {"status": "created", "day": result.data[0] if result.data else day}
+    inserted = result.data[0] if result.data else day
+    if inserted.get("id"):
+        _fire_auto_brief_day(inserted["id"])
+    return {"status": "created", "day": inserted}
 
 
 @router.delete("/trips/{trip_id}/days/{day_id}")
@@ -1519,21 +1533,24 @@ async def _create_trip_days(db, trip_id: str, days: list[TripDayInput]):
         day_row = await _geocode_and_build_day(day_input, trip_id, i + 1)
         try:
             result = db.table("trip_days").insert(day_row).execute()
-            if result.data and day_input.dealer_ids:
+            if result.data:
                 day_id = result.data[0]["id"]
-                stop_rows = [
-                    {
-                        "trip_day_id": day_id,
-                        "dealer_id": did,
-                        "stop_order": order,
-                        "is_included": True,
-                    }
-                    for order, did in enumerate(day_input.dealer_ids, 1)
-                ]
-                if stop_rows:
-                    db.table("trip_stops").upsert(
-                        stop_rows, on_conflict="trip_day_id,dealer_id"
-                    ).execute()
+                if day_input.dealer_ids:
+                    stop_rows = [
+                        {
+                            "trip_day_id": day_id,
+                            "dealer_id": did,
+                            "stop_order": order,
+                            "is_included": True,
+                        }
+                        for order, did in enumerate(day_input.dealer_ids, 1)
+                    ]
+                    if stop_rows:
+                        db.table("trip_stops").upsert(
+                            stop_rows, on_conflict="trip_day_id,dealer_id"
+                        ).execute()
+                # Fire auto-brief for this day
+                _fire_auto_brief_day(day_id)
         except Exception as e:
             logger.warning(f"Failed to insert trip day {i+1}: {e}")
 

@@ -64,7 +64,7 @@ def compute_days_on_lot(db, snap_id: str, snap_date: str, dealer_id: str = None,
         q = db.table("vehicles").select(
             "vin, dealer_id, first_seen_date, price, body_type, brand, "
             "dealers!inner(name, city, state)"
-        ).eq("snapshot_id", snap_id).not_.is_("first_seen_date", "null")
+        ).eq("snapshot_id", snap_id).eq("condition", "New").not_.is_("first_seen_date", "null")
 
         if dealer_id:
             q = q.eq("dealer_id", dealer_id)

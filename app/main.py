@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from app.config import settings
+from app.database import get_service_client
 
 from app.api.ingest import router as ingest_router
 from app.api.dealers import router as dealers_router
@@ -106,3 +107,15 @@ if os.path.isdir("static"):
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "comvoy-sales-intelligence"}
+
+
+@app.get("/ping")
+async def ping():
+    """Lightweight DB keep-alive — hit weekly to prevent Supabase free tier auto-pause."""
+    try:
+        db = get_service_client()
+        result = db.table("report_snapshots").select("report_date").order("report_date", desc=True).limit(1).execute()
+        latest = result.data[0]["report_date"] if result.data else None
+        return {"status": "ok", "db": "connected", "latest_snapshot": latest}
+    except Exception as e:
+        return {"status": "error", "db": str(e)}
