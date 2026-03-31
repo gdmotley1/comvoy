@@ -35,9 +35,6 @@ from app.api.travel import get_route_dealers as _get_route_dealers, _haversine
 from app.api.reports import get_latest_report as _get_latest_report
 from app.etl.geocoder import geocode_single as _geocode_single_async
 from app.models import NearbyQuery
-from app.api.salesforce import (
-    search_sf_leads, search_sf_contacts, search_sf_opportunities, get_sf_account,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -2402,6 +2399,7 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
             }, default=str)
 
         elif tool_name == "search_salesforce":
+            from app.api.salesforce import search_sf_leads, search_sf_contacts, search_sf_opportunities
             obj_type = tool_input.get("object_type", "all")
             query = tool_input.get("query")
             state = tool_input.get("state")
@@ -2425,6 +2423,7 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
             return json.dumps(results, default=str)
 
         elif tool_name == "get_dealer_salesforce":
+            from app.api.salesforce import get_sf_account
             accounts = get_sf_account(tool_input["dealer_name"])
             if not accounts:
                 return json.dumps({
