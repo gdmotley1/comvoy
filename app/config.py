@@ -46,6 +46,12 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_from: str = "Otto <otto.comvoy@gmail.com>"
 
+    # --- Salesforce (read-only CRM integration) ---
+    sf_username: str = ""
+    sf_password: str = ""
+    sf_security_token: str = ""
+    sf_domain: str = "login"  # "login" for prod, "test" for sandbox
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 

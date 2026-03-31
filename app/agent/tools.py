@@ -35,6 +35,9 @@ from app.api.travel import get_route_dealers as _get_route_dealers, _haversine
 from app.api.reports import get_latest_report as _get_latest_report
 from app.etl.geocoder import geocode_single as _geocode_single_async
 from app.models import NearbyQuery
+from app.api.salesforce import (
+    search_sf_leads, search_sf_contacts, search_sf_opportunities, get_sf_account,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -669,6 +672,61 @@ TOOL_DEFINITIONS = [
                 },
             },
             "required": ["rep_name"],
+        },
+    },
+    # Phase 8: Salesforce CRM (read-only)
+    {
+        "name": "search_salesforce",
+        "description": (
+            "Search Salesforce CRM for leads, contacts, or opportunities. "
+            "Use when a rep asks about CRM data, existing relationships, or open deals. "
+            "Can search across all three objects or filter to one type. "
+            "Returns names, companies, stages, amounts, and contact info."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Search term — name, company, or deal name.",
+                },
+                "object_type": {
+                    "type": "string",
+                    "enum": ["leads", "contacts", "opportunities", "all"],
+                    "description": "Which Salesforce object to search. Default 'all'.",
+                },
+                "state": {
+                    "type": "string",
+                    "description": "Two-letter state code to filter leads.",
+                },
+                "stage": {
+                    "type": "string",
+                    "description": "Opportunity stage filter (e.g. 'Prospecting', 'Closed Won').",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Max results per object type (default 10).",
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "get_dealer_salesforce",
+        "description": (
+            "Look up a dealer's Salesforce account by name. Returns the matching account "
+            "with its contacts and open opportunities. Use to check CRM status before "
+            "a visit — do we have contacts? Any open deals? Who owns the account?"
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "dealer_name": {
+                    "type": "string",
+                    "description": "Dealer name to look up in Salesforce (fuzzy match).",
+                },
+            },
+            "required": ["dealer_name"],
         },
     },
 ]
@@ -2342,6 +2400,38 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                 "min_vehicles": min_vehicles,
                 "results": results,
             }, default=str)
+
+        elif tool_name == "search_salesforce":
+            obj_type = tool_input.get("object_type", "all")
+            query = tool_input.get("query")
+            state = tool_input.get("state")
+            stage = tool_input.get("stage")
+            limit = min(tool_input.get("limit", 10), 25)
+            results = {}
+            if obj_type in ("leads", "all"):
+                leads = search_sf_leads(query=query, state=state, limit=limit)
+                if leads:
+                    results["leads"] = leads
+            if obj_type in ("contacts", "all"):
+                contacts = search_sf_contacts(query=query, limit=limit)
+                if contacts:
+                    results["contacts"] = contacts
+            if obj_type in ("opportunities", "all"):
+                opps = search_sf_opportunities(query=query, stage=stage, limit=limit)
+                if opps:
+                    results["opportunities"] = opps
+            if not results:
+                results["message"] = "No Salesforce records found matching your search."
+            return json.dumps(results, default=str)
+
+        elif tool_name == "get_dealer_salesforce":
+            accounts = get_sf_account(tool_input["dealer_name"])
+            if not accounts:
+                return json.dumps({
+                    "message": f"No Salesforce account found for '{tool_input['dealer_name']}'",
+                    "hint": "Try a different spelling or the parent company name.",
+                })
+            return json.dumps(accounts, default=str)
 
         else:
             return json.dumps({"error": f"Unknown tool: {tool_name}"})

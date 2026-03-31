@@ -54,6 +54,8 @@ TOOL_STATUS_MAP = {
     "get_upload_report": "Loading report data...",
     "get_dealer_velocity": "Checking velocity metrics...",
     "get_market_metrics": "Loading market KPIs...",
+    "search_salesforce": "Searching Salesforce CRM...",
+    "get_dealer_salesforce": "Looking up dealer in Salesforce...",
 }
 
 # Simple query classifier — routes easy questions to Haiku for speed
