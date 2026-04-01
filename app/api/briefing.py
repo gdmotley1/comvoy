@@ -1034,6 +1034,459 @@ def auto_brief_trip(plan_id: str):
     logger.info(f"Auto-brief complete for {rep_name}'s {plan['travel_date']} trip")
 
 
+def auto_brief_trip_full(trip_id: str):
+    """Send ONE consolidated briefing email for all days in a multi-day trip."""
+    db = get_service_client()
+
+    # Fetch trip
+    trip_data = db.table("trips").select("*").eq("id", trip_id).execute()
+    if not trip_data.data:
+        logger.error(f"Auto-brief: trip {trip_id} not found")
+        return
+    trip = trip_data.data[0]
+
+    # Fetch all days, ordered by date
+    days_data = db.table("trip_days").select("*").eq(
+        "trip_id", trip_id
+    ).order("travel_date").execute()
+    if not days_data.data:
+        logger.info(f"Auto-brief: no days for trip {trip_id} — skipping")
+        return
+
+    # Get rep info
+    rep_data = db.table("reps").select("name, email").eq("id", trip["rep_id"]).execute()
+    if not rep_data.data:
+        logger.error(f"Auto-brief: rep {trip['rep_id']} not found")
+        return
+    rep = rep_data.data[0]
+    rep_name = rep["name"]
+    rep_email = rep.get("email")
+    if not rep_email:
+        logger.warning(f"Auto-brief: rep {rep_name} has no email — skipping")
+        return
+
+    # Generate briefing for each day
+    days_with_briefings = []
+    total_dealers = 0
+    total_hot = 0
+    for day in days_data.data:
+        plan = {
+            "id": day["id"],
+            "_table": "trip_days",
+            "travel_date": day["travel_date"],
+            "start_location": day["start_location"],
+            "start_lat": day["start_lat"],
+            "start_lng": day["start_lng"],
+            "end_location": day["end_location"],
+            "end_lat": day["end_lat"],
+            "end_lng": day["end_lng"],
+            "route_polyline": day.get("route_polyline"),
+        }
+        briefing = generate_route_briefing(plan)
+        days_with_briefings.append({"day": day, "plan": plan, "briefing": briefing})
+        total_dealers += len(briefing.get("dealers", []))
+        total_hot += briefing["summary"].get("hot", 0)
+
+    if total_dealers == 0:
+        logger.info(f"Auto-brief: no dealers across any day in trip {trip_id} — skipping")
+        return
+
+    # Render consolidated email
+    html = render_trip_briefing_email(rep_name, trip, days_with_briefings)
+
+    # Build subject line
+    dates = [d["day"]["travel_date"] for d in days_with_briefings]
+    try:
+        dt_start = datetime.strptime(str(dates[0]), "%Y-%m-%d")
+        dt_end = datetime.strptime(str(dates[-1]), "%Y-%m-%d")
+        if dt_start.month == dt_end.month:
+            date_range = f"{dt_start.strftime('%b %d')}–{dt_end.strftime('%d')}"
+        else:
+            date_range = f"{dt_start.strftime('%b %d')}–{dt_end.strftime('%b %d')}"
+    except (ValueError, TypeError):
+        date_range = f"{dates[0]} to {dates[-1]}"
+
+    hot_note = f" / {total_hot} hot" if total_hot else ""
+    trip_name = trip.get("name", "Trip")
+    subject = f"Trip Briefing {date_range}: {trip_name} ({total_dealers} dealers{hot_note})"
+
+    send_briefing_email(rep_email, subject, html)
+    logger.info(f"Auto-brief complete for {rep_name}'s trip '{trip_name}' ({len(days_with_briefings)} days)")
+
+
+def render_trip_briefing_email(rep_name: str, trip: dict, days_with_briefings: list) -> str:
+    """Render consolidated multi-day trip briefing email.
+
+    Reuses existing render helpers (_render_top_stop, _render_compact_row, etc.)
+    but wraps them in per-day sections within one email.
+    """
+    trip_name = trip.get("name", "Trip")
+
+    # Date range
+    dates = [d["day"]["travel_date"] for d in days_with_briefings]
+    try:
+        dt_start = datetime.strptime(str(dates[0]), "%Y-%m-%d")
+        dt_end = datetime.strptime(str(dates[-1]), "%Y-%m-%d")
+        date_range_str = f"{dt_start.strftime('%B %d')} &ndash; {dt_end.strftime('%B %d, %Y')}"
+        date_range_short = f"{dt_start.strftime('%b %d')}&ndash;{dt_end.strftime('%b %d')}"
+    except (ValueError, TypeError):
+        date_range_str = f"{dates[0]} to {dates[-1]}"
+        date_range_short = date_range_str
+
+    # Aggregate stats across all days
+    all_dealers = []
+    total_vehicles = 0
+    for dwb in days_with_briefings:
+        dealers = dwb["briefing"].get("dealers", [])
+        all_dealers.extend(dealers)
+        total_vehicles += sum(d.get("vehicles", 0) for d in dealers)
+
+    total_smyrna = sum(d.get("smyrna_units", 0) for d in all_dealers)
+    smyrna_pct = round(total_smyrna / max(total_vehicles, 1) * 100, 1)
+    hot_count = sum(1 for d in all_dealers if d.get("tier") == "hot")
+    total_dealer_count = len(all_dealers)
+
+    # ── Per-day sections ──
+    day_sections_html = ""
+    for idx, dwb in enumerate(days_with_briefings):
+        day = dwb["day"]
+        plan = dwb["plan"]
+        briefing = dwb["briefing"]
+        top_stops = briefing.get("top_stops", [])
+        also_on_route = briefing.get("also_on_route", [])
+        day_dealers = briefing.get("dealers", [])
+        summary = briefing["summary"]
+        has_trends = briefing["has_trends"]
+
+        try:
+            dt = datetime.strptime(str(day["travel_date"]), "%Y-%m-%d")
+            day_label = dt.strftime("%A, %B %d")
+        except (ValueError, TypeError):
+            day_label = str(day["travel_date"])
+
+        start = day.get("start_location", "?")
+        end = day.get("end_location", "?")
+
+        day_vehicles = sum(d.get("vehicles", 0) for d in day_dealers)
+        day_smyrna = sum(d.get("smyrna_units", 0) for d in day_dealers)
+        day_smyrna_pct = round(day_smyrna / max(day_vehicles, 1) * 100, 1)
+        day_hot = summary.get("hot", 0)
+        total_on_route = summary.get("total_on_route", summary["total"])
+
+        # Top stops HTML
+        top_stops_html = ""
+        if top_stops:
+            for d in top_stops:
+                top_stops_html += _render_top_stop(d, has_trends)
+        else:
+            top_stops_html = """
+            <table role="presentation" width="100%"><tr>
+                <td style="padding:16px 20px;color:#94a3b8;font-size:14px;">
+                    No dealers found along this leg.
+                </td>
+            </tr></table>"""
+
+        # Also on route HTML
+        also_html = ""
+        if also_on_route:
+            compact_rows = "".join(_render_compact_row(d) for d in also_on_route)
+            also_html = f"""
+        <tr><td style="padding:16px 20px 8px 20px;">
+            <span style="font-size:11px;font-weight:700;letter-spacing:1px;
+                color:#475569;text-transform:uppercase;">ALSO ON YOUR ROUTE</span>
+            <span style="font-size:11px;color:#94a3b8;">
+                &nbsp;&mdash; {len(also_on_route)} more</span>
+        </td></tr>
+        <tr><td style="padding:0;">
+            <table role="presentation" cellpadding="0" cellspacing="0" width="100%"
+                   style="border-collapse:collapse;">
+                {compact_rows}
+            </table>
+        </td></tr>"""
+
+        # Day separator (before all days except the first)
+        separator = ""
+        if idx > 0:
+            separator = """
+        <tr><td style="padding:0 20px;">
+            <table role="presentation" width="100%" style="border-collapse:collapse;">
+                <tr><td style="border-bottom:3px solid #2563eb;font-size:1px;line-height:1px;">&nbsp;</td></tr>
+            </table>
+        </td></tr>
+        <tr><td style="height:8px;font-size:1px;line-height:1px;">&nbsp;</td></tr>"""
+
+        day_sections_html += f"""
+    {separator}
+    <!-- ═══════ DAY: {day_label} ═══════ -->
+    <tr><td style="padding:20px 20px 0 20px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%"
+               style="border-collapse:collapse;background-color:#f8fafc;border-radius:6px;">
+            <tr><td style="padding:16px 20px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" width="100%"
+                       style="border-collapse:collapse;">
+                    <tr><td style="font-size:18px;font-weight:700;color:#0f172a;
+                        line-height:1.3;padding-bottom:4px;">
+                        {day_label}
+                    </td></tr>
+                    <tr><td style="font-size:14px;color:#475569;">
+                        {start} &rarr; {end}
+                    </td></tr>
+                </table>
+            </td></tr>
+        </table>
+    </td></tr>
+
+    <!-- Day metrics -->
+    <tr><td style="padding:8px 20px 0 20px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%"
+               style="border-collapse:collapse;">
+            <tr>
+                <td width="25%" align="center" style="padding:8px 0;">
+                    <span style="font-size:20px;font-weight:700;color:#0f172a;
+                        line-height:1;">{total_on_route}</span><br>
+                    <span style="font-size:10px;color:#94a3b8;text-transform:uppercase;
+                        letter-spacing:0.5px;">Dealers</span>
+                </td>
+                <td width="25%" align="center" style="padding:8px 0;">
+                    <span style="font-size:20px;font-weight:700;color:#0f172a;
+                        line-height:1;">{day_vehicles:,}</span><br>
+                    <span style="font-size:10px;color:#94a3b8;text-transform:uppercase;
+                        letter-spacing:0.5px;">Vehicles</span>
+                </td>
+                <td width="25%" align="center" style="padding:8px 0;">
+                    <span style="font-size:20px;font-weight:700;color:#2563eb;
+                        line-height:1;">{day_smyrna_pct}%</span><br>
+                    <span style="font-size:10px;color:#94a3b8;text-transform:uppercase;
+                        letter-spacing:0.5px;">Smyrna Pen.</span>
+                </td>
+                <td width="25%" align="center" style="padding:8px 0;">
+                    <span style="font-size:20px;font-weight:700;color:#ff6b35;
+                        line-height:1;">{day_hot}</span><br>
+                    <span style="font-size:10px;color:#94a3b8;text-transform:uppercase;
+                        letter-spacing:0.5px;">High Priority</span>
+                </td>
+            </tr>
+        </table>
+    </td></tr>
+
+    {_divider()}
+
+    <!-- Day top stops -->
+    <tr><td style="padding:16px 20px 8px 20px;">
+        <span style="font-size:11px;font-weight:700;letter-spacing:1px;
+            color:#475569;text-transform:uppercase;">TOP STOPS</span>
+        <span style="font-size:11px;color:#94a3b8;">
+            &nbsp;&mdash; {len(top_stops)} highest-opportunity dealers</span>
+    </td></tr>
+    <tr><td style="padding:0;">
+        {top_stops_html}
+    </td></tr>
+
+    {also_html}
+"""
+
+    # ── Scoring key (once at bottom) ──
+    scoring_key = f"""
+    {_divider()}
+    <tr><td style="padding:20px 20px 8px 20px;">
+        <span style="font-size:11px;font-weight:700;letter-spacing:1px;
+            color:#475569;text-transform:uppercase;">HOW SCORING WORKS</span>
+    </td></tr>
+    <tr><td style="padding:4px 20px 0 20px;font-size:13px;color:#64748b;line-height:1.6;">
+        Each dealer is scored 0&ndash;100 based on four factors:
+    </td></tr>
+    <tr><td style="padding:8px 20px 0 20px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%"
+               style="border-collapse:collapse;">
+            <tr>
+                <td width="50%" style="padding:6px 8px 6px 0;font-size:12px;color:#475569;
+                    border-bottom:1px solid #e2e8f0;vertical-align:top;">
+                    <strong style="color:#1e293b;">Fleet Scale</strong><br>
+                    <span style="font-size:11px;color:#94a3b8;">0&ndash;20 pts &middot; Bigger fleet = bigger order potential</span>
+                </td>
+                <td width="50%" style="padding:6px 0 6px 8px;font-size:12px;color:#475569;
+                    border-bottom:1px solid #e2e8f0;vertical-align:top;">
+                    <strong style="color:#1e293b;">Product Fit</strong><br>
+                    <span style="font-size:11px;color:#94a3b8;">0&ndash;25 pts &middot; % of inventory in types we build</span>
+                </td>
+            </tr>
+            <tr>
+                <td width="50%" style="padding:6px 8px 6px 0;font-size:12px;color:#475569;
+                    vertical-align:top;">
+                    <strong style="color:#1e293b;">Smyrna Penetration</strong><br>
+                    <span style="font-size:11px;color:#94a3b8;">0&ndash;30 pts &middot; Low penetration = more room to grow</span>
+                </td>
+                <td width="50%" style="padding:6px 0 6px 8px;font-size:12px;color:#475569;
+                    vertical-align:top;">
+                    <strong style="color:#1e293b;">Growth Signal</strong><br>
+                    <span style="font-size:11px;color:#94a3b8;">0&ndash;25 pts &middot; Inventory growing = active buyer</span>
+                </td>
+            </tr>
+        </table>
+    </td></tr>
+    <tr><td style="padding:12px 20px 0 20px;">
+        <table role="presentation" cellpadding="0" cellspacing="0"
+               style="border-collapse:collapse;">
+            <tr>
+                <td style="padding:0 12px 0 0;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                        <tr><td style="background:#ff6b35;color:#fff;font-size:9px;
+                            font-weight:700;letter-spacing:0.5px;padding:3px 7px;
+                            mso-line-height-rule:exactly;line-height:14px;">HIGH PRIORITY</td></tr>
+                    </table>
+                    <span style="font-size:11px;color:#94a3b8;">70&ndash;100</span>
+                </td>
+                <td style="padding:0 12px 0 0;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                        <tr><td style="background:#22c55e;color:#fff;font-size:9px;
+                            font-weight:700;letter-spacing:0.5px;padding:3px 7px;
+                            mso-line-height-rule:exactly;line-height:14px;">OPPORTUNITY</td></tr>
+                    </table>
+                    <span style="font-size:11px;color:#94a3b8;">40&ndash;69</span>
+                </td>
+                <td style="padding:0;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                        <tr><td style="background:#475569;color:#fff;font-size:9px;
+                            font-weight:700;letter-spacing:0.5px;padding:3px 7px;
+                            mso-line-height-rule:exactly;line-height:14px;">MONITOR</td></tr>
+                    </table>
+                    <span style="font-size:11px;color:#94a3b8;">0&ndash;39</span>
+                </td>
+            </tr>
+        </table>
+    </td></tr>"""
+
+    # ── Assemble full email ──
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trip Briefing &mdash; {trip_name}</title>
+<!--[if mso]>
+<style>table,td {{font-family:Arial,Helvetica,sans-serif !important;}}</style>
+<![endif]-->
+</head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    -webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+
+<!-- Full-width background wrapper -->
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%"
+       style="background-color:#f1f5f9;">
+<tr><td align="center" style="padding:0;">
+
+<!-- Main container: 600px max -->
+<table role="presentation" cellpadding="0" cellspacing="0" width="600"
+       style="max-width:600px;width:100%;border-collapse:collapse;
+              background-color:#ffffff;">
+
+    <!-- ═══════ OTTO HEADER ═══════ -->
+    <tr><td style="background:linear-gradient(90deg,#2563eb,#4f8fff,#2563eb);
+        height:3px;font-size:1px;line-height:1px;" bgcolor="#3b82f6">&nbsp;</td></tr>
+
+    <tr><td align="center" style="padding:32px 20px 8px 20px;">
+        <span style="font-size:36px;font-weight:700;color:#2563eb;
+            letter-spacing:-1px;line-height:1;">Otto</span>
+    </td></tr>
+    <tr><td align="center" style="padding:0 20px 24px 20px;">
+        <span style="font-size:11px;font-weight:500;letter-spacing:1.5px;
+            color:#94a3b8;text-transform:uppercase;">Comvoy Sales Intelligence</span>
+    </td></tr>
+
+    <!-- Trip info block -->
+    <tr><td style="padding:0 20px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%"
+               style="border-collapse:collapse;background-color:#f8fafc;border-radius:6px;">
+            <tr><td style="padding:16px 20px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" width="100%"
+                       style="border-collapse:collapse;">
+                    <tr><td style="font-size:11px;font-weight:700;letter-spacing:1px;
+                        color:#2563eb;text-transform:uppercase;padding-bottom:6px;">
+                        TRIP BRIEFING
+                    </td></tr>
+                    <tr><td style="font-size:20px;font-weight:700;color:#0f172a;
+                        line-height:1.3;padding-bottom:4px;">
+                        {trip_name}
+                    </td></tr>
+                    <tr><td style="font-size:14px;color:#475569;">
+                        {date_range_str} &middot; {len(days_with_briefings)} day{'s' if len(days_with_briefings) != 1 else ''}
+                    </td></tr>
+                </table>
+            </td></tr>
+        </table>
+    </td></tr>
+
+    <!-- Spacer -->
+    <tr><td style="height:16px;font-size:1px;line-height:1px;">&nbsp;</td></tr>
+
+    <!-- ═══════ TRIP TOTALS ═══════ -->
+    <tr><td style="padding:0 20px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%"
+               style="border-collapse:collapse;">
+            <tr>
+                <td width="25%" align="center" style="padding:12px 0;">
+                    <span style="font-size:24px;font-weight:700;color:#0f172a;
+                        line-height:1;">{total_dealer_count}</span><br>
+                    <span style="font-size:10px;color:#94a3b8;text-transform:uppercase;
+                        letter-spacing:0.5px;">Dealers</span>
+                </td>
+                <td width="25%" align="center" style="padding:12px 0;">
+                    <span style="font-size:24px;font-weight:700;color:#0f172a;
+                        line-height:1;">{total_vehicles:,}</span><br>
+                    <span style="font-size:10px;color:#94a3b8;text-transform:uppercase;
+                        letter-spacing:0.5px;">Vehicles</span>
+                </td>
+                <td width="25%" align="center" style="padding:12px 0;">
+                    <span style="font-size:24px;font-weight:700;color:#2563eb;
+                        line-height:1;">{smyrna_pct}%</span><br>
+                    <span style="font-size:10px;color:#94a3b8;text-transform:uppercase;
+                        letter-spacing:0.5px;">Smyrna Pen.</span>
+                </td>
+                <td width="25%" align="center" style="padding:12px 0;">
+                    <span style="font-size:24px;font-weight:700;color:#ff6b35;
+                        line-height:1;">{hot_count}</span><br>
+                    <span style="font-size:10px;color:#94a3b8;text-transform:uppercase;
+                        letter-spacing:0.5px;">High Priority</span>
+                </td>
+            </tr>
+        </table>
+    </td></tr>
+
+    {_divider()}
+
+    <!-- ═══════ DAY SECTIONS ═══════ -->
+    {day_sections_html}
+
+    <!-- ═══════ SCORING KEY ═══════ -->
+    {scoring_key}
+
+    <!-- ═══════ FOOTER ═══════ -->
+    {_divider()}
+    <tr><td align="center" style="padding:24px 20px 12px 20px;">
+        <span style="font-size:26px;font-weight:700;color:#cbd5e1;
+            letter-spacing:-0.5px;">Otto</span>
+    </td></tr>
+    <tr><td align="center" style="padding:0 20px 6px 20px;
+        font-size:12px;color:#94a3b8;">
+        Comvoy Sales Intelligence
+    </td></tr>
+    <tr><td align="center" style="padding:0 20px 28px 20px;
+        font-size:11px;color:#94a3b8;">
+        Open Otto for the full interactive briefing
+    </td></tr>
+
+</table>
+<!-- End main container -->
+
+</td></tr>
+</table>
+</body>
+</html>"""
+
+    return html
+
+
 def auto_brief_trip_day(trip_day_id: str):
     """Auto-brief for the new trips system (trip_days table)."""
     db = get_service_client()

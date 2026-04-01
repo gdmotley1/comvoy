@@ -588,7 +588,7 @@ def _fire_auto_brief(plan_id: str | None, plan_data: dict):
 
 
 def _fire_auto_brief_day(trip_day_id: str):
-    """Fire auto-brief for a trip_day. Fails gracefully."""
+    """Fire auto-brief for a single trip_day. Fails gracefully."""
     try:
         from app.api.briefing import auto_brief_trip_day
         auto_brief_trip_day(trip_day_id)
@@ -596,6 +596,17 @@ def _fire_auto_brief_day(trip_day_id: str):
         logger.warning("briefing module not available — skipping auto-brief")
     except Exception as e:
         logger.error(f"Auto-brief failed for trip_day {trip_day_id}: {e}")
+
+
+def _fire_auto_brief_trip(trip_id: str):
+    """Fire consolidated auto-brief for all days in a trip. Fails gracefully."""
+    try:
+        from app.api.briefing import auto_brief_trip_full
+        auto_brief_trip_full(trip_id)
+    except ImportError:
+        logger.warning("briefing module not available — skipping trip auto-brief")
+    except Exception as e:
+        logger.error(f"Auto-brief failed for trip {trip_id}: {e}")
 
 
 # ===========================================================================
@@ -1549,10 +1560,11 @@ async def _create_trip_days(db, trip_id: str, days: list[TripDayInput]):
                         db.table("trip_stops").upsert(
                             stop_rows, on_conflict="trip_day_id,dealer_id"
                         ).execute()
-                # Fire auto-brief for this day
-                _fire_auto_brief_day(day_id)
         except Exception as e:
             logger.warning(f"Failed to insert trip day {i+1}: {e}")
+
+    # Fire ONE consolidated briefing for the whole trip
+    _fire_auto_brief_trip(trip_id)
 
 
 async def _geocode_and_build_day(day: TripDayInput, trip_id: str, day_number: int) -> dict:

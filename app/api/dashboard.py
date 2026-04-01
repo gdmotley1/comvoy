@@ -410,3 +410,75 @@ def get_dashboard(
     }
     _cache[cache_key] = (time.time(), result)
     return result
+
+
+@router.get("/dashboard/trends")
+def dashboard_trends():
+    """Week-over-week trend deltas from snapshot_metrics."""
+    cache_key = "trends"
+    cached = _cache.get(cache_key)
+    if cached and time.time() - cached[0] < _CACHE_TTL:
+        return cached[1]
+
+    db = get_service_client()
+
+    # Get two most recent snapshots
+    snaps = db.table("report_snapshots").select("id, report_date").order("report_date", desc=True).limit(2).execute()
+    if not snaps.data:
+        raise HTTPException(404, "No snapshots found")
+
+    current_snap = snaps.data[0]
+    prev_snap = snaps.data[1] if len(snaps.data) >= 2 else None
+
+    # Fetch current snapshot_metrics
+    current_metrics_row = db.table("snapshot_metrics").select("metrics").eq(
+        "snapshot_id", current_snap["id"]).execute()
+    if not current_metrics_row.data:
+        raise HTTPException(404, "No metrics for current snapshot")
+    cm = current_metrics_row.data[0]["metrics"]
+
+    # Fetch previous snapshot_metrics for delta comparison
+    pm = None
+    if prev_snap:
+        prev_metrics_row = db.table("snapshot_metrics").select("metrics").eq(
+            "snapshot_id", prev_snap["id"]).execute()
+        if prev_metrics_row.data:
+            pm = prev_metrics_row.data[0]["metrics"]
+
+    cs = cm["summary"]
+    ps = pm["summary"] if pm else None
+
+    result = {
+        "current_date": current_snap["report_date"],
+        "prev_date": prev_snap["report_date"] if prev_snap else None,
+        "summary": {
+            "vehicles": cs["total_vehicles"],
+            "dealers": cs["total_dealers"],
+            "sold": cs["sold"],
+            "added": cs["added"],
+            "net_change": cs["net_change"],
+            "price_changes": cs["price_changes"],
+        },
+        "deltas": None,
+        "hot_segments": cm.get("hot_segments", [])[:5],
+        "dealer_churn": cm.get("dealer_churn"),
+        "smyrna_share": cm.get("smyrna_share"),
+        "top_growers": cm.get("dealer_growth", {}).get("top_growers", [])[:5],
+        "top_shrinkers": cm.get("dealer_growth", {}).get("top_shrinkers", [])[:5],
+        "absorption": cm.get("absorption_rate", {}).get("interpretation"),
+    }
+
+    # Compute deltas vs previous period
+    if ps:
+        result["deltas"] = {
+            "vehicle_delta": cs["total_vehicles"] - ps["total_vehicles"],
+            "dealer_delta": cs["total_dealers"] - ps["total_dealers"],
+            "smyrna_delta": (cm.get("smyrna_share", {}).get("total_units", 0)
+                            - pm.get("smyrna_share", {}).get("total_units", 0)) if pm else 0,
+            "fouts_delta": (cm.get("smyrna_share", {}).get("fouts_plant_units", 0)
+                           - pm.get("smyrna_share", {}).get("fouts_plant_units", 0))
+                           if pm and "fouts_plant_units" in pm.get("smyrna_share", {}) else None,
+        }
+
+    _cache[cache_key] = (time.time(), result)
+    return result

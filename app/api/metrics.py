@@ -107,15 +107,14 @@ def compute_snapshot_metrics(snapshot_id: str, prev_snapshot_id: str = None):
     added_count = len(diff_by_type.get("new", []))
     price_change_count = len(diff_by_type.get("price_change", []))
 
-    # ── Fetch previous snapshot vehicle counts per dealer (for growth) ──
+    # ── Fetch previous snapshot dealer counts from dealer_snapshots (survives purge) ──
     prev_dealer_counts = {}
     if prev_snapshot_id:
-        prev_vehicles = _paginate(db, "vehicles",
-            "dealer_id, dealers!inner(name)",
-            [("snapshot_id", prev_snapshot_id)])
-        prev_vehicles = [v for v in prev_vehicles if not is_excluded_dealer(v.get("dealers", {}).get("name", ""))]
-        for v in prev_vehicles:
-            prev_dealer_counts[v["dealer_id"]] = prev_dealer_counts.get(v["dealer_id"], 0) + 1
+        prev_snaps = db.table("dealer_snapshots").select(
+            "dealer_id, total_vehicles"
+        ).eq("snapshot_id", prev_snapshot_id).execute().data or []
+        for ps in prev_snaps:
+            prev_dealer_counts[ps["dealer_id"]] = ps["total_vehicles"]
 
     # ── Fetch lead scores ───────────────────────────────────────────
     leads = db.table("lead_scores").select("dealer_id, score, tier").eq("snapshot_id", snapshot_id).execute().data or []

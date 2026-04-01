@@ -557,12 +557,15 @@ def main():
             ).execute()
         logger.info(f"Loaded {len(smyrna_detail_rows)} Smyrna detail rows")
 
-    # Diffs
+    # Resolve previous snapshot for diffs + metrics
     prev_id = None
+    snapshots = db.table("report_snapshots").select("id, report_date").order("report_date", desc=True).limit(2).execute()
+    if len(snapshots.data) >= 2:
+        prev_id = snapshots.data[1]["id"]
+
+    # Diffs
     if args.diff:
-        snapshots = db.table("report_snapshots").select("id, report_date").order("report_date", desc=True).limit(2).execute()
-        if len(snapshots.data) >= 2:
-            prev_id = snapshots.data[1]["id"]
+        if prev_id:
             compute_diffs(db, snapshot_id, prev_id)
         else:
             logger.info("Only one snapshot — skipping diff")
