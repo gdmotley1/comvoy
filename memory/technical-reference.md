@@ -27,14 +27,14 @@ type: reference
 - **Credentials**: in `comvoy/.env`
 - **Tables**: dealers, vehicles, vehicle_diffs, dealer_snapshots, dealer_brand_inventory, dealer_body_type_inventory, dealer_smyrna_details, report_snapshots, lead_scores, dealer_places, brands, body_types, snapshot_metrics, chat_sessions
 
-## Lead Scoring
-- Config in `app/api/scoring.py` — constants at top, CEO-adjustable
-- **4 factors** (sum to 100): Penetration (30), Product Fit (25), Growth Signal (25), Fleet Scale (20)
-- **Tiers**: Hot 70+ | Warm 40-69 | Cold <40
+## Dealer Tiering
+- Config in `app/api/scoring.py` — thresholds at top
+- **Strictly lot-size based**: score = total vehicles on lot
+- **Tiers**: Hot 50+ vehicles | Warm 20-49 | Cold <20
 - `opportunity_type` column still in DB (legacy CHECK constraint) — set based on Smyrna presence
-- **Scoring runs**: Must call `compute_lead_scores(snap_id, prev_snap_id)` after each data load (auto-runs in load_vehicles.py)
+- **Scoring runs**: Must call `compute_lead_scores(snap_id)` after each data load (auto-runs in load_vehicles.py)
 
-## Smyrna Body Types (in scoring)
+## Smyrna Body Types (used by briefing/agent)
 Service Trucks, Flatbed Trucks, Box Trucks, Box Vans, Stake Beds, Mechanic Body, Enclosed Service, Dump Trucks, Landscape Dumps, Flatbed Dump, Combo Body
 - Contractor Trucks are NOT built by Comvoy — correctly excluded
 

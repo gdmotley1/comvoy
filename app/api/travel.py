@@ -643,10 +643,19 @@ async def create_trip(body: TripCreate):
     trip_id = trip["id"]
 
     # Create days if provided
+    briefing_sent = False
     if body.days:
         await _create_trip_days(db, trip_id, body.days)
+        # Send consolidated briefing email (run inline so Vercel doesn't kill it)
+        try:
+            from app.api.briefing import auto_brief_trip_full
+            auto_brief_trip_full(trip_id)
+            briefing_sent = True
+            logger.info(f"Trip briefing sent for trip {trip_id}")
+        except Exception as e:
+            logger.error(f"Trip briefing failed for trip {trip_id}: {e}")
 
-    return {"status": "created", "trip": trip}
+    return {"status": "created", "trip": trip, "briefing_sent": briefing_sent}
 
 
 @router.get("/trips")
@@ -1573,8 +1582,7 @@ async def _create_trip_days(db, trip_id: str, days: list[TripDayInput]):
         except Exception as e:
             logger.warning(f"Failed to insert trip day {i+1}: {e}")
 
-    # Fire ONE consolidated briefing for the whole trip
-    _fire_auto_brief_trip(trip_id)
+    # Briefing is now fired from create_trip() directly
 
 
 async def _geocode_and_build_day(day: TripDayInput, trip_id: str, day_number: int) -> dict:

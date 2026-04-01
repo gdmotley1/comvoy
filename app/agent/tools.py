@@ -212,9 +212,8 @@ TOOL_DEFINITIONS = [
     {
         "name": "get_lead_scores",
         "description": (
-            "Get ranked leads scored by opportunity value (0-100). Tiers: hot (70+), warm (40-69), cold (<40). "
-            "Four factors: fleet scale (0-20), product fit (0-25), Smyrna penetration (0-30), growth signal (0-25). "
-            "Use for 'who should I call?', 'top opportunities in TX', 'hot leads'."
+            "Get ranked dealers by lot size (vehicle count). Tiers: hot (50+ vehicles), warm (20-49), cold (<20). "
+            "Use for 'who should I call?', 'top opportunities in TX', 'hot leads', 'biggest dealers'."
         ),
         "input_schema": {
             "type": "object",
@@ -243,7 +242,7 @@ TOOL_DEFINITIONS = [
             "Find dealers along a sales rep's travel route for a specific day. "
             "Returns dealers within a corridor of the rep's start→end path, "
             "in geographic travel order (first stop to last stop). Each dealer includes "
-            "lead score and distance off-route. Use for 'what dealers can Wesley hit tomorrow?' "
+            "vehicle count, tier, and distance off-route. Use for 'what dealers can Wesley hit tomorrow?' "
             "or 'who's on Kenneth's route March 10?'. Requires rep name and date."
         ),
         "input_schema": {
@@ -271,7 +270,7 @@ TOOL_DEFINITIONS = [
         "description": (
             "Generate talking points and key intel about a dealer for email/call prep. "
             "Returns a structured summary a rep can use to write their outreach. "
-            "Combines inventory data, Smyrna status, body type fit, and lead score. "
+            "Combines inventory data, Smyrna status, body type fit, and dealer tier. "
             "Use for 'give me talking points for Century Trucks' or 'prep me for a call with Ancira Chevrolet'. "
             "Requires dealer UUID — use search_dealers first."
         ),
@@ -290,7 +289,7 @@ TOOL_DEFINITIONS = [
         "name": "get_upload_report",
         "description": (
             "Get the latest auto-generated monthly report. Shows territory-wide changes, "
-            "Smyrna gains/losses, lead score distribution, and top opportunities. "
+            "Smyrna gains/losses, dealer tier distribution, and top opportunities. "
             "Generated automatically after each monthly data upload. "
             "Use for 'what's the latest report?', 'monthly summary', 'how did we do this month?'."
         ),
@@ -307,7 +306,7 @@ TOOL_DEFINITIONS = [
             "into daily stops with optimized driving routes. Use when a manager asks to plan a trip, "
             "brainstorm which dealers to visit, or build a travel schedule. Supports iteration — "
             "the manager can exclude specific dealers, add states, adjust days, or raise/lower "
-            "the minimum score threshold. "
+            "the minimum vehicle count threshold. "
             "Use for 'plan a 3-day trip for Wesley in GA and TN', 'who should Kenneth visit in Texas?', "
             "'build me a travel plan covering the southeast'."
         ),
@@ -349,7 +348,7 @@ TOOL_DEFINITIONS = [
                 },
                 "min_score": {
                     "type": "integer",
-                    "description": "Minimum lead score to include (0-100). Default 30. Use higher for focused trips.",
+                    "description": "Minimum vehicle count to include. Default 30. Use higher for focused trips (e.g. 50 for hot only).",
                     "default": 30,
                 },
             },
@@ -655,11 +654,11 @@ TOOL_DEFINITIONS = [
                 },
                 "min_score": {
                     "type": "integer",
-                    "description": "Minimum lead score (0-100) filter. Optional.",
+                    "description": "Minimum vehicle count filter. Optional.",
                 },
                 "tier": {
                     "type": "string",
-                    "description": "Lead score tier filter: 'hot', 'warm', or 'cold'. Optional.",
+                    "description": "Dealer tier filter: 'hot', 'warm', or 'cold'. Optional.",
                     "enum": ["hot", "warm", "cold"],
                 },
                 "limit_per_stop": {
@@ -1054,37 +1053,17 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                 tier=tool_input.get("tier"),
                 limit=limit,
             )
-            # Include scoring factors so Otto can explain WHY each dealer scored the way they did
             leads = []
             for lead in result["leads"]:
                 entry = {
                     "id": lead["dealer_id"], "name": lead["name"],
                     "city": lead["city"], "state": lead["state"],
-                    "score": lead["score"], "tier": lead["lead_tier"] if "lead_tier" in lead else lead["tier"],
+                    "vehicles": lead["score"],
+                    "tier": lead["lead_tier"] if "lead_tier" in lead else lead["tier"],
                 }
                 if lead.get("lat"):
                     entry["lat"] = round(lead["lat"], 4)
                     entry["lng"] = round(lead["lng"], 4)
-                f = lead.get("factors", {})
-                if f:
-                    why = {}
-                    if f.get("fleet_scale") is not None:
-                        why["fleet"] = f"{f['fleet_scale']}/20"
-                    if f.get("match_pct") is not None:
-                        why["fit"] = f"{f['match_pct']}%"
-                    if f.get("product_fit") is not None:
-                        why["fit_pts"] = f"{f['product_fit']}/25"
-                    if f.get("smyrna_penetration") is not None:
-                        why["pen_pts"] = f"{f['smyrna_penetration']}/30"
-                    if f.get("penetration_pct") is not None:
-                        why["pen_pct"] = f"{f['penetration_pct']}%"
-                    if f.get("growth_signal") is not None:
-                        why["growth_pts"] = f"{f['growth_signal']}/25"
-                    if f.get("growth_pct") is not None:
-                        why["growth_pct"] = f"{f['growth_pct']}%"
-                    if f.get("note"):
-                        why["note"] = f["note"]
-                    entry["why"] = why
                 leads.append(entry)
             return json.dumps({"leads": leads, "total": result["total"]}, default=str)
 
@@ -1124,19 +1103,6 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                         "hint": "Ask which of these dates the rep wants, or suggest they add a plan for this date.",
                     }, default=str)
                 raise
-            # Fetch scoring factors so Otto can explain WHY each dealer is rated the way they are
-            route_dealer_ids = [d["dealer_id"] for d in result["dealers"] if d.get("dealer_id")]
-            factors_map = {}
-            if route_dealer_ids:
-                snap = db.table("report_snapshots").select("id").order("report_date", desc=True).limit(1).execute()
-                if snap.data:
-                    factor_rows = db.table("lead_scores").select(
-                        "dealer_id, factors"
-                    ).eq("snapshot_id", snap.data[0]["id"]).in_(
-                        "dealer_id", route_dealer_ids
-                    ).execute()
-                    factors_map = {r["dealer_id"]: r["factors"] for r in (factor_rows.data or [])}
-
             # Compact output — dealers already in travel order (start→end)
             dealers = []
             for i, d in enumerate(result["dealers"], 1):
@@ -1148,22 +1114,8 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                 }
                 if d.get("smyrna_units"):
                     entry["smyrna"] = d["smyrna_units"]
-                if d.get("lead_score"):
-                    entry["score"] = d["lead_score"]
+                if d.get("lead_tier"):
                     entry["tier"] = d["lead_tier"]
-                # Include scoring factors for score explanation
-                f = factors_map.get(d.get("dealer_id"), {})
-                if f:
-                    why = {}
-                    if f.get("match_pct") is not None:
-                        why["fit"] = f"{f['match_pct']}%"
-                    if f.get("smyrna_penetration") is not None:
-                        why["pen_pts"] = f"{f['smyrna_penetration']}/30"
-                    if f.get("penetration_pct") is not None:
-                        why["pen_pct"] = f"{f['penetration_pct']}%"
-                    if f.get("growth_pct") is not None:
-                        why["growth"] = f"{f['growth_pct']}%"
-                    entry["why"] = why
                 dealers.append(entry)
             output = {
                 "rep": reps.data[0]["name"],
@@ -1368,17 +1320,8 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                 )
 
             if score_data:
-                intel["lead_score"] = f"{score_data['score']}/100 ({score_data['tier']})"
-                f = score_data.get("factors", {})
-                if f:
-                    intel["score_breakdown"] = {
-                        "fleet_scale": f"{f.get('fleet_scale', 0)}/20",
-                        "product_fit": f"{f.get('match_pct', 0)}% ({f.get('product_fit', 0)}/25 pts)",
-                        "smyrna_penetration": f"{f.get('smyrna_penetration', 0)}/30 ({f.get('penetration_pct', 0)}% pen)",
-                        "growth_signal": f"{f.get('growth_signal', 0)}/25",
-                    }
-                    if f.get("growth_pct") is not None:
-                        intel["score_breakdown"]["growth_pct"] = f"{f['growth_pct']}%"
+                intel["tier"] = score_data["tier"]
+                intel["vehicles_on_lot"] = score_data["score"]
 
             if trend_intel:
                 intel["trend"] = trend_intel
@@ -1539,9 +1482,8 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
             snap_id = snap.data[0]["id"]
 
             # Query lead scores for target states, joined with dealers for location
-            # Supabase PostgREST: use foreign key join — include factors for score explanation
             scores = db.table("lead_scores").select(
-                "dealer_id, score, tier, factors, "
+                "dealer_id, score, tier, "
                 "dealers!inner(id, name, city, state, latitude, longitude)"
             ).eq("snapshot_id", snap_id).gte("score", min_score).in_(
                 "dealers.state", states
@@ -1549,7 +1491,7 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
 
             if not scores.data:
                 return json.dumps({
-                    "error": f"No dealers with score >= {min_score} found in {', '.join(states)}.",
+                    "error": f"No dealers with {min_score}+ vehicles found in {', '.join(states)}.",
                     "tip": "Try lowering min_score or adding more states.",
                 })
 
@@ -1570,7 +1512,6 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                     "lng": d["longitude"],
                     "score": row["score"],
                     "tier": row["tier"],
-                    "factors": row.get("factors", {}),
                 })
 
             if not candidates:
@@ -1622,23 +1563,9 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                         "name": d["name"],
                         "city": d["city"],
                         "state": d["state"],
-                        "score": d["score"],
+                        "vehicles": d["score"],
                         "tier": d["tier"],
-                        "type": "whitespace" if d.get("factors", {}).get("penetration", 0) >= 25 else "upsell",
                     }
-                    # Include compact scoring factors so Otto can explain ratings
-                    f = d.get("factors", {})
-                    if f:
-                        why = {}
-                        if f.get("match_pct") is not None:
-                            why["fit"] = f"{f['match_pct']}%"
-                        if f.get("smyrna_penetration") is not None:
-                            why["pen_pts"] = f"{f['smyrna_penetration']}/30"
-                        if f.get("penetration_pct") is not None:
-                            why["pen_pct"] = f"{f['penetration_pct']}%"
-                        if f.get("growth_pct") is not None:
-                            why["growth"] = f"{f['growth_pct']}%"
-                        entry["why"] = why
                     # Add distance from previous stop
                     if i > 1:
                         prev = ordered[i - 2]
@@ -1661,7 +1588,7 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                 "total_driving_mi": round(total_driving, 1),
                 "hot_count": hot_count,
                 "states_covered": states,
-                "min_score_used": min_score,
+                "min_vehicles": min_score,
             }
             if rep_label:
                 summary["rep"] = rep_label
@@ -2338,23 +2265,11 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                         continue
 
                     sc = score_map.get(c["dealer_id"], {})
-                    s_score = sc.get("score")
                     s_tier = sc.get("tier")
-                    if min_score and (s_score or 0) < min_score:
+                    if min_score and vehicles < min_score:
                         continue
                     if tier_filter and s_tier != tier_filter:
                         continue
-
-                    # Compact scoring factors
-                    f = sc.get("factors", {})
-                    why = {}
-                    if f:
-                        if f.get("fleet_scale") is not None:
-                            why["fleet"] = f"{f['fleet_scale']}/20"
-                        if f.get("match_pct") is not None:
-                            why["fit"] = f"{f['match_pct']}%"
-                        if f.get("penetration_pct") is not None:
-                            why["pen"] = f"{f['penetration_pct']}%"
 
                     entry = {
                         "id": c["dealer_id"],
@@ -2365,14 +2280,11 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
                         "vehicles": vehicles,
                         "smyrna": inv_data.get("smyrna_units", 0),
                         "smyrna_pct": inv_data.get("smyrna_percentage", 0),
-                        "score": s_score,
                         "tier": s_tier,
                     }
-                    if why:
-                        entry["why"] = why
                     nearby_list.append(entry)
 
-                nearby_list.sort(key=lambda x: x.get("score") or 0, reverse=True)
+                nearby_list.sort(key=lambda x: x.get("vehicles") or 0, reverse=True)
                 nearby_list = nearby_list[:limit_per]
 
                 # Track seen to avoid duplicates

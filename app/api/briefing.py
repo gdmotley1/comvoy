@@ -314,7 +314,6 @@ def _render_top_stop(d: dict, show_trends: bool) -> str:
     tier_bg = {"hot": "#ff6b35", "warm": "#22c55e", "cold": "#475569"}.get(tier, "#475569")
     why = _build_why_visit(d)
 
-    score = d.get("score") or 0
     dist_text = f"{d['dist_miles']} mi off route"
     rank_text = f" &middot; #{d['rank']} in territory" if d.get("rank") else ""
 
@@ -322,19 +321,6 @@ def _render_top_stop(d: dict, show_trends: bool) -> str:
     smyrna_text = ""
     if d.get("smyrna_units", 0) > 0:
         smyrna_text = f" &middot; {d['smyrna_units']} Smyrna units ({d.get('smyrna_pct', 0)}%)"
-
-    # Score factor breakdown
-    factors = d.get("factors") or {}
-    factor_parts = []
-    if factors.get("fleet_scale") is not None:
-        factor_parts.append(f"Fleet {factors['fleet_scale']}/20")
-    if factors.get("product_fit") is not None:
-        factor_parts.append(f"Fit {factors['product_fit']}/25")
-    if factors.get("smyrna_penetration") is not None:
-        factor_parts.append(f"Pen {factors['smyrna_penetration']}/30")
-    if factors.get("growth_signal") is not None:
-        factor_parts.append(f"Growth {factors['growth_signal']}/25")
-    score_line = f"Score: {score}/100 ({' + '.join(factor_parts)})" if factor_parts else f"Score: {score}/100"
 
     # Body types we build that they carry
     overlap_html = ""
@@ -389,10 +375,6 @@ def _render_top_stop(d: dict, show_trends: bool) -> str:
         <tr><td style="padding:8px 20px 0 20px;font-size:13px;color:#64748b;">
             {d['vehicles']:,} vehicles &middot; Top brand: {d.get('top_brand', 'N/A')}{smyrna_text}
         </td></tr>
-        <!-- Score breakdown -->
-        <tr><td style="padding:4px 20px 0 20px;font-size:11px;color:#94a3b8;">
-            {score_line}
-        </td></tr>
         {overlap_html}
         {changes_html}
         <!-- Card bottom border -->
@@ -408,19 +390,14 @@ def _render_compact_row(d: dict) -> str:
     """Render a compact row for an 'also on route' dealer.
 
     Single-column: all info in one <td> to prevent overlap on mobile.
-    Two lines: name/location on top, score + reason below in muted text.
+    Two lines: name/location on top, vehicle count below in muted text.
     """
     tier = d.get("tier", "cold")
     tier_color = {"hot": "#ff6b35", "warm": "#22c55e", "cold": "#475569"}.get(tier, "#475569")
 
-    score = d.get("score") or 0
+    vehicles = d.get("vehicles", 0)
     smyrna = d.get("smyrna_units", 0)
-
-    # Short reason
-    if smyrna > 0:
-        reason = f"{smyrna} Smyrna units"
-    else:
-        reason = f"{d.get('vehicles', 0):,} vehicles"
+    smyrna_note = f" &middot; {smyrna} Smyrna" if smyrna > 0 else ""
 
     return f"""
     <tr><td style="padding:8px 20px;border-bottom:1px solid #e2e8f0;">
@@ -433,7 +410,7 @@ def _render_compact_row(d: dict) -> str:
                     <span style="color:#64748b;font-size:12px;">&nbsp;&mdash; {d['city']}, {d['state']}</span>
                 </td>
                 <td style="font-size:12px;color:#64748b;padding:0;white-space:nowrap;" align="right" width="100">
-                    {score}/100 &middot; {reason}
+                    {vehicles:,} vehicles{smyrna_note}
                 </td>
             </tr>
         </table>
@@ -578,39 +555,10 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
     {_divider()}
     <tr><td style="padding:20px 20px 8px 20px;">
         <span style="font-size:11px;font-weight:700;letter-spacing:1px;
-            color:#475569;text-transform:uppercase;">HOW SCORING WORKS</span>
+            color:#475569;text-transform:uppercase;">DEALER TIERS</span>
     </td></tr>
     <tr><td style="padding:4px 20px 0 20px;font-size:13px;color:#64748b;line-height:1.6;">
-        Each dealer is scored 0&ndash;100 based on four factors:
-    </td></tr>
-    <tr><td style="padding:8px 20px 0 20px;">
-        <table role="presentation" cellpadding="0" cellspacing="0" width="100%"
-               style="border-collapse:collapse;">
-            <tr>
-                <td width="50%" style="padding:6px 8px 6px 0;font-size:12px;color:#475569;
-                    border-bottom:1px solid #e2e8f0;vertical-align:top;">
-                    <strong style="color:#1e293b;">Fleet Scale</strong><br>
-                    <span style="font-size:11px;color:#94a3b8;">0&ndash;20 pts &middot; Bigger fleet = bigger order potential</span>
-                </td>
-                <td width="50%" style="padding:6px 0 6px 8px;font-size:12px;color:#475569;
-                    border-bottom:1px solid #e2e8f0;vertical-align:top;">
-                    <strong style="color:#1e293b;">Product Fit</strong><br>
-                    <span style="font-size:11px;color:#94a3b8;">0&ndash;25 pts &middot; % of inventory in types we build</span>
-                </td>
-            </tr>
-            <tr>
-                <td width="50%" style="padding:6px 8px 6px 0;font-size:12px;color:#475569;
-                    vertical-align:top;">
-                    <strong style="color:#1e293b;">Smyrna Penetration</strong><br>
-                    <span style="font-size:11px;color:#94a3b8;">0&ndash;30 pts &middot; Low penetration = more room to grow</span>
-                </td>
-                <td width="50%" style="padding:6px 0 6px 8px;font-size:12px;color:#475569;
-                    vertical-align:top;">
-                    <strong style="color:#1e293b;">Growth Signal</strong><br>
-                    <span style="font-size:11px;color:#94a3b8;">0&ndash;25 pts &middot; Inventory growing = active buyer</span>
-                </td>
-            </tr>
-        </table>
+        Dealers are ranked by total vehicles on the lot:
     </td></tr>
     <tr><td style="padding:12px 20px 0 20px;">
         <table role="presentation" cellpadding="0" cellspacing="0"
@@ -622,7 +570,7 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
                             font-weight:700;letter-spacing:0.5px;padding:3px 7px;
                             mso-line-height-rule:exactly;line-height:14px;">HIGH PRIORITY</td></tr>
                     </table>
-                    <span style="font-size:11px;color:#94a3b8;">70&ndash;100</span>
+                    <span style="font-size:11px;color:#94a3b8;">50+ vehicles</span>
                 </td>
                 <td style="padding:0 12px 0 0;">
                     <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
@@ -630,7 +578,7 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
                             font-weight:700;letter-spacing:0.5px;padding:3px 7px;
                             mso-line-height-rule:exactly;line-height:14px;">OPPORTUNITY</td></tr>
                     </table>
-                    <span style="font-size:11px;color:#94a3b8;">40&ndash;69</span>
+                    <span style="font-size:11px;color:#94a3b8;">20&ndash;49 vehicles</span>
                 </td>
                 <td style="padding:0;">
                     <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
@@ -638,7 +586,7 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
                             font-weight:700;letter-spacing:0.5px;padding:3px 7px;
                             mso-line-height-rule:exactly;line-height:14px;">MONITOR</td></tr>
                     </table>
-                    <span style="font-size:11px;color:#94a3b8;">0&ndash;39</span>
+                    <span style="font-size:11px;color:#94a3b8;">&lt;20 vehicles</span>
                 </td>
             </tr>
         </table>
@@ -1034,8 +982,170 @@ def auto_brief_trip(plan_id: str):
     logger.info(f"Auto-brief complete for {rep_name}'s {plan['travel_date']} trip")
 
 
+def _enrich_dealers(db, dealer_ids: list[str]) -> dict:
+    """Fetch inventory, scores, places, body types for a list of dealer IDs.
+
+    Returns dict keyed by dealer_id with all enrichment data.
+    """
+    if not dealer_ids:
+        return {}
+
+    # Get latest 2 snapshots for trend data
+    snaps = db.table("report_snapshots").select("id, report_date").order(
+        "report_date", desc=True
+    ).limit(2).execute()
+    snap_id = snaps.data[0]["id"] if snaps.data else None
+    prev_snap_id = snaps.data[1]["id"] if len(snaps.data) > 1 else None
+    has_trends = prev_snap_id is not None
+
+    # Inventory
+    inv_map = {}
+    if snap_id:
+        inv = db.table("dealer_snapshots").select(
+            "dealer_id, total_vehicles, smyrna_units, smyrna_percentage, rank, top_brand"
+        ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).execute()
+        inv_map = {r["dealer_id"]: r for r in inv.data}
+
+    # Lead scores
+    score_map = {}
+    if snap_id:
+        scores = db.table("lead_scores").select(
+            "dealer_id, score, tier, factors"
+        ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).execute()
+        score_map = {r["dealer_id"]: r for r in scores.data}
+
+    # Places
+    places_map = {}
+    try:
+        places_data = db.table("dealer_places").select(
+            "dealer_id, rating, review_count, phone, website, google_maps_url"
+        ).in_("dealer_id", dealer_ids).execute()
+        places_map = {r["dealer_id"]: r for r in (places_data.data or [])}
+    except Exception as e:
+        logger.debug(f"dealer_places fetch skipped: {e}")
+
+    # Body types (current)
+    bt_current = {}
+    if snap_id:
+        bt_data = db.table("dealer_body_type_inventory").select(
+            "dealer_id, vehicle_count, body_types(name)"
+        ).eq("snapshot_id", snap_id).in_("dealer_id", dealer_ids).execute()
+        for row in bt_data.data:
+            did = row["dealer_id"]
+            bt_name = row["body_types"]["name"]
+            bt_current.setdefault(did, {})[bt_name] = row["vehicle_count"]
+
+    # Body types (previous)
+    bt_previous = {}
+    if prev_snap_id:
+        bt_prev_data = db.table("dealer_body_type_inventory").select(
+            "dealer_id, vehicle_count, body_types(name)"
+        ).eq("snapshot_id", prev_snap_id).in_("dealer_id", dealer_ids).execute()
+        for row in bt_prev_data.data:
+            did = row["dealer_id"]
+            bt_name = row["body_types"]["name"]
+            bt_previous.setdefault(did, {})[bt_name] = row["vehicle_count"]
+
+    return {
+        "inv_map": inv_map,
+        "score_map": score_map,
+        "places_map": places_map,
+        "bt_current": bt_current,
+        "bt_previous": bt_previous,
+        "has_trends": has_trends,
+    }
+
+
+def _build_dealer_entry(did: str, dealer_info: dict, enrichment: dict,
+                        dist_miles: float = 0, route_position: float = 0) -> dict:
+    """Build a single enriched dealer dict for the briefing email."""
+    inv = enrichment["inv_map"].get(did, {})
+    sc = enrichment["score_map"].get(did, {})
+    factors = sc.get("factors", {}) or {}
+    curr_bts = enrichment["bt_current"].get(did, {})
+    prev_bts = enrichment["bt_previous"].get(did, {})
+
+    bt_changes = _compute_bt_changes(curr_bts, prev_bts) if enrichment["has_trends"] else []
+    smyrna_overlap = {bt: ct for bt, ct in curr_bts.items() if bt in SMYRNA_BODY_TYPES}
+
+    return {
+        "dealer_id": did,
+        "name": dealer_info.get("dealer_name") or dealer_info.get("name", ""),
+        "city": dealer_info.get("city", ""),
+        "state": dealer_info.get("state", ""),
+        "route_position": round(route_position, 3),
+        "dist_miles": round(dist_miles, 1),
+        "vehicles": inv.get("total_vehicles", 0),
+        "smyrna_units": inv.get("smyrna_units", 0),
+        "smyrna_pct": inv.get("smyrna_percentage", 0),
+        "rank": inv.get("rank"),
+        "top_brand": inv.get("top_brand"),
+        "score": sc.get("score"),
+        "tier": sc.get("tier"),
+        "factors": factors,
+        "smyrna_overlap": smyrna_overlap,
+        "bt_changes": bt_changes,
+        "places": enrichment["places_map"].get(did, {}),
+    }
+
+
+def generate_trip_day_briefing(db, day_id: str, enrichment: dict) -> dict:
+    """Generate briefing for a trip day using its selected stops (not corridor search)."""
+    # Get included stops for this day
+    stops = db.table("trip_stops").select(
+        "dealer_id, stop_order"
+    ).eq("trip_day_id", day_id).eq("is_included", True).order("stop_order").execute()
+
+    if not stops.data:
+        return {
+            "top_stops": [], "also_on_route": [], "dealers": [],
+            "summary": {"total": 0, "total_on_route": 0, "hot": 0, "zero_smyrna": 0},
+            "has_trends": enrichment["has_trends"],
+        }
+
+    stop_dealer_ids = [s["dealer_id"] for s in stops.data]
+
+    # Get dealer basic info (name, city, state)
+    dealer_info_data = db.table("dealers").select(
+        "id, dealer_name, city, state"
+    ).in_("id", stop_dealer_ids).execute()
+    dealer_info_map = {d["id"]: d for d in (dealer_info_data.data or [])}
+
+    # Build enriched dealer list in stop order
+    dealers = []
+    for s in stops.data:
+        did = s["dealer_id"]
+        info = dealer_info_map.get(did, {})
+        dealer = _build_dealer_entry(did, info, enrichment)
+        dealers.append(dealer)
+
+    # Sort by score for top stops / also on route split
+    dealers.sort(key=lambda x: -(x.get("score") or 0))
+    top_stops = dealers[:5]
+    also_on_route = dealers[5:]
+
+    hot_count = sum(1 for d in dealers if d.get("tier") == "hot")
+    zero_smyrna = sum(1 for d in dealers if d.get("smyrna_units", 0) == 0)
+
+    return {
+        "top_stops": top_stops,
+        "also_on_route": also_on_route,
+        "dealers": dealers,
+        "summary": {
+            "total": len(dealers),
+            "total_on_route": len(dealers),
+            "hot": hot_count,
+            "zero_smyrna": zero_smyrna,
+        },
+        "has_trends": enrichment["has_trends"],
+    }
+
+
 def auto_brief_trip_full(trip_id: str):
-    """Send ONE consolidated briefing email for all days in a multi-day trip."""
+    """Send ONE consolidated briefing email for all days in a multi-day trip.
+
+    Uses the trip's selected stops (trip_stops), NOT a corridor search.
+    """
     db = get_service_client()
 
     # Fetch trip
@@ -1065,7 +1175,21 @@ def auto_brief_trip_full(trip_id: str):
         logger.warning(f"Auto-brief: rep {rep_name} has no email — skipping")
         return
 
-    # Generate briefing for each day
+    # Collect all dealer IDs across all days for one batch enrichment
+    day_ids = [d["id"] for d in days_data.data]
+    all_stops = db.table("trip_stops").select(
+        "dealer_id, trip_day_id"
+    ).in_("trip_day_id", day_ids).eq("is_included", True).execute()
+
+    all_dealer_ids = list(set(s["dealer_id"] for s in (all_stops.data or [])))
+    if not all_dealer_ids:
+        logger.info(f"Auto-brief: no included stops in trip {trip_id} — skipping")
+        return
+
+    # One batch enrichment for all dealers
+    enrichment = _enrich_dealers(db, all_dealer_ids)
+
+    # Generate briefing for each day using selected stops
     days_with_briefings = []
     total_dealers = 0
     total_hot = 0
@@ -1082,7 +1206,7 @@ def auto_brief_trip_full(trip_id: str):
             "end_lng": day["end_lng"],
             "route_polyline": day.get("route_polyline"),
         }
-        briefing = generate_route_briefing(plan)
+        briefing = generate_trip_day_briefing(db, day["id"], enrichment)
         days_with_briefings.append({"day": day, "plan": plan, "briefing": briefing})
         total_dealers += len(briefing.get("dealers", []))
         total_hot += briefing["summary"].get("hot", 0)
@@ -1290,39 +1414,10 @@ def render_trip_briefing_email(rep_name: str, trip: dict, days_with_briefings: l
     {_divider()}
     <tr><td style="padding:20px 20px 8px 20px;">
         <span style="font-size:11px;font-weight:700;letter-spacing:1px;
-            color:#475569;text-transform:uppercase;">HOW SCORING WORKS</span>
+            color:#475569;text-transform:uppercase;">DEALER TIERS</span>
     </td></tr>
     <tr><td style="padding:4px 20px 0 20px;font-size:13px;color:#64748b;line-height:1.6;">
-        Each dealer is scored 0&ndash;100 based on four factors:
-    </td></tr>
-    <tr><td style="padding:8px 20px 0 20px;">
-        <table role="presentation" cellpadding="0" cellspacing="0" width="100%"
-               style="border-collapse:collapse;">
-            <tr>
-                <td width="50%" style="padding:6px 8px 6px 0;font-size:12px;color:#475569;
-                    border-bottom:1px solid #e2e8f0;vertical-align:top;">
-                    <strong style="color:#1e293b;">Fleet Scale</strong><br>
-                    <span style="font-size:11px;color:#94a3b8;">0&ndash;20 pts &middot; Bigger fleet = bigger order potential</span>
-                </td>
-                <td width="50%" style="padding:6px 0 6px 8px;font-size:12px;color:#475569;
-                    border-bottom:1px solid #e2e8f0;vertical-align:top;">
-                    <strong style="color:#1e293b;">Product Fit</strong><br>
-                    <span style="font-size:11px;color:#94a3b8;">0&ndash;25 pts &middot; % of inventory in types we build</span>
-                </td>
-            </tr>
-            <tr>
-                <td width="50%" style="padding:6px 8px 6px 0;font-size:12px;color:#475569;
-                    vertical-align:top;">
-                    <strong style="color:#1e293b;">Smyrna Penetration</strong><br>
-                    <span style="font-size:11px;color:#94a3b8;">0&ndash;30 pts &middot; Low penetration = more room to grow</span>
-                </td>
-                <td width="50%" style="padding:6px 0 6px 8px;font-size:12px;color:#475569;
-                    vertical-align:top;">
-                    <strong style="color:#1e293b;">Growth Signal</strong><br>
-                    <span style="font-size:11px;color:#94a3b8;">0&ndash;25 pts &middot; Inventory growing = active buyer</span>
-                </td>
-            </tr>
-        </table>
+        Dealers are ranked by total vehicles on the lot:
     </td></tr>
     <tr><td style="padding:12px 20px 0 20px;">
         <table role="presentation" cellpadding="0" cellspacing="0"
@@ -1334,7 +1429,7 @@ def render_trip_briefing_email(rep_name: str, trip: dict, days_with_briefings: l
                             font-weight:700;letter-spacing:0.5px;padding:3px 7px;
                             mso-line-height-rule:exactly;line-height:14px;">HIGH PRIORITY</td></tr>
                     </table>
-                    <span style="font-size:11px;color:#94a3b8;">70&ndash;100</span>
+                    <span style="font-size:11px;color:#94a3b8;">50+ vehicles</span>
                 </td>
                 <td style="padding:0 12px 0 0;">
                     <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
@@ -1342,7 +1437,7 @@ def render_trip_briefing_email(rep_name: str, trip: dict, days_with_briefings: l
                             font-weight:700;letter-spacing:0.5px;padding:3px 7px;
                             mso-line-height-rule:exactly;line-height:14px;">OPPORTUNITY</td></tr>
                     </table>
-                    <span style="font-size:11px;color:#94a3b8;">40&ndash;69</span>
+                    <span style="font-size:11px;color:#94a3b8;">20&ndash;49 vehicles</span>
                 </td>
                 <td style="padding:0;">
                     <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
@@ -1350,7 +1445,7 @@ def render_trip_briefing_email(rep_name: str, trip: dict, days_with_briefings: l
                             font-weight:700;letter-spacing:0.5px;padding:3px 7px;
                             mso-line-height-rule:exactly;line-height:14px;">MONITOR</td></tr>
                     </table>
-                    <span style="font-size:11px;color:#94a3b8;">0&ndash;39</span>
+                    <span style="font-size:11px;color:#94a3b8;">&lt;20 vehicles</span>
                 </td>
             </tr>
         </table>

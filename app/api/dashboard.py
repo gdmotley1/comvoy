@@ -176,7 +176,6 @@ def get_dashboard(
             "city": info.get("city", ""),
             "state": info.get("state", ""),
             "vehicles": vcount,
-            "score": ld.get("score", 0),
             "tier": ld.get("tier", "cold"),
         })
 
@@ -339,7 +338,6 @@ def get_dashboard(
             }
             ld = lead_by_dealer.get(did)
             if ld:
-                row["score"] = ld.get("score", 0)
                 row["tier"] = ld.get("tier", "cold")
             dealer_velocity_list.append(row)
         dealer_velocity_list.sort(key=lambda x: x["sold"], reverse=True)
