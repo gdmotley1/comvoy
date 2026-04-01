@@ -5,7 +5,7 @@ Zero Claude API cost — all data comes from existing DB queries.
 
 Pipeline:
   1. find_dealers_along_route (PostGIS corridor search)
-  2. Join with dealer_snapshots + lead_scores + factors
+  2. Join with dealer_snapshots + lead_scores (vehicle counts) + tiers
   3. Diff body types vs previous month (what's growing/shrinking?)
   4. Render HTML email with inline CSS
   5. Send via SMTP
@@ -168,12 +168,12 @@ def generate_route_briefing(plan: dict) -> dict:
         }
         dealers.append(dealer)
 
-    # Rank by score — highest opportunity dealers shown first.
+    # Rank by vehicle count — largest dealers shown first.
     dealers.sort(key=lambda x: -(x.get("score") or 0))
-    top_pool = dealers[:20]  # Top 20 by opportunity score
+    top_pool = dealers[:20]  # Top 20 by vehicle count
 
     # Split: Top 5 get full-detail cards, next 15 get compact rows
-    # Both sections stay in score order (best first)
+    # Both sections stay in vehicle count order (best first)
     top_stops = top_pool[:5]
     also_on_route = top_pool[5:]
 
@@ -436,7 +436,7 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
       3. Executive Summary (paragraph)
       4. Top Stops (5 full-detail cards)
       5. Also On Route (compact rows)
-      6. Scoring Key (how ratings work)
+      6. Tier Key (how tiers work)
       7. Footer
 
     100% table-based HTML, inline CSS, no flexbox/grid.
@@ -480,7 +480,7 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
     if total_on_route > summary["total"]:
         exec_parts.append(
             f" We've surfaced the <strong>top {summary['total']}</strong> "
-            f"by opportunity score."
+            f"by vehicle count."
         )
     if hot_dealers:
         names = ", ".join(d["name"] for d in hot_dealers[:3])
@@ -550,8 +550,8 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
         Month-over-month trends available after 2+ monthly data uploads.
     </td></tr>"""
 
-    # ── Scoring Key (stacked rows — no multi-column overlap risk) ──
-    scoring_key = f"""
+    # ── Tier Key (stacked rows — no multi-column overlap risk) ──
+    tier_key = f"""
     {_divider()}
     <tr><td style="padding:20px 20px 8px 20px;">
         <span style="font-size:11px;font-weight:700;letter-spacing:1px;
@@ -723,8 +723,8 @@ def render_briefing_email(rep_name: str, plan: dict, briefing: dict) -> str:
 
     {remaining_note}
 
-    <!-- ═══════ SCORING KEY ═══════ -->
-    {scoring_key}
+    <!-- ═══════ TIER KEY ═══════ -->
+    {tier_key}
 
     <!-- ═══════ FOOTER ═══════ -->
     {_divider()}
@@ -867,8 +867,8 @@ def send_welcome_email(rep_name: str, rep_email: str,
     <tr><td style="padding:10px 20px 20px 20px;font-size:14px;color:#334155;line-height:1.8;">
         &#x1F4CA; <strong style="color:#0f172a;">Market Intelligence</strong>
         &mdash; 597 dealers, 13 brands, 12 states<br>
-        &#x1F525; <strong style="color:#0f172a;">Lead Scoring</strong>
-        &mdash; Every dealer ranked by opportunity<br>
+        &#x1F525; <strong style="color:#0f172a;">Dealer Tiering</strong>
+        &mdash; Every dealer ranked by lot size<br>
         &#x1F4CB; <strong style="color:#0f172a;">Dealer Briefings</strong>
         &mdash; Auto-generated before every trip<br>
         &#x1F5FA; <strong style="color:#0f172a;">Territory Analytics</strong>
@@ -885,7 +885,7 @@ def send_welcome_email(rep_name: str, rep_email: str,
     <tr><td style="padding:10px 20px 8px 20px;font-size:14px;color:#334155;line-height:1.8;">
         1. Open Otto and try the chat &mdash; ask about any dealer or market<br>
         2. Check the Dashboard for territory-wide analytics<br>
-        3. Explore the Map to see every dealer scored and color-coded
+        3. Explore the Map to see every dealer tiered and color-coded
     </td></tr>
     <tr><td align="center" style="padding:16px 20px 24px 20px;">
         <a href="{otto_url}" style="display:inline-block;background:#2563eb;color:#ffffff;
@@ -1119,7 +1119,7 @@ def generate_trip_day_briefing(db, day_id: str, enrichment: dict) -> dict:
         dealer = _build_dealer_entry(did, info, enrichment)
         dealers.append(dealer)
 
-    # Sort by score for top stops / also on route split
+    # Sort by vehicle count for top stops / also on route split
     dealers.sort(key=lambda x: -(x.get("score") or 0))
     top_stops = dealers[:5]
     also_on_route = dealers[5:]
@@ -1409,8 +1409,8 @@ def render_trip_briefing_email(rep_name: str, trip: dict, days_with_briefings: l
     {also_html}
 """
 
-    # ── Scoring key (once at bottom) ──
-    scoring_key = f"""
+    # ── Tier key (once at bottom) ──
+    tier_key = f"""
     {_divider()}
     <tr><td style="padding:20px 20px 8px 20px;">
         <span style="font-size:11px;font-weight:700;letter-spacing:1px;
@@ -1553,8 +1553,8 @@ def render_trip_briefing_email(rep_name: str, trip: dict, days_with_briefings: l
     <!-- ═══════ DAY SECTIONS ═══════ -->
     {day_sections_html}
 
-    <!-- ═══════ SCORING KEY ═══════ -->
-    {scoring_key}
+    <!-- ═══════ TIER KEY ═══════ -->
+    {tier_key}
 
     <!-- ═══════ FOOTER ═══════ -->
     {_divider()}

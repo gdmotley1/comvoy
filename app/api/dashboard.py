@@ -155,7 +155,7 @@ def get_dashboard(
             "count": len(bt_prices_list),
         }
 
-    # Lead scores — filter to dealers present in the current (filtered) vehicle set
+    # Dealer tiers — filter to dealers present in the current (filtered) vehicle set
     lead_query = db.table("lead_scores").select("tier, score, dealer_id").eq("snapshot_id", snap_id)
     filtered_dealer_ids = list(dealer_info.keys())
     if filtered_dealer_ids and (state or body_type):

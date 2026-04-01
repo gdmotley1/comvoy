@@ -8431,7 +8431,7 @@
                         <div class="dash-kpi-item">
                             <div class="dash-kpi glow" style="color:#ef4444">${l.hot}</div>
                             <div class="dash-kpi-label">Hot Leads</div>
-                            <div class="dash-kpi-sub" style="color:var(--text-tertiary)">${l.hot + l.warm + l.cold} dealers scored</div>
+                            <div class="dash-kpi-sub" style="color:var(--text-tertiary)">${l.hot + l.warm + l.cold} dealers</div>
                         </div>
                         <div class="dash-kpi-item">
                             <div class="dash-kpi" style="color:var(--accent-cyan)">${t.smyrna_truck_units}${dl ? deltaBadge(dl.smyrna_delta) : ''}</div>
@@ -8717,7 +8717,7 @@
                 const maxTier = Math.max(l.hot, l.warm, l.cold) || 1;
                 let leadHTML = `<div class="dash-card span-2" style="animation-delay:${idx++ * 0.06}s">
                     <div class="dash-card-title">Dealer Tiers</div>
-                    <div style="font-size:11px;color:var(--text-tertiary);margin:-4px 0 20px 12px">${t.dealers} dealers scored</div>
+                    <div style="font-size:11px;color:var(--text-tertiary);margin:-4px 0 20px 12px">${t.dealers} dealers</div>
                     <div class="dash-lead-bar">
                         <div class="dash-lead-label" style="color:#ef4444">Hot</div>
                         <div class="dash-lead-track">

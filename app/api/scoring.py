@@ -71,11 +71,11 @@ def compute_lead_scores(snapshot_id: str, prev_snapshot_id: str | None = None) -
     warm = sum(1 for s in scores if s["tier"] == "warm")
     cold = sum(1 for s in scores if s["tier"] == "cold")
     summary = {
-        "total_scored": len(scores),
+        "total_dealers": len(scores),
         "hot": hot, "warm": warm, "cold": cold,
-        "top_score": max(s["score"] for s in scores) if scores else 0,
+        "max_vehicles": max(s["score"] for s in scores) if scores else 0,
     }
-    logger.info(f"Scored {len(scores)} dealers: {hot} hot, {warm} warm, {cold} cold")
+    logger.info(f"Tiered {len(scores)} dealers: {hot} hot, {warm} warm, {cold} cold")
     return summary
 
 
@@ -85,7 +85,7 @@ def get_lead_scores(
     tier: str = Query(None, description="Filter by tier: hot, warm, cold"),
     limit: int = Query(25, le=100),
 ):
-    """Get scored leads ranked by opportunity value."""
+    """Get dealers ranked by vehicle count."""
     db = get_service_client()
 
     # Get latest snapshot

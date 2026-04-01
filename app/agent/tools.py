@@ -1134,7 +1134,7 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
             return json.dumps(output, default=str)
 
         elif tool_name == "get_dealer_intel":
-            # Build comprehensive talking points from briefing + lead score + trends
+            # Build comprehensive talking points from briefing + tier + trends
             # Parallelized: group 1 (briefing + snapshot) then group 2 (all enrichments)
             import concurrent.futures
             dealer_id = tool_input["dealer_id"]
@@ -1492,7 +1492,7 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
             if not scores.data:
                 return json.dumps({
                     "error": f"No dealers with {min_score}+ vehicles found in {', '.join(states)}.",
-                    "tip": "Try lowering min_score or adding more states.",
+                    "tip": "Try lowering the vehicle count threshold or adding more states.",
                 })
 
             # Build dealer list with location data, filtering exclusions and missing coords
@@ -1517,7 +1517,7 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
             if not candidates:
                 return json.dumps({
                     "error": "No geocoded dealers found matching criteria after exclusions.",
-                    "tip": "Try different states or lower the min_score threshold.",
+                    "tip": "Try different states or lower the vehicle count threshold.",
                 })
 
             # Cap at num_days * 8 — a rep can realistically visit ~6-8 dealers/day
