@@ -322,7 +322,8 @@ def get_dashboard(
             d_ages = dealer_ages.get(did, [])
             dd = dealer_diffs.get(did, {"sold": 0, "added": 0, "price_changes": 0})
             inv = dealer_vehicles.get(did, 0)
-            turnover_pct = round(dd["sold"] / inv * 100, 1) if inv else 0
+            starting_inv = inv + dd["sold"] - dd["added"]  # approximate beginning-of-period inventory
+            turnover_pct = round(dd["sold"] / starting_inv * 100, 1) if starting_inv > 0 else 0
             row = {
                 "id": did,
                 "name": info["name"],
