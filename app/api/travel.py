@@ -631,7 +631,7 @@ async def create_trip(body: TripCreate):
         "name": body.name,
         "rep_id": body.rep_id,
         "created_by": body.created_by,
-        "status": "draft" if body.days else "draft",
+        "status": "planned" if body.start_date.isoformat() > datetime.now().strftime("%Y-%m-%d") else "active",
         "start_date": body.start_date.isoformat(),
         "end_date": body.end_date.isoformat(),
         "notes": body.notes,
@@ -1091,16 +1091,26 @@ async def estimate_trip_days(
         day_splits.append(current_day)
 
     suggestions = []
-    for split in day_splits:
+    num_splits = len(day_splits)
+    for idx, split in enumerate(day_splits):
         dealers_in_day = split["dealers"]
         first_d = dealers_in_day[0] if dealers_in_day else None
         last_d = dealers_in_day[-1] if dealers_in_day else None
+        # First day starts from user's origin, last day ends at user's destination
+        if idx == 0:
+            day_start = start
+        else:
+            day_start = f"{first_d['city']}, {first_d['state']}" if first_d else start
+        if idx == num_splits - 1:
+            day_end = end
+        else:
+            day_end = f"{last_d['city']}, {last_d['state']}" if last_d else end
         suggestions.append({
             "day": split["day"],
             "dealer_count": len(dealers_in_day),
             "estimated_hours": round((split["drive_min"] + split["visit_min"]) / 60, 1),
-            "start_area": f"{first_d['city']}, {first_d['state']}" if first_d else start,
-            "end_area": f"{last_d['city']}, {last_d['state']}" if last_d else end,
+            "start_area": day_start,
+            "end_area": day_end,
             "dealers": [{
                 "dealer_id": d["dealer_id"],
                 "name": d["dealer_name"],
