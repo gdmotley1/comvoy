@@ -37,7 +37,7 @@ def smyrna_badge():
 def phone_link(phone):
     if not phone:
         return "N/A"
-    return f'<a href="tel:{phone}" style="color:#1e40af;text-decoration:none;">{phone}</a>'
+    return f'<a href="tel:{phone}" style="color:#60a5fa;text-decoration:none;">{phone}</a>'
 
 
 def website_link(url):
@@ -46,7 +46,7 @@ def website_link(url):
     short = url.replace("https://", "").replace("http://", "").split("?")[0].rstrip("/")
     if len(short) > 40:
         short = short[:40] + "..."
-    return f'<a href="{url}" target="_blank" style="color:#1e40af;text-decoration:none;font-size:12px;">{short}</a>'
+    return f'<a href="{url}" target="_blank" style="color:#60a5fa;text-decoration:none;font-size:12px;">{short}</a>'
 
 
 def body_type_bar(breakdown, total):
@@ -57,14 +57,14 @@ def body_type_bar(breakdown, total):
     for bt in breakdown[:5]:
         pct = (bt["count"] / total * 100) if total else 0
         is_mech = bt["name"] == "Mechanic Body"
-        bg = "#2563eb" if is_mech else "#e5e7eb"
-        fg = "#fff" if is_mech else "#374151"
+        bg = "#3b82f6" if is_mech else "#475569"
+        fg = "#fff" if is_mech else "#cbd5e1"
         html += f'''<div style="display:flex;align-items:center;margin-bottom:2px;font-size:11px;">
-            <div style="width:120px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;color:#6b7280;">{bt["name"]}</div>
-            <div style="flex:1;background:#f3f4f6;border-radius:3px;height:14px;margin:0 6px;position:relative;">
+            <div style="width:120px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;color:#94a3b8;">{bt["name"]}</div>
+            <div style="flex:1;background:#334155;border-radius:3px;height:14px;margin:0 6px;position:relative;">
                 <div style="width:{max(pct, 2):.0f}%;background:{bg};height:100%;border-radius:3px;"></div>
             </div>
-            <div style="width:30px;text-align:right;font-weight:{'700' if is_mech else '400'};color:{fg if is_mech else '#374151'};">{bt["count"]}</div>
+            <div style="width:30px;text-align:right;font-weight:{'700' if is_mech else '400'};color:{fg};">{bt["count"]}</div>
         </div>'''
     html += "</div>"
     return html
@@ -88,20 +88,20 @@ def dealer_card(d, index):
     rating_html = ""
     if rating:
         stars = "★" * int(rating) + ("½" if rating % 1 >= 0.5 else "")
-        rating_html = f'<span style="color:#f59e0b;">{stars}</span> {rating} ({reviews:,} reviews)'
+        rating_html = f'<span style="color:#fbbf24;">{stars}</span> {rating} ({reviews:,} reviews)'
 
     brand_tags = ""
     if brands:
         brand_tags = " ".join(
-            f'<span style="display:inline-block;padding:1px 6px;border-radius:3px;background:#f3f4f6;font-size:11px;margin:1px;">{b["name"]} ({b["count"]})</span>'
+            f'<span style="display:inline-block;padding:1px 6px;border-radius:3px;background:#334155;color:#cbd5e1;font-size:11px;margin:1px;">{b["name"]} ({b["count"]})</span>'
             for b in brands[:4]
         )
 
     smyrna_html = ""
     if smyrna:
         smyrna_html = f"""
-        <div style="margin-top:8px;padding:8px 12px;background:#eff6ff;border-left:3px solid #2563eb;border-radius:4px;font-size:12px;">
-            <strong style="color:#1e40af;">Existing Smyrna Relationship</strong> — {smyrna_units} Smyrna unit{'s' if smyrna_units != 1 else ''} currently on lot
+        <div style="margin-top:8px;padding:8px 12px;background:#172554;border-left:3px solid #3b82f6;border-radius:4px;font-size:12px;">
+            <strong style="color:#93c5fd;">Existing Smyrna Relationship</strong> <span style="color:#94a3b8;">&mdash; {smyrna_units} Smyrna unit{'s' if smyrna_units != 1 else ''} currently on lot</span>
         </div>"""
 
     # Talking points
@@ -137,51 +137,51 @@ def dealer_card(d, index):
 
     points_html = ""
     if points:
-        points_html = '<div style="margin-top:10px;"><strong style="font-size:12px;color:#374151;">Talking Points:</strong><ul style="margin:4px 0 0 0;padding-left:18px;">'
+        points_html = '<div style="margin-top:10px;"><strong style="font-size:12px;color:#e2e8f0;">Talking Points:</strong><ul style="margin:4px 0 0 0;padding-left:18px;">'
         for p in points:
-            points_html += f'<li style="font-size:12px;color:#4b5563;margin-bottom:3px;">{p}</li>'
+            points_html += f'<li style="font-size:12px;color:#94a3b8;margin-bottom:3px;">{p}</li>'
         points_html += "</ul></div>"
 
     return f"""
-    <div style="border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:16px;page-break-inside:avoid;background:#fff;">
+    <div style="border:1px solid #334155;border-radius:8px;padding:16px;margin-bottom:16px;page-break-inside:avoid;background:#1e293b;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;">
             <div>
-                <h3 style="margin:0;font-size:16px;color:#111827;">
+                <h3 style="margin:0;font-size:16px;color:#f1f5f9;">
                     {index}. {d["name"]}
                     {smyrna_badge() if smyrna else ""}
                 </h3>
-                <div style="color:#6b7280;font-size:13px;margin-top:2px;">{d["city"]}, {d["state"]}</div>
+                <div style="color:#94a3b8;font-size:13px;margin-top:2px;">{d["city"]}, {d["state"]}</div>
             </div>
             <div style="text-align:right;">
                 {tier_badge(tier)}
-                <div style="font-size:22px;font-weight:700;color:#1e40af;margin-top:4px;">{mech} <span style="font-size:12px;font-weight:400;color:#6b7280;">mech bodies</span></div>
+                <div style="font-size:22px;font-weight:700;color:#60a5fa;margin-top:4px;">{mech} <span style="font-size:12px;font-weight:400;color:#94a3b8;">mech bodies</span></div>
             </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px;padding:10px;background:#f9fafb;border-radius:6px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px;padding:10px;background:#0f172a;border-radius:6px;">
             <div>
-                <div style="font-size:11px;color:#6b7280;text-transform:uppercase;">Contact</div>
+                <div style="font-size:11px;color:#64748b;text-transform:uppercase;">Contact</div>
                 <div style="font-size:13px;font-weight:600;">{phone_link(phone)}</div>
                 <div>{website_link(website)}</div>
             </div>
             <div>
-                <div style="font-size:11px;color:#6b7280;text-transform:uppercase;">Lot Size / Rank</div>
-                <div style="font-size:13px;font-weight:600;">{lot} vehicles{f' (#{rank} in state)' if rank else ''}</div>
-                <div style="font-size:12px;color:#6b7280;">{d.get('brand_count', '?')} brands, {d.get('body_type_count', '?')} body types</div>
+                <div style="font-size:11px;color:#64748b;text-transform:uppercase;">Lot Size / Rank</div>
+                <div style="font-size:13px;font-weight:600;color:#e2e8f0;">{lot} vehicles{f' (#{rank} in state)' if rank else ''}</div>
+                <div style="font-size:12px;color:#94a3b8;">{d.get('brand_count', '?')} brands, {d.get('body_type_count', '?')} body types</div>
             </div>
             <div>
-                <div style="font-size:11px;color:#6b7280;text-transform:uppercase;">Rating</div>
-                <div style="font-size:13px;">{rating_html if rating_html else 'N/A'}</div>
+                <div style="font-size:11px;color:#64748b;text-transform:uppercase;">Rating</div>
+                <div style="font-size:13px;color:#e2e8f0;">{rating_html if rating_html else 'N/A'}</div>
             </div>
         </div>
 
         <div style="margin-top:10px;">
-            <div style="font-size:11px;color:#6b7280;text-transform:uppercase;margin-bottom:4px;">Chassis Brands</div>
+            <div style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:4px;">Chassis Brands</div>
             {brand_tags}
         </div>
 
         <div style="margin-top:8px;">
-            <div style="font-size:11px;color:#6b7280;text-transform:uppercase;margin-bottom:2px;">Body Type Mix</div>
+            <div style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:2px;">Body Type Mix</div>
             {body_type_bar(body_types, lot if lot != '?' else 0)}
         </div>
 
@@ -202,10 +202,10 @@ briefing_html = f"""<!DOCTYPE html>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-    body {{ font-family: 'Inter', -apple-system, sans-serif; background: #f3f4f6; color: #111827; }}
+    body {{ font-family: 'Inter', -apple-system, sans-serif; background: #0f172a; color: #e2e8f0; }}
     .container {{ max-width: 900px; margin: 0 auto; padding: 20px; }}
     @media print {{
-        body {{ background: #fff; }}
+        body {{ background: #0f172a; color: #e2e8f0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }}
         .container {{ padding: 0; }}
         .no-print {{ display: none !important; }}
     }}
@@ -231,30 +231,30 @@ briefing_html = f"""<!DOCTYPE html>
     </div>
 
     <!-- INVENTORY SUMMARY -->
-    <div style="background:#fff;border-radius:8px;padding:20px;margin-bottom:24px;border:1px solid #e5e7eb;">
-        <h2 style="font-size:16px;color:#111827;margin-bottom:12px;">Current Fouts Mechanic Body Inventory</h2>
+    <div style="background:#1e293b;border-radius:8px;padding:20px;margin-bottom:24px;border:1px solid #334155;">
+        <h2 style="font-size:16px;color:#f1f5f9;margin-bottom:12px;">Current Fouts Mechanic Body Inventory</h2>
         <table style="width:100%;border-collapse:collapse;font-size:13px;">
             <thead>
-                <tr style="border-bottom:2px solid #e5e7eb;">
-                    <th style="text-align:left;padding:8px 12px;color:#6b7280;font-weight:600;">Chassis</th>
-                    <th style="text-align:center;padding:8px 12px;color:#6b7280;font-weight:600;">Units</th>
-                    <th style="text-align:right;padding:8px 12px;color:#6b7280;font-weight:600;">Price</th>
+                <tr style="border-bottom:2px solid #475569;">
+                    <th style="text-align:left;padding:8px 12px;color:#94a3b8;font-weight:600;">Chassis</th>
+                    <th style="text-align:center;padding:8px 12px;color:#94a3b8;font-weight:600;">Units</th>
+                    <th style="text-align:right;padding:8px 12px;color:#94a3b8;font-weight:600;">Price</th>
                 </tr>
             </thead>
             <tbody>
-                {''.join(f"""<tr style="border-bottom:1px solid #f3f4f6;">
-                    <td style="padding:8px 12px;font-weight:500;">{chassis}</td>
-                    <td style="padding:8px 12px;text-align:center;font-weight:700;color:#1e40af;">{count}</td>
-                    <td style="padding:8px 12px;text-align:right;color:#374151;">{price}</td>
+                {''.join(f"""<tr style="border-bottom:1px solid #334155;">
+                    <td style="padding:8px 12px;font-weight:500;color:#e2e8f0;">{chassis}</td>
+                    <td style="padding:8px 12px;text-align:center;font-weight:700;color:#60a5fa;">{count}</td>
+                    <td style="padding:8px 12px;text-align:right;color:#cbd5e1;">{price}</td>
                 </tr>""" for chassis, count, price in fouts_inventory)}
-                <tr style="border-top:2px solid #e5e7eb;">
-                    <td style="padding:8px 12px;font-weight:700;">Total</td>
-                    <td style="padding:8px 12px;text-align:center;font-weight:700;color:#1e40af;">38</td>
-                    <td style="padding:8px 12px;text-align:right;font-weight:600;color:#374151;">$122,222&ndash;$226,000</td>
+                <tr style="border-top:2px solid #475569;">
+                    <td style="padding:8px 12px;font-weight:700;color:#f1f5f9;">Total</td>
+                    <td style="padding:8px 12px;text-align:center;font-weight:700;color:#60a5fa;">38</td>
+                    <td style="padding:8px 12px;text-align:right;font-weight:600;color:#cbd5e1;">$122,222&ndash;$226,000</td>
                 </tr>
             </tbody>
         </table>
-        <div style="margin-top:12px;font-size:12px;color:#6b7280;">
+        <div style="margin-top:12px;font-size:12px;color:#64748b;">
             All units are Warner Mechanics Bodies, new condition, built at Fouts plant in Milledgeville, GA.
             Chassis: Ford, Freightliner, Kenworth. Body builder: Warner Truck Bodies.
         </div>
@@ -262,30 +262,30 @@ briefing_html = f"""<!DOCTYPE html>
 
     <!-- MARKET OVERVIEW -->
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:24px;">
-        <div style="background:#fff;border-radius:8px;padding:16px;border:1px solid #e5e7eb;text-align:center;">
-            <div style="font-size:28px;font-weight:700;color:#1e40af;">{len(dealers)}</div>
-            <div style="font-size:12px;color:#6b7280;">Dealers w/ Mech Bodies</div>
+        <div style="background:#1e293b;border-radius:8px;padding:16px;border:1px solid #334155;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:#60a5fa;">{len(dealers)}</div>
+            <div style="font-size:12px;color:#94a3b8;">Dealers w/ Mech Bodies</div>
         </div>
-        <div style="background:#fff;border-radius:8px;padding:16px;border:1px solid #e5e7eb;text-align:center;">
-            <div style="font-size:28px;font-weight:700;color:#dc2626;">{len(tier1)}</div>
-            <div style="font-size:12px;color:#6b7280;">Stocking 5+ Units</div>
+        <div style="background:#1e293b;border-radius:8px;padding:16px;border:1px solid #334155;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:#f87171;">{len(tier1)}</div>
+            <div style="font-size:12px;color:#94a3b8;">Stocking 5+ Units</div>
         </div>
-        <div style="background:#fff;border-radius:8px;padding:16px;border:1px solid #e5e7eb;text-align:center;">
-            <div style="font-size:28px;font-weight:700;color:#059669;">{len(smyrna_dealers)}</div>
-            <div style="font-size:12px;color:#6b7280;">Existing Smyrna Partners</div>
+        <div style="background:#1e293b;border-radius:8px;padding:16px;border:1px solid #334155;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:#34d399;">{len(smyrna_dealers)}</div>
+            <div style="font-size:12px;color:#94a3b8;">Existing Smyrna Partners</div>
         </div>
-        <div style="background:#fff;border-radius:8px;padding:16px;border:1px solid #e5e7eb;text-align:center;">
-            <div style="font-size:28px;font-weight:700;color:#7c3aed;">{sum(d['mech_count'] for d in dealers)}</div>
-            <div style="font-size:12px;color:#6b7280;">Total Mech Bodies in Market</div>
+        <div style="background:#1e293b;border-radius:8px;padding:16px;border:1px solid #334155;text-align:center;">
+            <div style="font-size:28px;font-weight:700;color:#a78bfa;">{sum(d['mech_count'] for d in dealers)}</div>
+            <div style="font-size:12px;color:#94a3b8;">Total Mech Bodies in Market</div>
         </div>
     </div>
 
     <!-- PRIORITY TIER 1 -->
     <div style="margin-bottom:8px;">
-        <h2 style="font-size:18px;color:#111827;border-bottom:3px solid #dc2626;padding-bottom:8px;display:inline-block;">
+        <h2 style="font-size:18px;color:#f1f5f9;border-bottom:3px solid #ef4444;padding-bottom:8px;display:inline-block;">
             Priority 1: Heavy Mechanic Body Dealers (5+ units)
         </h2>
-        <p style="font-size:13px;color:#6b7280;margin-top:4px;">
+        <p style="font-size:13px;color:#94a3b8;margin-top:4px;">
             These {len(tier1)} dealers already sell mechanic bodies at volume. They know the product, have the customer base, and can absorb additional inventory immediately.
         </p>
     </div>
@@ -293,10 +293,10 @@ briefing_html = f"""<!DOCTYPE html>
 
     <!-- PRIORITY TIER 2 -->
     <div style="margin-top:32px;margin-bottom:8px;">
-        <h2 style="font-size:18px;color:#111827;border-bottom:3px solid #f59e0b;padding-bottom:8px;display:inline-block;">
+        <h2 style="font-size:18px;color:#f1f5f9;border-bottom:3px solid #fbbf24;padding-bottom:8px;display:inline-block;">
             Priority 2: Growing Mechanic Body Dealers (2&ndash;4 units)
         </h2>
-        <p style="font-size:13px;color:#6b7280;margin-top:4px;">
+        <p style="font-size:13px;color:#94a3b8;margin-top:4px;">
             These {len(tier2)} dealers are actively selling mechanic bodies but at lower volume. Good candidates to scale up with Fouts/Warner product.
         </p>
     </div>
@@ -304,17 +304,17 @@ briefing_html = f"""<!DOCTYPE html>
 
     <!-- PRIORITY TIER 3 -->
     <div style="margin-top:32px;margin-bottom:8px;">
-        <h2 style="font-size:18px;color:#111827;border-bottom:3px solid #6b7280;padding-bottom:8px;display:inline-block;">
+        <h2 style="font-size:18px;color:#f1f5f9;border-bottom:3px solid #64748b;padding-bottom:8px;display:inline-block;">
             Priority 3: Entry-Level Mechanic Body Dealers (1 unit)
         </h2>
-        <p style="font-size:13px;color:#6b7280;margin-top:4px;">
+        <p style="font-size:13px;color:#94a3b8;margin-top:4px;">
             These {len(tier3)} dealers have dipped a toe into mechanic bodies. May be testing the market or just got their first unit.
         </p>
     </div>
     {''.join(dealer_card(d, i+len(tier1)+len(tier2)+1) for i, d in enumerate(tier3))}
 
     <!-- FOOTER -->
-    <div style="margin-top:32px;padding:16px;background:#f9fafb;border-radius:8px;font-size:12px;color:#6b7280;text-align:center;border:1px solid #e5e7eb;">
+    <div style="margin-top:32px;padding:16px;background:#1e293b;border-radius:8px;font-size:12px;color:#64748b;text-align:center;border:1px solid #334155;">
         Generated by Otto &mdash; Comvoy Sales Intelligence &mdash; {today}<br>
         Data source: Comvoy market snapshot (March 30, 2026) &bull; Fouts CV inventory from foutscv.com
     </div>
@@ -338,9 +338,9 @@ print(f"  Tier 3 (1 unit): {len(tier3)} dealers")
 def call_row(d, priority):
     smyrna_flag = "&#9733;" if d.get("has_smyrna") else ""
     tier = d.get("tier", "?")
-    tier_color = {"hot": "#dc2626", "warm": "#f59e0b", "cold": "#6b7280"}.get(tier, "#6b7280")
+    tier_color = {"hot": "#f87171", "warm": "#fbbf24", "cold": "#64748b"}.get(tier, "#64748b")
     phone = d.get("phone", "")
-    phone_html = f'<a href="tel:{phone}" style="color:#1e40af;text-decoration:none;white-space:nowrap;">{phone}</a>' if phone else "N/A"
+    phone_html = f'<a href="tel:{phone}" style="color:#60a5fa;text-decoration:none;white-space:nowrap;">{phone}</a>' if phone else "N/A"
 
     # Chassis match
     brand_names = [b["name"].lower() for b in d.get("brand_breakdown", [])]
@@ -363,17 +363,17 @@ def call_row(d, priority):
     if d.get("lot_size", 0) >= 100:
         notes.append(f"Large lot ({d['lot_size']})")
 
-    return f"""<tr style="border-bottom:1px solid #e5e7eb;">
-        <td style="padding:6px 8px;font-size:12px;text-align:center;font-weight:600;color:#1e40af;">{priority}</td>
-        <td style="padding:6px 8px;font-size:12px;font-weight:500;">{d["name"]}{f' <span style="color:#2563eb;">★</span>' if d.get("has_smyrna") else ""}</td>
-        <td style="padding:6px 8px;font-size:12px;color:#6b7280;">{d["city"]}, {d["state"]}</td>
+    return f"""<tr style="border-bottom:1px solid #334155;">
+        <td style="padding:6px 8px;font-size:12px;text-align:center;font-weight:600;color:#60a5fa;">{priority}</td>
+        <td style="padding:6px 8px;font-size:12px;font-weight:500;color:#e2e8f0;">{d["name"]}{f' <span style="color:#60a5fa;">★</span>' if d.get("has_smyrna") else ""}</td>
+        <td style="padding:6px 8px;font-size:12px;color:#94a3b8;">{d["city"]}, {d["state"]}</td>
         <td style="padding:6px 8px;font-size:12px;">{phone_html}</td>
         <td style="padding:6px 8px;font-size:12px;text-align:center;"><span style="color:{tier_color};font-weight:600;">{tier.upper()}</span></td>
-        <td style="padding:6px 8px;font-size:12px;text-align:center;font-weight:700;color:#1e40af;">{d["mech_count"]}</td>
-        <td style="padding:6px 8px;font-size:12px;text-align:center;">{d.get("lot_size", "?")}</td>
-        <td style="padding:6px 8px;font-size:11px;color:#6b7280;">{chassis_html}</td>
-        <td style="padding:6px 8px;font-size:11px;color:#6b7280;">{"; ".join(notes)}</td>
-        <td style="padding:6px 8px;font-size:11px;text-align:center;">&#9744;</td>
+        <td style="padding:6px 8px;font-size:12px;text-align:center;font-weight:700;color:#60a5fa;">{d["mech_count"]}</td>
+        <td style="padding:6px 8px;font-size:12px;text-align:center;color:#cbd5e1;">{d.get("lot_size", "?")}</td>
+        <td style="padding:6px 8px;font-size:11px;color:#94a3b8;">{chassis_html}</td>
+        <td style="padding:6px 8px;font-size:11px;color:#94a3b8;">{"; ".join(notes)}</td>
+        <td style="padding:6px 8px;font-size:11px;text-align:center;color:#64748b;">&#9744;</td>
     </tr>"""
 
 
@@ -386,13 +386,14 @@ call_sheet_html = f"""<!DOCTYPE html>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-    body {{ font-family: 'Inter', -apple-system, sans-serif; background: #fff; color: #111827; }}
+    body {{ font-family: 'Inter', -apple-system, sans-serif; background: #0f172a; color: #e2e8f0; }}
     .container {{ max-width: 1100px; margin: 0 auto; padding: 20px; }}
     table {{ width: 100%; border-collapse: collapse; }}
-    thead th {{ position: sticky; top: 0; background: #1e3a5f; color: #fff; }}
-    tr:hover {{ background: #f9fafb; }}
+    thead th {{ position: sticky; top: 0; background: #1e293b; color: #94a3b8; }}
+    tr:hover {{ background: #1e293b; }}
     @media print {{
-        thead th {{ background: #1e3a5f !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }}
+        body {{ background: #0f172a; color: #e2e8f0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }}
+        thead th {{ background: #1e293b !important; color: #94a3b8 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }}
         .no-print {{ display: none !important; }}
         body {{ font-size: 11px; }}
     }}
@@ -402,19 +403,19 @@ call_sheet_html = f"""<!DOCTYPE html>
 
 <div class="container">
 
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:16px;border-bottom:3px solid #1e3a5f;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:16px;border-bottom:3px solid #334155;">
         <div>
-            <h1 style="font-size:22px;color:#1e3a5f;">Mechanic Body Placement — Call Sheet</h1>
-            <div style="font-size:13px;color:#6b7280;">Fouts Commercial Vehicles &bull; {today} &bull; 38 units to place &bull; &#9733; = Smyrna partner</div>
+            <h1 style="font-size:22px;color:#f1f5f9;">Mechanic Body Placement — Call Sheet</h1>
+            <div style="font-size:13px;color:#94a3b8;">Fouts Commercial Vehicles &bull; {today} &bull; 38 units to place &bull; &#9733; = Smyrna partner</div>
         </div>
         <div style="text-align:right;">
-            <div style="font-size:13px;color:#6b7280;">{len(dealers)} dealers</div>
-            <div style="font-size:13px;color:#6b7280;">{sum(1 for d in dealers if d.get('has_smyrna'))} existing partners</div>
+            <div style="font-size:13px;color:#94a3b8;">{len(dealers)} dealers</div>
+            <div style="font-size:13px;color:#94a3b8;">{sum(1 for d in dealers if d.get('has_smyrna'))} existing partners</div>
         </div>
     </div>
 
     <!-- SMYRNA PARTNERS FIRST -->
-    <h2 style="font-size:14px;color:#2563eb;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">
+    <h2 style="font-size:14px;color:#60a5fa;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">
         &#9733; Existing Smyrna Partners — Call First
     </h2>
     <table style="margin-bottom:24px;">
@@ -438,7 +439,7 @@ call_sheet_html = f"""<!DOCTYPE html>
     </table>
 
     <!-- ALL OTHER DEALERS -->
-    <h2 style="font-size:14px;color:#1e3a5f;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">
+    <h2 style="font-size:14px;color:#cbd5e1;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">
         All Mechanic Body Dealers — By Current Stock
     </h2>
     <table>
@@ -461,7 +462,7 @@ call_sheet_html = f"""<!DOCTYPE html>
         </tbody>
     </table>
 
-    <div style="margin-top:24px;padding:12px;font-size:11px;color:#6b7280;text-align:center;border-top:1px solid #e5e7eb;">
+    <div style="margin-top:24px;padding:12px;font-size:11px;color:#64748b;text-align:center;border-top:1px solid #334155;">
         Generated by Otto &mdash; Comvoy Sales Intelligence &mdash; {today} &bull; Data: March 30, 2026 snapshot
     </div>
 
