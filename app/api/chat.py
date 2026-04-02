@@ -425,14 +425,7 @@ def _prepare_chat(msg: ChatMessage, session_id: str):
     # Build system prompt with conversation memory
     memory_section = _get_conversation_memory(user_name, msg.message)
 
-    # Add rep-specific context
-    rep_context = ""
-    if user_name.lower() in ("wesley", "wesley white"):
-        rep_context = "\n\nCURRENT USER: Wesley White — covers GA, TN, NC, SC, AL. Tailor territory insights to these states."
-    elif user_name.lower() in ("kenneth", "kenneth greene"):
-        rep_context = "\n\nCURRENT USER: Kenneth Greene — covers TX, LA, OK, AR, MS. Tailor territory insights to these states."
-
-    system_prompt = f"TODAY: {date.today().isoformat()}{rep_context}{memory_section}\n\n{SALES_KNOWLEDGE_BASE}\n\n{SALES_AGENT_SYSTEM_PROMPT}"
+    system_prompt = f"TODAY: {date.today().isoformat()}{memory_section}\n\n{SALES_KNOWLEDGE_BASE}\n\n{SALES_AGENT_SYSTEM_PROMPT}"
     model = _pick_model(msg.message)
 
     # Save session to DB (async-safe, non-blocking)
